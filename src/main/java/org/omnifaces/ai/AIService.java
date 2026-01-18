@@ -1,0 +1,427 @@
+/*
+ * Copyright OmniFaces
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package org.omnifaces.ai;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
+import org.omnifaces.ai.ModerationOptions.Category;
+import org.omnifaces.ai.exception.AIException;
+
+/**
+ * Generic interface for AI service providers.
+ * <p>
+ * This interface provides a unified abstraction for various AI capabilities including
+ * chat, summarization, translation, content moderation, image analysis, and more.
+ * <p>
+ * The implementations must be stateless and able to be {@link ApplicationScoped}.
+ *
+ * @author Bauke Scholtz
+ * @since 1.0
+ */
+public interface AIService extends Serializable {
+
+    // Chat Capabilities ----------------------------------------------------------------------------------------------
+
+    /**
+     * Sends a message to the AI and receives a response.
+     * <p>
+     * This is the core method for chat-based AI interactions.
+     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
+     *
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return The AI's response, never {@code null}.
+     * @throws AIException if the chat request fails.
+     */
+    default String chat(String message, ChatOptions options) throws AIException {
+        try {
+            return chatAsync(message, options).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously sends a message to the AI and receives a response.
+     * <p>
+     * This is the core method for chat-based AI interactions.
+     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
+     *
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     */
+    CompletableFuture<String> chatAsync(String message, ChatOptions options);
+
+    /**
+     * Sends a message to the AI with default options.
+     *
+     * @param message The user's message to send to the AI
+     * @return The AI's response, never {@code null}.
+     * @throws AIException if the chat request fails
+     */
+    default String chat(String message) throws AIException {
+        try {
+            return chatAsync(message).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously sends a message to the AI with default options.
+     *
+     * @param message The user's message to send to the AI
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     */
+    default CompletableFuture<String> chatAsync(String message) {
+        return chatAsync(message, new ChatOptions.Builder().systemPrompt(getChatPrompt()).build());
+    }
+
+
+    // Text Analysis Capabilities -------------------------------------------------------------------------------------
+
+    /**
+     * Summarizes text to a target length.
+     *
+     * @param text The text to summarize.
+     * @param maxWords Maximum words in summary.
+     * @return The summarized text, never {@code null}.
+     * @throws AIException if summarization fails.
+     */
+    default String summarize(String text, int maxWords) throws AIException {
+        try {
+            return summarizeAsync(text, maxWords).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously summarizes text to a target length.
+     *
+     * @param text The text to summarize.
+     * @param maxWords Maximum words in summary.
+     * @return A CompletableFuture that will contain the summarized text, never {@code null}.
+     */
+    CompletableFuture<String> summarizeAsync(String text, int maxWords);
+
+    /**
+     * Extracts key points from text as a list.
+     *
+     * @param text The text to extract key points from.
+     * @param maxPoints Maximum number of key points to extract.
+     * @return List of key points, never {@code null}.
+     * @throws AIException if extraction fails.
+     */
+    default List<String> extractKeyPoints(String text, int maxPoints) throws AIException {
+        try {
+            return extractKeyPointsAsync(text, maxPoints).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously extracts key points from text as a list.
+     *
+     * @param text The text to extract key points from.
+     * @param maxPoints Maximum number of key points to extract.
+     * @return A CompletableFuture that will contain a list of key points, never {@code null}.
+     */
+    CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints);
+
+
+    // Text Translation Capabilities --------------------------------------------------------------------------------------
+
+    /**
+     * Translates text from source language to target language while preserving any markup and placeholders.
+     *
+     * @param text The text to translate.
+     * @param sourceLang Source language code (ISO 639-1), may be {@code null} for auto-detection.
+     * @param targetLang Target language code (ISO 639-1), required.
+     * @return The translated text, never {@code null}.
+     * @throws AIException if translation fails.
+     */
+    default String translate(String text, String sourceLang, String targetLang) throws AIException {
+        try {
+            return translateAsync(text, sourceLang, targetLang).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously translates text from source language to target language while preserving any markup and placeholders.
+     *
+     * @param text The text to translate.
+     * @param sourceLang Source language code (ISO 639-1), may be {@code null} for auto-detection.
+     * @param targetLang Target language code (ISO 639-1), required.
+     * @return A CompletableFuture that will contain the translated text, never {@code null}.
+     */
+    CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang);
+
+    /**
+     * Detects the language of the given text.
+     *
+     * @param text The text to analyze.
+     * @return The detected language code (ISO 639-1), never {@code null}.
+     * @throws AIException if language detection fails.
+     */
+    default String detectLanguage(String text) throws AIException {
+        try {
+            return detectLanguageAsync(text).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously detects the language of the given text.
+     *
+     * @param text The text to analyze.
+     * @return A CompletableFuture that will contain the detected language code (ISO 639-1), never {@code null}.
+     */
+    CompletableFuture<String> detectLanguageAsync(String text);
+
+
+    // Text Moderation Capabilities -----------------------------------------------------------------------------------
+
+    /**
+     * Moderates content to detect violations per {@link Category}.
+     *
+     * @param content The content to moderate.
+     * @param options Moderation options (categories to check, threshold, etc.).
+     * @return Moderation result with detected violations, never {@code null}.
+     * @throws AIException if moderation fails.
+     */
+    default ModerationResult moderateContent(String content, ModerationOptions options) throws AIException {
+        try {
+            return moderateContentAsync(content, options).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously moderates content to detect violations per {@link Category}.
+     *
+     * @param content The content to moderate.
+     * @param options Moderation options (categories to check, threshold, etc.).
+     * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
+     */
+    CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options);
+
+    /**
+     * Moderates content with default options.
+     * <p>
+     * Default implementation checks for all categories defined in {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES}.
+     *
+     * @param content The content to moderate.
+     * @return Moderation result with detected violations, never {@code null}.
+     * @throws AIException if moderation fails.
+     */
+    default ModerationResult moderateContent(String content) throws AIException {
+        try {
+            return moderateContentAsync(content).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously moderates content with default options.
+     * <p>
+     * Default implementation checks for all categories defined in {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES}.
+     *
+     * @param content The content to moderate.
+     * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
+     */
+    default CompletableFuture<ModerationResult> moderateContentAsync(String content) {
+        return moderateContentAsync(content, ModerationOptions.DEFAULT);
+    }
+
+
+    // Image Analysis Capabilities ------------------------------------------------------------------------------------
+
+    /**
+     * Analyzes an image and generates a description.
+     * <p>
+     * Useful for generating alt text for accessibility.
+     *
+     * @param image content of the image to analyze.
+     * @param prompt Optional prompt describing what to focus on (e.g., "describe the product", "what's the main subject"). Defaults to "describe everything".
+     * @return Description of the image, never {@code null}.
+     * @throws AIException if image analysis fails.
+     */
+    default String analyzeImage(byte[] image, String prompt) throws AIException {
+        try {
+            return analyzeImageAsync(image, prompt).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously analyzes an image and generates a description.
+     * <p>
+     * Useful for generating alt text for accessibility.
+     *
+     * @param image content of the image to analyze.
+     * @param prompt Optional prompt describing what to focus on (e.g., "describe the product", "what's the main subject"). Defaults to "describe everything".
+     * @return A CompletableFuture that will contain the description of the image, never {@code null}.
+     */
+    CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt);
+
+    /**
+     * Generates alt text for an image with default prompt.
+     *
+     * @param image content of the image to analyze.
+     * @return Alt text description, never {@code null}.
+     * @throws AIException if image analysis fails.
+     */
+    default String generateAltText(byte[] image) throws AIException {
+        try {
+            return generateAltTextAsync(image).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously generates alt text for an image with default prompt.
+     *
+     * @param image content of the image to analyze.
+     * @return A CompletableFuture that will contain the alt text description, never {@code null}.
+     */
+    CompletableFuture<String> generateAltTextAsync(byte[] image);
+
+
+    // Image Generation Capabilities ----------------------------------------------------------------------------------
+
+    /**
+     * Generates an image based on a prompt.
+     *
+     * @param prompt The prompt for image generation.
+     * @param options Image generation options (size, quality, style, etc.).
+     * @return Generated image bytes, never {@code null}.
+     * @throws AIException if generation fails.
+     */
+    default byte[] generateImage(String prompt, GenerateImageOptions options) throws AIException {
+        try {
+            return generateImageAsync(prompt, options).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously generates an image based on a prompt.
+     *
+     * @param prompt The prompt for image generation.
+     * @param options Image generation options (size, quality, style, etc.).
+     * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
+     */
+    CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options);
+
+    /**
+     * Generates an image based on a prompt with default options.
+     *
+     * @param prompt The prompt for image generation.
+     * @return Generated image bytes, never {@code null}.
+     * @throws AIException if generation fails.
+     */
+    default byte[] generateImage(String prompt) throws AIException {
+        try {
+            return generateImageAsync(prompt).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Asynchronously generates an image based on a prompt with default options.
+     *
+     * @param prompt The prompt for image generation.
+     * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
+     */
+    default CompletableFuture<byte[]> generateImageAsync(String prompt) {
+        return generateImageAsync(prompt, GenerateImageOptions.DEFAULT);
+    }
+
+
+    // Service Metadata -----------------------------------------------------------------------------------------------
+
+    /**
+     * Returns the name of this AI service.
+     * @return The name of this AI service (e.g. AnthropicAIService (Anthropic claude-sonnet-4-5-20250929)).
+     */
+    default String getServiceName() {
+        return getClass().getSimpleName() + " (" + getProviderName() + " " + getModelName() + ")";
+    }
+
+    /**
+     * Returns the AI provider name of this AI service.
+     * @return The AI provider name of this AI service (e.g., "OpenAI", "Anthropic", "Google AI", etc).
+     */
+    String getProviderName();
+
+    /**
+     * Returns the AI model name being used by this AI service.
+     * @return The AI model name being used by this AI service (e.g., "gpt-5-mini", "claude-sonnet-4-5-20250929", "gemini-2.5-flash", etc)
+     */
+    String getModelName();
+
+    /**
+     * Returns the chat prompt being used by this AI service.
+     * @return The chat prompt being used by this AI service.
+     */
+    String getChatPrompt();
+
+    /**
+     * Returns the major version of the AI model being used by this AI service, or {@code -1} if none is found.
+     * The default implementation returns the first digit found in {@link #getModelName()}.
+     * @return The major version of the AI model being used by this AI service, or {@code -1} if none is found (e.g., 1, 2, 3, etc).
+     */
+    default int getModelMajorVersion() {
+        var digits = new StringBuilder();
+
+        for (var c : getModelName().toCharArray()) {
+            if (Character.isDigit(c)) {
+                digits.append(c);
+            }
+            else if (digits.length() > 0) {
+                break;
+            }
+        }
+
+        return digits.length() > 0 ? Integer.parseInt(digits.toString()) : -1;
+    }
+}
