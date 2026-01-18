@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.omnifaces.ai.exception.AIApiException;
+import org.omnifaces.ai.exception.AIBadRequestException;
 import org.omnifaces.ai.exception.AIException;
 
 /**
@@ -93,7 +94,7 @@ final class AIApiClient {
             .thenCompose(response -> {
                 var statusCode = response.statusCode();
 
-                if (statusCode >= 400) {
+                if (statusCode >= AIBadRequestException.STATUS_CODE) {
                     return CompletableFuture.failedFuture(AIApiException.forStatusCode(statusCode, request.uri().toString().split("\\?", 2)[0] + ": "+  response.body()));
                 }
 
@@ -114,6 +115,15 @@ final class AIApiClient {
             });
     }
 
+    /**
+     * Determines whether a failed request should be retried based on the exception.
+     * <p>
+     * Retryable errors are transient connection issues indicated by an {@link IOException}
+     * with a message containing "terminated", "reset", or "refused" anywhere in the cause chain.
+     *
+     * @param throwable The exception to check.
+     * @return {@code true} if the error is transient and the request should be retried.
+     */
     private static boolean isRetryable(Throwable throwable) {
         if (throwable == null) {
             return false;
