@@ -1,0 +1,16 @@
+# Maven
+target/
+
+# Eclipse
+.classpath
+.project
+.settings/
+*.jsfdia
+*.tern-project
+
+# IntelliJ
+.idea
+*.iml
+*.ipr
+*.iws
+
