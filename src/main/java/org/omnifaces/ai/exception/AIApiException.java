@@ -17,12 +17,12 @@ package org.omnifaces.ai.exception;
  * <p>
  * This exception and its subclasses represent HTTP-level errors (4xx/5xx):
  * <ul>
- * <li>{@link AIBadRequestException} - 400 Bad Request
- * <li>{@link AIAuthenticationException} - 401 Unauthorized
- * <li>{@link AIAuthorizationException} - 403 Forbidden
- * <li>{@link AIEndpointNotFoundException} - 404 Not Found
- * <li>{@link AIRateLimitExceededException} - 429 Too Many Requests
- * <li>{@link AIServiceUnavailableException} - 503 Service Unavailable
+ * <li>{@link AIApiBadRequestException} - 400 Bad Request
+ * <li>{@link AIApiAuthenticationException} - 401 Unauthorized
+ * <li>{@link AIApiAuthorizationException} - 403 Forbidden
+ * <li>{@link AIApiEndpointNotFoundException} - 404 Not Found
+ * <li>{@link AIApiRateLimitExceededException} - 429 Too Many Requests
+ * <li>{@link AIApiServiceUnavailableException} - 503 Service Unavailable
  * </ul>
  * <p>
  * Use {@link #forStatusCode(int, String)} to create the appropriate subclass based on HTTP status code.
@@ -46,12 +46,12 @@ public class AIApiException extends AIException {
      */
     public static AIApiException forStatusCode(int statusCode, String message) {
         return switch (statusCode) {
-            case AIBadRequestException.STATUS_CODE -> new AIBadRequestException("API bad request: " + message);
-            case AIAuthenticationException.STATUS_CODE -> new AIAuthenticationException("API authentication failed: " + message);
-            case AIAuthorizationException.STATUS_CODE -> new AIAuthorizationException("API authorization failed: " + message);
-            case AIEndpointNotFoundException.STATUS_CODE -> new AIEndpointNotFoundException("API endpoint not found: " + message);
-            case AIRateLimitExceededException.STATUS_CODE -> new AIRateLimitExceededException("API rate limit exceeded: " + message);
-            case AIServiceUnavailableException.STATUS_CODE -> new AIServiceUnavailableException("API service unavailable: " + message);
+            case AIApiBadRequestException.STATUS_CODE -> new AIApiBadRequestException("API bad request: " + message);
+            case AIApiAuthenticationException.STATUS_CODE -> new AIApiAuthenticationException("API authentication failed: " + message);
+            case AIApiAuthorizationException.STATUS_CODE -> new AIApiAuthorizationException("API authorization failed: " + message);
+            case AIApiEndpointNotFoundException.STATUS_CODE -> new AIApiEndpointNotFoundException("API endpoint not found: " + message);
+            case AIApiRateLimitExceededException.STATUS_CODE -> new AIApiRateLimitExceededException("API rate limit exceeded: " + message);
+            case AIApiServiceUnavailableException.STATUS_CODE -> new AIApiServiceUnavailableException("API service unavailable: " + message);
             default -> new AIApiException("API error " + statusCode + ": " + message, statusCode);
         };
     }

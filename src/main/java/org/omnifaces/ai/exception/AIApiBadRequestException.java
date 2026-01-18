@@ -13,26 +13,26 @@
 package org.omnifaces.ai.exception;
 
 /**
- * Exception thrown when the AI API returns HTTP 429 Too Many Requests.
+ * Exception thrown when the AI API returns HTTP 400 Bad Request.
  * <p>
- * This indicates the rate limit has been exceeded. Consider implementing retry logic with exponential backoff, or reducing request frequency.
+ * This typically indicates an invalid or malformed request, such as missing required parameters, invalid JSON, or unsupported options.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIRateLimitExceededException extends AIApiException {
+public class AIApiBadRequestException extends AIApiException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Too Many Requests: {@value}. */
-    public static final int STATUS_CODE = 429;
+    /** The HTTP status code for Bad Request: {@value}. */
+    public static final int STATUS_CODE = 400;
 
     /**
-     * Constructs a new rate limit exceeded exception with the specified message.
+     * Constructs a new bad request exception with the specified message.
      *
      * @param message The detail message.
      */
-    public AIRateLimitExceededException(String message) {
+    public AIApiBadRequestException(String message) {
         super(message, STATUS_CODE);
     }
 }

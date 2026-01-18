@@ -13,26 +13,26 @@
 package org.omnifaces.ai.exception;
 
 /**
- * Exception thrown when the AI API returns HTTP 400 Bad Request.
+ * Exception thrown when the AI API returns HTTP 401 Unauthorized.
  * <p>
- * This typically indicates an invalid or malformed request, such as missing required parameters, invalid JSON, or unsupported options.
+ * This typically indicates a missing or invalid API key.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIBadRequestException extends AIApiException {
+public class AIApiAuthenticationException extends AIApiException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Bad Request: {@value}. */
-    public static final int STATUS_CODE = 400;
+    /** The HTTP status code for Unauthorized: {@value}. */
+    public static final int STATUS_CODE = 401;
 
     /**
-     * Constructs a new bad request exception with the specified message.
+     * Constructs a new authentication exception with the specified message.
      *
      * @param message The detail message.
      */
-    public AIBadRequestException(String message) {
+    public AIApiAuthenticationException(String message) {
         super(message, STATUS_CODE);
     }
 }

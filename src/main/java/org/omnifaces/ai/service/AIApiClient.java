@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.omnifaces.ai.exception.AIApiException;
-import org.omnifaces.ai.exception.AIBadRequestException;
+import org.omnifaces.ai.exception.AIApiBadRequestException;
 import org.omnifaces.ai.exception.AIException;
 
 /**
@@ -94,7 +94,7 @@ final class AIApiClient {
             .thenCompose(response -> {
                 var statusCode = response.statusCode();
 
-                if (statusCode >= AIBadRequestException.STATUS_CODE) {
+                if (statusCode >= AIApiBadRequestException.STATUS_CODE) {
                     return CompletableFuture.failedFuture(AIApiException.forStatusCode(statusCode, request.uri().toString().split("\\?", 2)[0] + ": "+  response.body()));
                 }
 

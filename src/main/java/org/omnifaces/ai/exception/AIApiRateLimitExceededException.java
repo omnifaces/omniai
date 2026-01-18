@@ -13,26 +13,26 @@
 package org.omnifaces.ai.exception;
 
 /**
- * Exception thrown when the AI API returns HTTP 403 Forbidden.
+ * Exception thrown when the AI API returns HTTP 429 Too Many Requests.
  * <p>
- * This typically indicates insufficient permissions for the requested operation, such as accessing a model or feature not included in your subscription or wrong country.
+ * This indicates the rate limit has been exceeded. Consider implementing retry logic with exponential backoff, or reducing request frequency.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIAuthorizationException extends AIApiException {
+public class AIApiRateLimitExceededException extends AIApiException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Forbidden: {@value}. */
-    public static final int STATUS_CODE = 403;
+    /** The HTTP status code for Too Many Requests: {@value}. */
+    public static final int STATUS_CODE = 429;
 
     /**
-     * Constructs a new authorization exception with the specified message.
+     * Constructs a new rate limit exceeded exception with the specified message.
      *
      * @param message The detail message.
      */
-    public AIAuthorizationException(String message) {
+    public AIApiRateLimitExceededException(String message) {
         super(message, STATUS_CODE);
     }
 }

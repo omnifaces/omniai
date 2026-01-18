@@ -13,26 +13,26 @@
 package org.omnifaces.ai.exception;
 
 /**
- * Exception thrown when the AI API returns HTTP 404 Not Found.
+ * Exception thrown when the AI API returns HTTP 503 Service Unavailable.
  * <p>
- * This typically indicates an invalid endpoint URL or a non-existent model name.
+ * This indicates the AI service is temporarily unavailable, typically due to high load or maintenance. Retry the request after a short delay.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIEndpointNotFoundException extends AIApiException {
+public class AIApiServiceUnavailableException extends AIApiException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Not Found: {@value}. */
-    public static final int STATUS_CODE = 404;
+    /** The HTTP status code for Service Unavailable: {@value}. */
+    public static final int STATUS_CODE = 503;
 
     /**
-     * Constructs a new endpoint not found exception with the specified message.
+     * Constructs a new service unavailable exception with the specified message.
      *
      * @param message The detail message.
      */
-    public AIEndpointNotFoundException(String message) {
+    public AIApiServiceUnavailableException(String message) {
         super(message, STATUS_CODE);
     }
 }
