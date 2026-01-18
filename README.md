@@ -21,7 +21,7 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 </dependency>
 ```
 
-On non-Jakarta EE containers such as Tomcat and Jetty, you'll need to add JSON-P and optionally CDI dependencies:
+On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optionally CDI dependencies:
 
 ```xml
 <!-- JSON-P implementation (required) -->
@@ -43,14 +43,14 @@ On non-Jakarta EE containers such as Tomcat and Jetty, you'll need to add JSON-P
 
 | Provider | Default Model | API Key Required |
 |----------|---------------|------------------|
-| OpenAI | gpt-5-mini | Yes |
-| Anthropic | claude-sonnet-4-5-20250929 | Yes |
-| Google AI | gemini-2.5-flash | Yes |
-| xAI | grok-4-1-fast-reasoning | Yes |
-| Meta Llama | Llama-4-Scout-17B-16E-Instruct-FP8 | Yes |
-| Azure OpenAI | gpt-5-mini | Yes |
-| OpenRouter | google/gemma-3-27b-it:free | Yes |
-| Ollama | llama3.2 | No |
+| OpenAI | gpt-5-mini | [Yes](https://platform.openai.com/api-keys) |
+| Anthropic | claude-sonnet-4-5-20250929 | [Yes](https://platform.claude.com/settings/keys) |
+| Google AI | gemini-2.5-flash | [Yes](https://aistudio.google.com/app/api-keys) |
+| xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) |
+| Meta Llama | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) |
+| Azure OpenAI | gpt-5-mini | [Yes](https://portal.azure.com) |
+| OpenRouter | google/gemma-3-27b-it:free | [Yes](https://openrouter.ai/settings/keys) |
+| Ollama | llama3.2 | No (localhost) |
 | Custom | - | - |
 
 ## Quick Start
