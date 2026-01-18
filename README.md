@@ -21,6 +21,24 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 </dependency>
 ```
 
+On non-Jakarta EE containers such as Tomcat and Jetty, you'll need to add JSON-P and optionally CDI dependencies:
+
+```xml
+<!-- JSON-P implementation (required) -->
+<dependency>
+    <groupId>org.eclipse.parsson</groupId>
+    <artifactId>parsson</artifactId>
+    <version>1.1.7</version>
+</dependency>
+
+<!-- CDI implementation (optional, for @AI injection) -->
+<dependency>
+    <groupId>org.jboss.weld.servlet</groupId>
+    <artifactId>weld-servlet-shaded</artifactId>
+    <version>6.0.4.Final</version>
+</dependency>
+```
+
 ## Supported Providers
 
 | Provider | Default Model | API Key Required |
