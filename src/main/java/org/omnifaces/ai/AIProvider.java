@@ -27,7 +27,7 @@ import org.omnifaces.ai.service.XAIService;
  * Enumeration of major AI model providers / platforms.
  *
  * <p>
- * This is not meant to be exhaustive. New providers can be added over time.
+ * This is not meant to be exhaustive. New providers can be added over time. Default models and endpoints can also change over time.
  *
  * <h2>Usage</h2>
  * <p>
