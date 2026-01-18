@@ -41,17 +41,17 @@ On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optio
 
 ## Supported Providers
 
-| Provider | Default Model | API Key Required |
-|----------|---------------|------------------|
-| OpenAI | gpt-5-mini | [Yes](https://platform.openai.com/api-keys) |
-| Anthropic | claude-sonnet-4-5-20250929 | [Yes](https://platform.claude.com/settings/keys) |
-| Google AI | gemini-2.5-flash | [Yes](https://aistudio.google.com/app/api-keys) |
-| xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) |
-| Meta Llama | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) |
-| Azure OpenAI | gpt-5-mini | [Yes](https://portal.azure.com) |
-| OpenRouter | google/gemma-3-27b-it:free | [Yes](https://openrouter.ai/settings/keys) |
-| Ollama | llama3.2 | No (localhost) |
-| Custom | - | - |
+| Provider | Default Model | API Key Required | Available Models |
+|----------|---------------|------------------|------------------|
+| OpenAI | gpt-5-mini | [Yes](https://platform.openai.com/api-keys) | [List](https://platform.openai.com/docs/models) |
+| Anthropic | claude-sonnet-4-5-20250929 | [Yes](https://platform.claude.com/settings/keys) | [List](https://platform.claude.com/docs/en/about-claude/models/overview) |
+| Google AI | gemini-2.5-flash | [Yes](https://aistudio.google.com/app/api-keys) | [List](https://ai.google.dev/gemini-api/docs/models) |
+| xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) | [List](https://docs.x.ai/docs/models) |
+| Meta Llama | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) | [List](https://llama.developer.meta.com/docs/models/) |
+| Azure OpenAI | gpt-5-mini | [Yes](https://portal.azure.com) | [List](https://ai.azure.com/catalog) |
+| OpenRouter | google/gemma-3-27b-it:free | [Yes](https://openrouter.ai/settings/keys) | [List](https://openrouter.ai/models) |
+| Ollama | llama3.2 | No (localhost) | [List](https://ollama.com/library) |
+| Custom | - | - | - |
 
 ## Quick Start
 
