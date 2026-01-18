@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.service;
 
+import java.util.Set;
+
 import jakarta.json.Json;
 
 import org.omnifaces.ai.AIConfig;
@@ -62,14 +64,6 @@ public class XAIService extends OpenAIService {
         super(config);
     }
 
-    /**
-     * Builds the JSON request payload for {@link #generateImageAsync(String, GenerateImageOptions)}.
-     * You can override this method to customize the payload.
-     *
-     * @param prompt The image generation prompt.
-     * @param options The image generation options.
-     * @return The JSON request payload.
-     */
     @Override
     protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
         if (isEmpty(prompt)) {
@@ -84,5 +78,10 @@ public class XAIService extends OpenAIService {
             .add("response_format", "b64_json")
             .build()
             .toString();
+    }
+
+    @Override
+    protected boolean supportsModerationCapability(Set<String> categories) {
+        return false;
     }
 }
