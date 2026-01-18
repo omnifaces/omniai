@@ -238,11 +238,11 @@ var service = AIConfig.of("com.example.MyCustomAIService", "api-key").createServ
 
 ### Where OmniAI Shines
 
-1. Ultra-lightweight - No external HTTP library, just java.net.http.HttpClient. Minimal deps.
-2. Built-in text utilities - Summarization, translation, key point extraction, moderation as first-class features (not "build your own prompt")
-3. Native CDI with EL - `@AI(apiKey = "#{config.key}")` with expression resolution
-4. 8 providers out of the box - Including Ollama for local/offline
-5. Clean exception hierarchy - Specific exceptions per HTTP status
+- Ultra-lightweight - No external HTTP library, just `java.net.http.HttpClient`. Minimal deps.
+- Built-in text utilities - Summarization, translation, key point extraction, moderation as first-class features (not "build your own prompt")
+- Native CDI with EL - `@AI(apiKey = "#{config.key}")` with expression resolution
+- 8 providers out of the box - Including Ollama for local/offline
+- Clean exception hierarchy - Specific exceptions per HTTP status
 
 ### Where OmniAI is Intentionally Simpler
 
