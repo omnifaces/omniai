@@ -215,7 +215,7 @@ public class ModerationOptions implements Serializable {
          */
         public ModerationOptions build() {
             if (categories.isEmpty()) {
-                throw new IllegalArgumentException("categories cannot be empty");
+                throw new IllegalArgumentException("categories cannot be blank");
             }
 
             return new ModerationOptions(this);

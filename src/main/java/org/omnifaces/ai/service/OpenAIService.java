@@ -116,13 +116,13 @@ public class OpenAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildChatPayload(String message, ChatOptions options) {
-        if (isEmpty(message)) {
-            throw new IllegalArgumentException("Message cannot be empty");
+        if (isBlank(message)) {
+            throw new IllegalArgumentException("Message cannot be blank");
         }
 
         var messages = Json.createArrayBuilder();
 
-        if (!isEmpty(options.getSystemPrompt())) {
+        if (!isBlank(options.getSystemPrompt())) {
             messages.add(Json.createObjectBuilder()
                 .add("role", "system")
                 .add("content", options.getSystemPrompt()));
@@ -166,8 +166,8 @@ public class OpenAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildVisionPayload(byte[] image, String prompt) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         return Json.createObjectBuilder()
@@ -196,8 +196,8 @@ public class OpenAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         return Json.createObjectBuilder()

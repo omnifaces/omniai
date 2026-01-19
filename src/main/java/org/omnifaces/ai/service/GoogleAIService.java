@@ -96,13 +96,13 @@ public class GoogleAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildChatPayload(String message, ChatOptions options) {
-        if (isEmpty(message)) {
-            throw new IllegalArgumentException("Message cannot be empty");
+        if (isBlank(message)) {
+            throw new IllegalArgumentException("Message cannot be blank");
         }
 
         var payload = Json.createObjectBuilder();
 
-        if (!isEmpty(options.getSystemPrompt())) {
+        if (!isBlank(options.getSystemPrompt())) {
             payload.add("system_instruction", Json.createObjectBuilder()
                 .add("parts", Json.createArrayBuilder()
                     .add(Json.createObjectBuilder()
@@ -139,8 +139,8 @@ public class GoogleAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildVisionPayload(byte[] image, String prompt) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         var base64 = encodeBase64(image);
@@ -167,8 +167,8 @@ public class GoogleAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         var generationConfig = Json.createObjectBuilder()

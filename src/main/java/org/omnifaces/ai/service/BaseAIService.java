@@ -114,8 +114,8 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException {
-        if (isEmpty(text)) {
-            throw new IllegalArgumentException("Text cannot be empty");
+        if (isBlank(text)) {
+            throw new IllegalArgumentException("Text cannot be blank");
         }
 
         var options = ChatOptions.newBuilder()
@@ -159,8 +159,8 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException {
-        if (isEmpty(text)) {
-            throw new IllegalArgumentException("Text cannot be empty");
+        if (isBlank(text)) {
+            throw new IllegalArgumentException("Text cannot be blank");
         }
 
         var options = ChatOptions.newBuilder()
@@ -169,7 +169,7 @@ public abstract class BaseAIService implements AIService {
             .maxTokens(estimateExtractKeyPointsMaxTokens(maxPoints))
             .build();
 
-        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(BaseAIService::isEmpty)).toList());
+        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(BaseAIService::isBlank)).toList());
     }
 
     /**
@@ -206,12 +206,12 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
-        if (isEmpty(text)) {
-            throw new IllegalArgumentException("Text cannot be empty");
+        if (isBlank(text)) {
+            throw new IllegalArgumentException("Text cannot be blank");
         }
 
-        if (isEmpty(targetLang)) {
-            throw new IllegalArgumentException("Target language cannot be empty");
+        if (isBlank(targetLang)) {
+            throw new IllegalArgumentException("Target language cannot be blank");
         }
 
         var options = ChatOptions.newBuilder()
@@ -268,8 +268,8 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> detectLanguageAsync(String text) throws AIException {
-        if (isEmpty(text)) {
-            throw new IllegalArgumentException("Text cannot be empty");
+        if (isBlank(text)) {
+            throw new IllegalArgumentException("Text cannot be blank");
         }
 
         var options = ChatOptions.newBuilder()
@@ -279,7 +279,7 @@ public abstract class BaseAIService implements AIService {
             .build();
 
         return chatAsync(text, options).thenApply(response -> {
-            if (isEmpty(response)) {
+            if (isBlank(response)) {
                 throw new AIApiResponseException("Response is empty");
             }
 
@@ -318,8 +318,8 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
-        if (isEmpty(content)) {
-            throw new IllegalArgumentException("Content cannot be empty");
+        if (isBlank(content)) {
+            throw new IllegalArgumentException("Content cannot be blank");
         }
 
         if (options.getCategories().isEmpty()) {
@@ -408,7 +408,7 @@ public abstract class BaseAIService implements AIService {
      * @return The system prompt.
      */
     protected String buildAnalyzeImagePrompt(String prompt) {
-        return isEmpty(prompt) ? """
+        return isBlank(prompt) ? """
             You are an expert at analyzing images.
             Describe this image in detail.
             Rules:
@@ -513,7 +513,7 @@ public abstract class BaseAIService implements AIService {
         for (var messageContentPath : messageContentPaths) {
             var messageContent = extractByPath(responseJson, messageContentPath);
 
-            if (!isEmpty(messageContent)) {
+            if (!isBlank(messageContent)) {
                 return messageContent;
             }
         }
@@ -542,7 +542,7 @@ public abstract class BaseAIService implements AIService {
         for (var imageContentPath : imageContentPaths) {
             var imageContent = extractByPath(responseJson, imageContentPath);
 
-            if (!isEmpty(imageContent)) {
+            if (!isBlank(imageContent)) {
                 try {
                     return Base64.getDecoder().decode(imageContent);
                 }
@@ -561,7 +561,7 @@ public abstract class BaseAIService implements AIService {
         for (var errorMessagePath : getResponseErrorMessagePaths()) {
             var errorMessage = extractByPath(responseJson, errorMessagePath);
 
-            if (!isEmpty(errorMessage)) {
+            if (!isBlank(errorMessage)) {
                 throw new AIApiResponseException(errorMessage);
             }
         }
@@ -602,22 +602,34 @@ public abstract class BaseAIService implements AIService {
     // Text/JSON Helper Methods ---------------------------------------------------------------------------------------
 
     /**
-     * Returns whether the given object is empty/blank. Supports currently only {@link String} and {@link JsonArray}.
-     * @param object Object to check.
-     * @return Whether the given object is empty/blank. Supports currently only {@link String} and {@link JsonArray}.
+     * Returns whether the given string is null or blank.
+     * @param string String to check.
+     * @return Whether the given string is null or blank.
      */
-    protected static boolean isEmpty(Object object) {
-        if (object == null) {
+    protected static boolean isBlank(String string) {
+        return string == null || string.isBlank();
+    }
+
+    /**
+     * Returns whether the given JSON value is empty. Supports currently only {@link JsonObject}, {@link JsonArray} and {@link JsonString}.
+     * @param value JSON value to check.
+     * @return Whether the given JSON value is empty.
+     */
+    protected static boolean isEmpty(JsonValue value) {
+        if (value == null) {
             return true;
         }
-        else if (object instanceof String string) {
-            return string.isBlank();
+        else if (value instanceof JsonObject object) {
+            return object.isEmpty();
         }
-        else if (object instanceof JsonArray array) {
+        else if (value instanceof JsonArray array) {
             return array.isEmpty();
         }
+        else if (value instanceof JsonString string) {
+            return isBlank(string.getString());
+        }
         else {
-            return isEmpty(object.toString());
+            throw new UnsupportedOperationException("Not implemented yet, just add a new else-if block here");
         }
     }
 
@@ -692,7 +704,7 @@ public abstract class BaseAIService implements AIService {
         }
 
         var string = current instanceof JsonString jsonString ? jsonString.getString() : current.toString();
-        return isEmpty(string) ? null : string.strip();
+        return isBlank(string) ? null : string.strip();
     }
 
 

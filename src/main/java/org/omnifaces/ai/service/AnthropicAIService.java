@@ -98,15 +98,15 @@ public class AnthropicAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildChatPayload(String message, ChatOptions options) {
-        if (isEmpty(message)) {
-            throw new IllegalArgumentException("Message cannot be empty");
+        if (isBlank(message)) {
+            throw new IllegalArgumentException("Message cannot be blank");
         }
 
         var payload = Json.createObjectBuilder()
             .add("model", model)
             .add("max_tokens", options.getMaxTokens());
 
-        if (!isEmpty(options.getSystemPrompt())) {
+        if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());
         }
 
@@ -135,8 +135,8 @@ public class AnthropicAIService extends BaseAIService {
      * @return The JSON request payload.
      */
     protected String buildVisionPayload(byte[] image, String prompt) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         var base64 = encodeBase64(image);

@@ -66,8 +66,8 @@ public class XAIService extends OpenAIService {
 
     @Override
     protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
-        if (isEmpty(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be empty");
+        if (isBlank(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be blank");
         }
 
         return Json.createObjectBuilder()
