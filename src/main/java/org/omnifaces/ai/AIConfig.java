@@ -15,6 +15,8 @@ package org.omnifaces.ai;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toUnmodifiableMap;
+import static org.omnifaces.ai.helper.StringHelper.isBlank;
+import static org.omnifaces.ai.helper.StringHelper.stripToNull;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -63,18 +65,6 @@ public record AIConfig(String provider, String apiKey, String model, String endp
         properties = properties == null ? emptyMap() : properties.entrySet().stream()
                 .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
                 .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
-    }
-
-    private static boolean isBlank(String string) {
-        return string == null || string.isBlank();
-    }
-
-    private static String stripToNull(String string) {
-        if (string == null) {
-            return null;
-        }
-        var stripped = string.strip();
-        return stripped.isEmpty() ? null : stripped;
     }
 
     /**

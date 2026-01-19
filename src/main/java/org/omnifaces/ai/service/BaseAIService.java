@@ -17,13 +17,10 @@ import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.function.Predicate.not;
 import static org.omnifaces.ai.AIConfig.PROPERTY_API_KEY;
+import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
+import static org.omnifaces.ai.helper.JsonHelper.parseJson;
+import static org.omnifaces.ai.helper.StringHelper.isBlank;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
@@ -31,16 +28,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import javax.imageio.ImageIO;
-
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
 
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
@@ -50,6 +40,7 @@ import org.omnifaces.ai.ModerationOptions;
 import org.omnifaces.ai.ModerationResult;
 import org.omnifaces.ai.exception.AIApiResponseException;
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.helper.StringHelper;
 
 /**
  * Base class for AI service implementations providing common API functionality.
@@ -178,7 +169,7 @@ public abstract class BaseAIService implements AIService {
             .maxTokens(estimateExtractKeyPointsMaxTokens(maxPoints))
             .build();
 
-        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(BaseAIService::isBlank)).toList());
+        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(StringHelper::isBlank)).toList());
     }
 
     /**
@@ -606,229 +597,4 @@ public abstract class BaseAIService implements AIService {
      * @return all possible paths to the image content in the JSON response of {@link #asyncPostAndExtractImageContent(String, String)}.
      */
     protected abstract List<String> getResponseImageContentPaths();
-
-
-    // Text/JSON Helper Methods ---------------------------------------------------------------------------------------
-
-    /**
-     * Returns whether the given string is null or blank.
-     * @param string String to check.
-     * @return Whether the given string is null or blank.
-     */
-    protected static boolean isBlank(String string) {
-        return string == null || string.isBlank();
-    }
-
-    /**
-     * Returns whether the given JSON value is empty. Supports currently only {@link JsonObject}, {@link JsonArray} and {@link JsonString}.
-     * @param value JSON value to check.
-     * @return Whether the given JSON value is empty.
-     */
-    protected static boolean isEmpty(JsonValue value) {
-        if (value == null) {
-            return true;
-        }
-        else if (value instanceof JsonObject object) {
-            return object.isEmpty();
-        }
-        else if (value instanceof JsonArray array) {
-            return array.isEmpty();
-        }
-        else if (value instanceof JsonString string) {
-            return isBlank(string.getString());
-        }
-        else {
-            throw new UnsupportedOperationException("Not implemented yet, just add a new else-if block here");
-        }
-    }
-
-    /**
-     * Parses given string to a {@link JsonObject}.
-     *
-     * @param json The JSON string to parse.
-     * @return The parsed JSON object.
-     * @throws AIApiResponseException If the string cannot be parsed as JSON.
-     */
-    protected static JsonObject parseJson(String json) throws AIApiResponseException {
-        var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some APIs stubbornly put JSON in markdown formatting like ```json\n{...}\n```.
-
-        try (var reader = Json.createReader(new StringReader(sanitizedJson))) {
-            return reader.readObject();
-        }
-        catch (Exception e) {
-            throw new AIApiResponseException("Cannot parse json " + json, e);
-        }
-    }
-
-    /**
-     * Extracts a string value from a JSON object using a dot-separated path.
-     * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     *
-     * @param root The JSON object to extract from.
-     * @param path The dot-separated path to the value, with optional array indices in brackets.
-     * @return The stripped string value at the path, or {@code null} if the path doesn't exist, is null, or is empty.
-     */
-    protected static String extractByPath(JsonObject root, String path) {
-        JsonValue current = root;
-
-        for (var segment : path.split("\\.")) {
-            if (!(current instanceof JsonObject || current instanceof JsonArray)) {
-                return null;
-            }
-
-            var startBracket = segment.indexOf('[');
-
-            if (startBracket >= 0) {
-                var key = segment.substring(0, startBracket);
-                var endBracket = segment.indexOf(']', startBracket);
-                var index = Integer.parseInt(segment.substring(startBracket + 1, endBracket));
-                var jsonObject = current.asJsonObject();
-
-                if (!jsonObject.containsKey(key) || jsonObject.isNull(key)) {
-                    return null;
-                }
-
-                var array = jsonObject.getJsonArray(key);
-
-                if (array == null || index < 0 || index >= array.size()) {
-                    return null;
-                }
-
-                current = array.get(index);
-            }
-            else {
-                var jsonObject = current.asJsonObject();
-
-                if (!jsonObject.containsKey(segment) || jsonObject.isNull(segment)) {
-                    return null;
-                }
-
-                current = jsonObject.get(segment);
-            }
-        }
-
-        if (current == null) {
-            return null;
-        }
-
-        var string = current instanceof JsonString jsonString ? jsonString.getString() : current.toString();
-        return isBlank(string) ? null : string.strip();
-    }
-
-
-    // Image Helper Methods (copied from OmniFaces GraphicResource) ---------------------------------------------------
-
-    private static final String WEBP_MIME_TYPE = "image/webp";
-    private static final String JPEG_MIME_TYPE = "image/jpeg";
-    private static final String PNG_MIME_TYPE = "image/png";
-    private static final String GIF_MIME_TYPE = "image/gif";
-    private static final String BMP_MIME_TYPE = "image/bmp";
-
-    private static final Map<String, String> MIME_TYPES_BY_BASE64_HEADER = Map.of(
-        "UklGR", WEBP_MIME_TYPE,
-        "/9j/", JPEG_MIME_TYPE,
-        "iVBORw", PNG_MIME_TYPE,
-        "R0lGOD", GIF_MIME_TYPE,
-        "Qk0", BMP_MIME_TYPE
-    );
-
-    private static final Set<String> MIME_TYPES_SUPPORTING_ALPHA_CHANNEL = Set.of(PNG_MIME_TYPE, GIF_MIME_TYPE);
-    private static final Set<String> MIME_TYPES_NEEDING_CONVERSION_TO_PNG = Set.of(GIF_MIME_TYPE, BMP_MIME_TYPE);
-
-    /**
-     * Converts the given image bytes to a Base64 string.
-     * This will automatically remove any alpha channel from images supporting these.
-     * This will automatically convert unsupported image types to PNG as far as possible.
-     *
-     * @param image The image bytes.
-     * @return The Base64 encoded string.
-     * @throws AIException when image format is not supported or cannot be converted.
-     */
-    protected static String toImageBase64(byte[] image) {
-        var base64 = encodeBase64(image);
-        var mimeType = guessImageMimeType(base64);
-
-        if (MIME_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mimeType)) {
-            base64 = encodeBase64(removeAnyAlphaChannel(image));
-        }
-        else if (MIME_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mimeType)) {
-            base64 = encodeBase64(convertToPng(image));
-        }
-
-        return base64;
-    }
-
-    private static String encodeBase64(byte[] bytes) {
-        return Base64.getEncoder().encodeToString(bytes);
-    }
-
-    /**
-     * Guesses the MIME type of an image based on its Base64 encoded header.
-     *
-     * @param base64 The Base64 encoded image string.
-     * @return The guessed MIME type.
-     * @throws AIException when the image is not recognized.
-     */
-    protected static String guessImageMimeType(String base64) {
-        for (var contentTypeByBase64Header : MIME_TYPES_BY_BASE64_HEADER.entrySet()) {
-            if (base64.startsWith(contentTypeByBase64Header.getKey())) {
-                return contentTypeByBase64Header.getValue();
-            }
-        }
-
-        throw new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG.");
-    }
-
-    /**
-     * Converts the given image bytes to a data URI.
-     * This will automatically remove any alpha channel from images supporting these.
-     * This will automatically convert unsupported image types to PNG as far as possible.
-     *
-     * @param image The image bytes.
-     * @return The data URI string in the format {@code data:<mime-type>;base64,<data>}.
-     * @throws AIException when image format is not supported or cannot be converted.
-     */
-    protected static String toImageDataUri(byte[] image) {
-        var base64 = toImageBase64(image);
-        var mimeType = guessImageMimeType(base64);
-        return "data:" + mimeType + ";base64," + base64;
-    }
-
-    /**
-     * Some models can't deal with alpha channels found in some PNG/GIF images, so we make sure we remove it beforehand (and we convert GIF to PNG immediately).
-     */
-    private static byte[] removeAnyAlphaChannel(byte[] image) {
-        try {
-            var input = ImageIO.read(new ByteArrayInputStream(image));
-            var rgbOnly = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
-            var graphics = rgbOnly.createGraphics();
-            graphics.setColor(Color.WHITE);
-            graphics.fillRect(0, 0, rgbOnly.getWidth(), rgbOnly.getHeight());
-            graphics.drawImage(input, 0, 0, null);
-            graphics.dispose();
-            return saveAsPng(rgbOnly);
-        }
-        catch (Exception e) {
-            throw new AIException("Cannot remove alpha channel from image", e);
-        }
-    }
-
-    /**
-     * Some models don't support legacy image formats like GIF/BMP, so we proactively convert these to PNG.
-     */
-    private static byte[] convertToPng(byte[] image) {
-        try {
-            return saveAsPng(ImageIO.read(new ByteArrayInputStream(image)));
-        }
-        catch (Exception e) {
-            throw new AIException("Cannot convert image to PNG", e);
-        }
-    }
-
-    private static byte[] saveAsPng(BufferedImage image) throws IOException {
-        var output = new ByteArrayOutputStream();
-        ImageIO.write(image, "PNG", output);
-        return output.toByteArray();
-    }
 }

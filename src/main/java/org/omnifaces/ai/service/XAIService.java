@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.service;
 
+import static org.omnifaces.ai.helper.StringHelper.isBlank;
+
 import java.util.Set;
 
 import jakarta.json.Json;

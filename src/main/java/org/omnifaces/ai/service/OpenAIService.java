@@ -12,6 +12,11 @@
  */
 package org.omnifaces.ai.service;
 
+import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
+import static org.omnifaces.ai.helper.JsonHelper.isEmpty;
+import static org.omnifaces.ai.helper.JsonHelper.parseJson;
+import static org.omnifaces.ai.helper.StringHelper.isBlank;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

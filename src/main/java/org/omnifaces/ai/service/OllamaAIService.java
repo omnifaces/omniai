@@ -12,6 +12,9 @@
  */
 package org.omnifaces.ai.service;
 
+import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
+import static org.omnifaces.ai.helper.StringHelper.isBlank;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 

@@ -27,8 +27,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import org.omnifaces.ai.exception.AIApiException;
 import org.omnifaces.ai.exception.AIApiBadRequestException;
+import org.omnifaces.ai.exception.AIApiException;
 import org.omnifaces.ai.exception.AIException;
 
 /**
