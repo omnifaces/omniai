@@ -573,6 +573,7 @@ public abstract class BaseAIService implements AIService {
      * Returns all possible paths to the error message in the JSON response of {@link #asyncPostAndExtractMessageContent(String, String)} and
      * {@link #asyncPostAndExtractImageContent(String, String)}. May be empty.
      * Used by {@link #extractMessageContent(String)} and {@link #extractImageContent(String)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * The default implementation returns {@code "error.message"} and {@code "error"}.
      * @return all possible paths to the error message in the JSON response of {@link #asyncPostAndExtractMessageContent(String, String)} and
      * {@link #asyncPostAndExtractImageContent(String, String)}.
@@ -584,6 +585,7 @@ public abstract class BaseAIService implements AIService {
     /**
      * Returns all possible paths to the message content in the JSON response of {@link #asyncPostAndExtractMessageContent(String, String)}.
      * May not be empty. Used by {@link #extractMessageContent(String)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @return all possible paths to the message content in the JSON response of {@link #asyncPostAndExtractMessageContent(String, String)}.
      */
     protected abstract List<String> getResponseMessageContentPaths();
@@ -591,6 +593,7 @@ public abstract class BaseAIService implements AIService {
     /**
      * Returns all possible paths to the image content in the JSON response of {@link #asyncPostAndExtractImageContent(String, String)}.
      * May not be empty. Used by {@link #extractImageContent(String)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @return all possible paths to the image content in the JSON response of {@link #asyncPostAndExtractImageContent(String, String)}.
      */
     protected abstract List<String> getResponseImageContentPaths();
