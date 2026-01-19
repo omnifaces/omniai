@@ -304,7 +304,7 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Estimates the maximum number of tokens for {@link #detectLanguageAsync(String, int)}.
+     * Estimates the maximum number of tokens for {@link #detectLanguageAsync(String)}.
      * You can override this method to customize the estimation.
      *
      * @return Estimated maximum number of tokens.
