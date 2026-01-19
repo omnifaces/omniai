@@ -192,19 +192,23 @@ public record AIModelVersion(String modelName, int majorVersion, int minorVersio
      * Extracts the prefix of a model name before the first digit (major version).
      *
      * @param fullModelName The full model name.
-     * @return The prefix before the major version number (e.g., model for "model-4.5").
+     * @return The prefix before the major version number, excluding trailing non-letter characters (e.g., "anthropic.claude" for "anthropic.claude-3-haiku").
      */
     private static String getModelPrefix(String fullModelName) {
-        var prefix = new StringBuilder();
+        var lastLetterIndex = -1;
 
-        for (var c : fullModelName.toCharArray()) {
+        for (var i = 0; i < fullModelName.length(); i++) {
+            var c = fullModelName.charAt(i);
+
             if (Character.isDigit(c)) {
                 break;
             }
-            prefix.append(c);
+            else if (Character.isLetter(c)) {
+                lastLetterIndex = i;
+            }
         }
 
-        return prefix.toString();
+        return lastLetterIndex >= 0 ? fullModelName.substring(0, lastLetterIndex + 1) : fullModelName;
     }
 
     /**

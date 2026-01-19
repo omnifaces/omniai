@@ -16,7 +16,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_gptMini() {
         var version = AIModelVersion.of("gpt-5-mini");
-        assertEquals("gpt-", version.modelName());
+        assertEquals("gpt", version.modelName());
         assertEquals(5, version.majorVersion());
         assertEquals(0, version.minorVersion());
     }
@@ -24,7 +24,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_claudeSonnet() {
         var version = AIModelVersion.of("claude-sonnet-4-5-20250929");
-        assertEquals("claude-sonnet-", version.modelName());
+        assertEquals("claude-sonnet", version.modelName());
         assertEquals(4, version.majorVersion());
         assertEquals(5, version.minorVersion());
     }
@@ -32,7 +32,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_geminiFlash() {
         var version = AIModelVersion.of("gemini-2.5-flash");
-        assertEquals("gemini-", version.modelName());
+        assertEquals("gemini", version.modelName());
         assertEquals(2, version.majorVersion());
         assertEquals(5, version.minorVersion());
     }
@@ -40,7 +40,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_grokFastReasoning() {
         var version = AIModelVersion.of("grok-4-1-fast-reasoning");
-        assertEquals("grok-", version.modelName());
+        assertEquals("grok", version.modelName());
         assertEquals(4, version.majorVersion());
         assertEquals(1, version.minorVersion());
     }
@@ -48,7 +48,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_llamaScout() {
         var version = AIModelVersion.of("Llama-4-Scout-17B-16E-Instruct-FP8");
-        assertEquals("Llama-", version.modelName());
+        assertEquals("Llama", version.modelName());
         assertEquals(4, version.majorVersion());
         assertEquals(0, version.minorVersion());
     }
@@ -56,7 +56,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_googleGemma() {
         var version = AIModelVersion.of("google/gemma-3-27b-it:free");
-        assertEquals("google/gemma-", version.modelName());
+        assertEquals("google/gemma", version.modelName());
         assertEquals(3, version.majorVersion());
         assertEquals(27, version.minorVersion());
     }
@@ -67,6 +67,14 @@ class AIModelVersionTest {
         assertEquals("llama", version.modelName());
         assertEquals(3, version.majorVersion());
         assertEquals(2, version.minorVersion());
+    }
+
+    @Test
+    void ofFullModelName_bedrockClaude() {
+        var version = AIModelVersion.of("anthropic.claude-3-haiku-20240307-v1:0");
+        assertEquals("anthropic.claude", version.modelName());
+        assertEquals(3, version.majorVersion());
+        assertEquals(0, version.minorVersion());
     }
 
     // =================================================================================================================
@@ -130,7 +138,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_multiDigitMajor() {
         var version = AIModelVersion.of("model-123.456");
-        assertEquals("model-", version.modelName());
+        assertEquals("model", version.modelName());
         assertEquals(123, version.majorVersion());
         assertEquals(456, version.minorVersion());
     }
@@ -138,7 +146,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_underscoreSeparator() {
         var version = AIModelVersion.of("model-4_5");
-        assertEquals("model-", version.modelName());
+        assertEquals("model", version.modelName());
         assertEquals(4, version.majorVersion());
         assertEquals(5, version.minorVersion());
     }
@@ -146,7 +154,7 @@ class AIModelVersionTest {
     @Test
     void ofFullModelName_letterAfterMajor() {
         var version = AIModelVersion.of("gpt-4o");
-        assertEquals("gpt-", version.modelName());
+        assertEquals("gpt", version.modelName());
         assertEquals(4, version.majorVersion());
         assertEquals(0, version.minorVersion());
     }
@@ -386,6 +394,15 @@ class AIModelVersionTest {
         assertFalse(v1.eq(v2));
     }
 
+    @Test
+    void modelMatching_bedrockClaudeMatchesClaude() {
+        var v1 = AIModelVersion.of("claude", 3, 0);
+        var v2 = AIModelVersion.of("anthropic.claude-3-haiku-20240307-v1:0");
+        assertTrue(v1.lte(v2));
+        assertTrue(v2.gte(v1));
+        assertTrue(v1.eq(v2));
+    }
+
     // =================================================================================================================
     // Test compareTo (Comparable interface)
     // =================================================================================================================
@@ -469,6 +486,13 @@ class AIModelVersionTest {
         var minimum = AIModelVersion.of("gpt", 5, 0);
         var actual = AIModelVersion.of("gpt-4o");
         assertFalse(minimum.lte(actual));
+    }
+
+    @Test
+    void realWorld_checkMinimumBedrockClaudeVersion() {
+        var minimum = AIModelVersion.of("claude", 3, 0);
+        var actual = AIModelVersion.of("anthropic.claude-3-haiku-20240307-v1:0");
+        assertTrue(minimum.lte(actual));
     }
 
     // =================================================================================================================
