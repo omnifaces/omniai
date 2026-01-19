@@ -12,7 +12,6 @@
  */
 package org.omnifaces.ai.service;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -108,7 +107,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException {
         if (isEmpty(text)) {
-            return completedFuture("");
+            throw new IllegalArgumentException("Text cannot be empty");
         }
 
         var options = ChatOptions.newBuilder()
@@ -153,7 +152,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException {
         if (isEmpty(text)) {
-            return completedFuture(emptyList());
+            throw new IllegalArgumentException("Text cannot be empty");
         }
 
         var options = ChatOptions.newBuilder()
@@ -162,7 +161,7 @@ public abstract class BaseAIService implements AIService {
             .maxTokens(estimateExtractKeyPointsMaxTokens(maxPoints))
             .build();
 
-        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.trim()).filter(not(BaseAIService::isEmpty)).toList());
+        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(BaseAIService::isEmpty)).toList());
     }
 
     /**
@@ -199,7 +198,11 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
         if (isEmpty(text)) {
-            return completedFuture("");
+            throw new IllegalArgumentException("Text cannot be empty");
+        }
+
+        if (isEmpty(targetLang)) {
+            throw new IllegalArgumentException("Target language cannot be empty");
         }
 
         var options = ChatOptions.newBuilder()
@@ -257,7 +260,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> detectLanguageAsync(String text) throws AIException {
         if (isEmpty(text)) {
-            return completedFuture(null);
+            throw new IllegalArgumentException("Text cannot be empty");
         }
 
         var options = ChatOptions.newBuilder()
@@ -271,7 +274,7 @@ public abstract class BaseAIService implements AIService {
                 throw new AIApiResponseException("Response is empty");
             }
 
-            return response.trim().toLowerCase().replaceAll("[^a-z]", "");
+            return response.strip().toLowerCase().replaceAll("[^a-z]", "");
         });
     }
 
@@ -306,7 +309,11 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
-        if (isEmpty(content) || options.getCategories().isEmpty()) {
+        if (isEmpty(content)) {
+            throw new IllegalArgumentException("Content cannot be empty");
+        }
+
+        if (options.getCategories().isEmpty()) {
             return completedFuture(ModerationResult.SAFE);
         }
 
@@ -583,16 +590,16 @@ public abstract class BaseAIService implements AIService {
     // Text/JSON Helper Methods ---------------------------------------------------------------------------------------
 
     /**
-     * Returns whether the given object is empty. Supports currently only {@link String} and {@link JsonArray}.
+     * Returns whether the given object is empty/blank. Supports currently only {@link String} and {@link JsonArray}.
      * @param object Object to check.
-     * @return Whether the given object is empty. Supports currently only {@link String} and {@link JsonArray}.
+     * @return Whether the given object is empty/blank. Supports currently only {@link String} and {@link JsonArray}.
      */
     protected static boolean isEmpty(Object object) {
         if (object == null) {
             return true;
         }
         else if (object instanceof String string) {
-            return string.trim().isBlank();
+            return string.isBlank();
         }
         else if (object instanceof JsonArray array) {
             return array.isEmpty();
@@ -627,7 +634,7 @@ public abstract class BaseAIService implements AIService {
      *
      * @param root The JSON object to extract from.
      * @param path The dot-separated path to the value, with optional array indices in brackets.
-     * @return The trimmed string value at the path, or {@code null} if the path doesn't exist, is null, or is empty.
+     * @return The stripped string value at the path, or {@code null} if the path doesn't exist, is null, or is empty.
      */
     protected static String extractByPath(JsonObject root, String path) {
         JsonValue current = root;
@@ -673,7 +680,7 @@ public abstract class BaseAIService implements AIService {
         }
 
         var string = current instanceof JsonString jsonString ? jsonString.getString() : current.toString();
-        return isEmpty(string) ? null : string.trim();
+        return isEmpty(string) ? null : string.strip();
     }
 
 

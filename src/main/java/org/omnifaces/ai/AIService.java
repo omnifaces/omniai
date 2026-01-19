@@ -48,6 +48,7 @@ public interface AIService extends Serializable {
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
      * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      * @throws AIException if the chat request fails.
      */
@@ -69,6 +70,7 @@ public interface AIService extends Serializable {
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      */
     CompletableFuture<String> chatAsync(String message, ChatOptions options);
@@ -78,6 +80,7 @@ public interface AIService extends Serializable {
      *
      * @param message The user's message to send to the AI.
      * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      * @throws AIException if the chat request fails.
      */
@@ -95,6 +98,7 @@ public interface AIService extends Serializable {
      *
      * @param message The user's message to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      */
     default CompletableFuture<String> chatAsync(String message) {
@@ -110,6 +114,7 @@ public interface AIService extends Serializable {
      * @param text The text to summarize.
      * @param maxWords Maximum number of words in the summary.
      * @return The summarized text, never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if summarization capability is not supported by the implementation.
      * @throws AIException if summarization fails.
      */
@@ -128,6 +133,7 @@ public interface AIService extends Serializable {
      * @param text The text to summarize.
      * @param maxWords Maximum number of words in the summary.
      * @return A CompletableFuture that will contain the summarized text, never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if summarization capability is not supported by the implementation.
      */
     CompletableFuture<String> summarizeAsync(String text, int maxWords);
@@ -138,6 +144,7 @@ public interface AIService extends Serializable {
      * @param text The text to extract key points from.
      * @param maxPoints Maximum number of key points to extract.
      * @return List of key points, never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if key point extraction capability is not supported by the implementation.
      * @throws AIException if extraction fails.
      */
@@ -156,6 +163,7 @@ public interface AIService extends Serializable {
      * @param text The text to extract key points from.
      * @param maxPoints Maximum number of key points to extract.
      * @return A CompletableFuture that will contain a list of key points, never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if key point extraction capability is not supported by the implementation.
      */
     CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints);
@@ -170,6 +178,7 @@ public interface AIService extends Serializable {
      * @param sourceLang Source language code (ISO 639-1), or {@code null} for auto-detection.
      * @param targetLang Target language code (ISO 639-1).
      * @return The translated text, never {@code null}.
+     * @throws IllegalArgumentException if text or targetLang is blank.
      * @throws UnsupportedOperationException if translation capability is not supported by the implementation.
      * @throws AIException if translation fails.
      */
@@ -189,6 +198,7 @@ public interface AIService extends Serializable {
      * @param sourceLang Source language code (ISO 639-1), or {@code null} for auto-detection.
      * @param targetLang Target language code (ISO 639-1).
      * @return A CompletableFuture that will contain the translated text, never {@code null}.
+     * @throws IllegalArgumentException if text or targetLang is blank.
      * @throws UnsupportedOperationException if translation capability is not supported by the implementation.
      */
     CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang);
@@ -198,6 +208,7 @@ public interface AIService extends Serializable {
      *
      * @param text The text to analyze.
      * @return The detected language code (ISO 639-1), never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if language detection capability is not supported by the implementation.
      * @throws AIException if language detection fails.
      */
@@ -215,6 +226,7 @@ public interface AIService extends Serializable {
      *
      * @param text The text to analyze.
      * @return A CompletableFuture that will contain the detected language code (ISO 639-1), never {@code null}.
+     * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if language detection capability is not supported by the implementation.
      */
     CompletableFuture<String> detectLanguageAsync(String text);
@@ -228,6 +240,7 @@ public interface AIService extends Serializable {
      * @param content The content to moderate.
      * @param options Moderation options (categories to check, threshold, etc.).
      * @return Moderation result with detected violations, never {@code null}.
+     * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation capability is not supported by the implementation.
      * @throws AIException if moderation fails.
      */
@@ -246,6 +259,7 @@ public interface AIService extends Serializable {
      * @param content The content to moderate.
      * @param options Moderation options (categories to check, threshold, etc.).
      * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
+     * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation capability is not supported by the implementation.
      */
     CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options);
@@ -257,6 +271,7 @@ public interface AIService extends Serializable {
      *
      * @param content The content to moderate.
      * @return Moderation result with detected violations, never {@code null}.
+     * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation capability is not supported by the implementation.
      * @throws AIException if moderation fails.
      */
@@ -276,6 +291,7 @@ public interface AIService extends Serializable {
      *
      * @param content The content to moderate.
      * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
+     * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation capability is not supported by the implementation.
      */
     default CompletableFuture<ModerationResult> moderateContentAsync(String content) {
@@ -293,6 +309,7 @@ public interface AIService extends Serializable {
      * @param image The image bytes to analyze.
      * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"), or {@code null} for a general description.
      * @return Description of the image, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image analysis capability is not supported by the implementation.
      * @throws AIException if image analysis fails.
      */
@@ -313,6 +330,7 @@ public interface AIService extends Serializable {
      * @param image The image bytes to analyze.
      * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"), or {@code null} for a general description.
      * @return A CompletableFuture that will contain the description of the image, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image analysis capability is not supported by the implementation.
      */
     CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt);
@@ -352,6 +370,7 @@ public interface AIService extends Serializable {
      * @param prompt The text prompt describing the image to generate.
      * @param options Image generation options (size, quality, style, etc.).
      * @return Generated image bytes, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation capability is not supported by the implementation.
      * @throws AIException if image generation fails.
      */
@@ -370,6 +389,7 @@ public interface AIService extends Serializable {
      * @param prompt The text prompt describing the image to generate.
      * @param options Image generation options (size, quality, style, etc.).
      * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation capability is not supported by the implementation.
      */
     CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options);
@@ -379,6 +399,7 @@ public interface AIService extends Serializable {
      *
      * @param prompt The text prompt describing the image to generate.
      * @return Generated image bytes, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation capability is not supported by the implementation.
      * @throws AIException if image generation fails.
      */
@@ -396,6 +417,7 @@ public interface AIService extends Serializable {
      *
      * @param prompt The text prompt describing the image to generate.
      * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
+     * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation capability is not supported by the implementation.
      */
     default CompletableFuture<byte[]> generateImageAsync(String prompt) {

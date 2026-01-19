@@ -55,26 +55,26 @@ public record AIConfig(String provider, String apiKey, String model, String endp
     public static final String PROPERTY_PROMPT = PROPERTY_PREFIX + "PROMPT";
 
     public AIConfig {
-        provider = trimToNull(provider);
-        apiKey = trimToNull(apiKey);
-        model = trimToNull(model);
-        endpoint = trimToNull(endpoint);
-        prompt = trimToNull(prompt);
+        provider = stripToNull(provider);
+        apiKey = stripToNull(apiKey);
+        model = stripToNull(model);
+        endpoint = stripToNull(endpoint);
+        prompt = stripToNull(prompt);
         properties = properties == null ? emptyMap() : properties.entrySet().stream()
                 .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
-                .collect(toUnmodifiableMap(e -> e.getKey().trim(), e -> e.getValue().trim()));
+                .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
     }
 
     private static boolean isBlank(String string) {
-        return string == null || string.trim().isBlank();
+        return string == null || string.isBlank();
     }
 
-    private static String trimToNull(String string) {
+    private static String stripToNull(String string) {
         if (string == null) {
             return null;
         }
-        var trimmed = string.trim();
-        return trimmed.isBlank() ? null : trimmed;
+        var stripped = string.strip();
+        return stripped.isEmpty() ? null : stripped;
     }
 
     /**
@@ -237,10 +237,10 @@ public record AIConfig(String provider, String apiKey, String model, String endp
      */
     public AIConfig withProperty(String key, String value) {
         if (isBlank(key) || isBlank(value)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("key or value cannot be blank");
         }
         var newProperties = new HashMap<String, String>(properties);
-        newProperties.put(key.trim(), value.trim());
+        newProperties.put(key.strip(), value.strip());
         return withProperties(newProperties);
     }
 

@@ -38,7 +38,7 @@ class ExpressionResolver {
         elProcessor.getELManager().addELResolver(((ELAwareBeanManager) beanManager).getELResolver());
 
         while (matcher.find()) {
-            var expression = matcher.group(2).trim();
+            var expression = matcher.group(2).strip();
 
             try {
                 var result = elProcessor.eval(expression);

@@ -78,17 +78,17 @@ class AIServiceProducer {
      * Resolves EL expressions in the given value.
      * @param beanManager The CDI bean manager for EL resolution.
      * @param value The value, possibly containing an EL expression.
-     * @return The resolved value, or {@code null} if the input is empty.
+     * @return The resolved value, or {@code null} if the input is blank.
      */
     private static String resolveELIfNecessary(BeanManager beanManager, String value) {
-        if (value == null || value.trim().isBlank()) {
+        if (value == null || value.isBlank()) {
             return null;
         }
 
-        var trimmed = value.trim();
+        var stripped = value.strip();
 
-        if (!value.contains("#{") && !value.contains("${")) {
-            return trimmed;
+        if (!stripped.contains("#{") && !stripped.contains("${")) {
+            return stripped;
         }
 
         if (!isELAwareBeanManagerAvailable(beanManager)) {
@@ -101,7 +101,7 @@ class AIServiceProducer {
                     + " E.g. org.glassfish.expressly:expressly:6.0.0");
         }
 
-        return ExpressionResolver.resolveEL(beanManager, trimmed);
+        return ExpressionResolver.resolveEL(beanManager, stripped);
     }
 
     private static boolean isJsonAvailable() {

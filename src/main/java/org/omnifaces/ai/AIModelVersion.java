@@ -20,7 +20,7 @@ import java.io.Serializable;
  * This record can be used to check version requirements against an {@link AIService}. Comparison methods first verify that the service's model name prefix (the
  * part before the major version number) contains this version's model name, then compare version numbers.
  *
- * @param modelName The name of the AI model to match against, may not be blank.
+ * @param modelName The name of the AI model to match against, may not be empty.
  * @param majorVersion The major version number, may not be negative.
  * @param minorVersion The minor version number, may not be negative.
  * @author Bauke Scholtz
@@ -32,10 +32,10 @@ public record AIModelVersion(String modelName, int majorVersion, int minorVersio
     /**
      * Validates and normalizes the record components.
      *
-     * @throws IllegalArgumentException if modelName is null or blank, or if majorVersion or minorVersion is negative.
+     * @throws IllegalArgumentException if modelName is blank, or if majorVersion or minorVersion is negative.
      */
     public AIModelVersion {
-        if (modelName == null || modelName.trim().isBlank()) {
+        if (modelName == null || modelName.isBlank()) {
             throw new IllegalArgumentException("Model name may not be blank");
         }
         if (majorVersion < 0) {
@@ -44,7 +44,7 @@ public record AIModelVersion(String modelName, int majorVersion, int minorVersio
         if (minorVersion < 0) {
             throw new IllegalArgumentException("Minor version may not be negative");
         }
-        modelName = modelName.trim();
+        modelName = modelName.strip();
     }
 
     /**
