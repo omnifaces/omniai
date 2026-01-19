@@ -102,7 +102,6 @@ public class GoogleAIService extends BaseAIService {
 
         var payload = Json.createObjectBuilder();
 
-        // Use the native system_instruction block if available
         if (!isEmpty(options.getSystemPrompt())) {
             payload.add("system_instruction", Json.createObjectBuilder()
                 .add("parts", Json.createArrayBuilder()
@@ -112,6 +111,7 @@ public class GoogleAIService extends BaseAIService {
 
         payload.add("contents", Json.createArrayBuilder()
             .add(Json.createObjectBuilder()
+                .add("role", "user")
                 .add("parts", Json.createArrayBuilder()
                     .add(Json.createObjectBuilder()
                         .add("text", message)))));
@@ -124,12 +124,7 @@ public class GoogleAIService extends BaseAIService {
             generationConfig.add("topP", options.getTopP());
         }
 
-        return Json.createObjectBuilder()
-            .add("contents", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("parts", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("text", message)))))
+        return payload
             .add("generationConfig", generationConfig)
             .build()
             .toString();
