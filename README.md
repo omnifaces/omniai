@@ -17,7 +17,7 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 <dependency>
     <groupId>org.omnifaces</groupId>
     <artifactId>omniai</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-M1</version>
 </dependency>
 ```
 
