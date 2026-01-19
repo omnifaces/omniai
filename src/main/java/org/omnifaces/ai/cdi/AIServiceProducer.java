@@ -38,7 +38,7 @@ import org.omnifaces.ai.AIService;
  * @see AIService
  */
 @ApplicationScoped
-public class AIServiceProducer {
+class AIServiceProducer {
 
     private final Map<AIConfig, AIService> serviceCache = new ConcurrentHashMap<>();
 
