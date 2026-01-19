@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai;
 
+import java.io.Serializable;
+
 /**
  * A record that holds AI model version information and provides comparison utilities.
  * <p>
@@ -25,7 +27,7 @@ package org.omnifaces.ai;
  * @since 1.0
  * @see AIService#getAIModelVersion()
  */
-public record AIModelVersion(String modelName, int majorVersion, int minorVersion) implements Comparable<AIModelVersion> {
+public record AIModelVersion(String modelName, int majorVersion, int minorVersion) implements Comparable<AIModelVersion>, Serializable {
 
     /**
      * Validates and normalizes the record components.
