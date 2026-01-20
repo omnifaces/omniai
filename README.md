@@ -7,7 +7,7 @@ A unified Java AI utility library for Jakarta EE applications.
 
 ## Overview
 
-OmniAI provides a single, consistent API to interact with multiple AI providers.
+OmniAI provides a single, consistent API to interact with multiple AI providers. It achieves that by interacting with their REST API endpoints directly.
 
 ## Requirements
 
