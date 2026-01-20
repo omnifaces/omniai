@@ -1,3 +1,6 @@
+[![Maven](https://img.shields.io/maven-central/v/org.omnifaces/omniai)](https://search.maven.org/artifact/org.omnifaces/omniai)
+[![Javadoc](http://javadoc.io/badge/org.omnifaces/omniai.svg)](http://javadoc.io/doc/org.omnifaces/omniai) 
+
 # OmniAI
 
 A unified Java AI utility library for Jakarta EE applications.
