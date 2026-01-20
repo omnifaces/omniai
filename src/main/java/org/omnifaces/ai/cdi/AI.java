@@ -32,10 +32,17 @@ import org.omnifaces.ai.ChatOptions;
 /**
  * CDI qualifier annotation for injecting configured {@link AIService} instances.
  * <p>
- * Usage example:
+ * Usage example with built-in provider:
  * <pre>
  * &#64;Inject
  * &#64;AI(provider = ANTHROPIC, apiKey = "#{config.anthropicApiKey}")
+ * private AIService ai;
+ * </pre>
+ * <p>
+ * Usage example with custom service class:
+ * <pre>
+ * &#64;Inject
+ * &#64;AI(serviceClass = MyCustomAIService.class)
  * private AIService ai;
  * </pre>
  * <p>
@@ -53,12 +60,22 @@ import org.omnifaces.ai.ChatOptions;
 public @interface AI {
 
     /**
-     * The AI provider to use. Defaults to {@link AIProvider#OPENAI}. You cannot use {@link AIProvider#CUSTOM}.
+     * The AI provider to use. Defaults to {@link AIProvider#OPENAI}. Do not use {@link AIProvider#CUSTOM}, use {@link #serviceClass()} instead.
      *
      * @return The AI provider.
      */
     @Nonbinding
     AIProvider provider() default AIProvider.OPENAI;
+
+    /**
+     * Custom AIService implementation class.
+     * Use this instead of {@link #provider()} when you have a custom implementation.
+     * If specified (not {@link AIService AIService.class}), the {@link #provider()} is ignored.
+     *
+     * @return The custom service class, or {@link AIService AIService.class} if not specified.
+     */
+    @Nonbinding
+    Class<? extends AIService> serviceClass() default AIService.class;
 
     /**
      * The API key. Supports EL expressions.

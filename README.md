@@ -184,10 +184,20 @@ All methods have async variants returning `CompletableFuture` (e.g., `summarizeA
 
 ## Custom Providers
 
-Implement `AIService` or extend `BaseAIService` and use the fully qualified class name as the provider:
+Implement `AIService` or extend `BaseAIService`:
+
+### Programmatic Configuration
 
 ```java
 AIService service = AIConfig.of("com.example.MyCustomAIService", "api-key").createService();
+```
+
+### CDI Integration
+
+```java
+@Inject
+@AI(serviceClass = MyCustomAIService.class, apiKey = "#{config.apiKey}")
+private AIService custom;
 ```
 
 ## OmniAI vs LangChain4J vs Spring AI vs Jakarta Agentic

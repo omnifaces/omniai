@@ -14,6 +14,7 @@ package org.omnifaces.ai;
 
 import static java.util.Arrays.stream;
 
+import org.omnifaces.ai.cdi.AI;
 import org.omnifaces.ai.service.AnthropicAIService;
 import org.omnifaces.ai.service.AzureAIService;
 import org.omnifaces.ai.service.GoogleAIService;
@@ -121,7 +122,8 @@ public enum AIProvider {
     OLLAMA("Ollama", OllamaAIService.class, false, "llama3.2", "http://localhost:11434"),
 
     /**
-     * Custom: provide the FQN of your custom {@link AIService} implementation as the provider in {@link AIConfig}.
+     * Custom: provide the FQN of your custom {@link AIService} implementation as the provider in {@link AIConfig},
+     * or use {@link AI#serviceClass()} when using CDI injection.
      * If you have a great one, feel free to submit it to OmniAI so it ends up as a new enum entry here :)
      */
     CUSTOM(null, null, false, null, null);

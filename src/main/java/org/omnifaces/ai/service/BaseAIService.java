@@ -17,6 +17,8 @@ import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.function.Predicate.not;
 import static org.omnifaces.ai.AIConfig.PROPERTY_API_KEY;
+import static org.omnifaces.ai.AIConfig.PROPERTY_ENDPOINT;
+import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
@@ -89,8 +91,8 @@ public abstract class BaseAIService implements AIService {
         }
 
         this.apiKey = provider.isApiKeyRequired() ? config.require(PROPERTY_API_KEY) : config.apiKey();
-        this.model = ofNullable(config.model()).orElseGet(provider::getDefaultModel);
-        this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).orElseGet(provider::getDefaultEndpoint)));
+        this.model = ofNullable(config.model()).or(() -> ofNullable(provider.getDefaultModel())).orElseGet(() -> config.require(PROPERTY_MODEL));
+        this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))));
         this.prompt = config.prompt();
     }
 

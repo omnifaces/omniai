@@ -56,7 +56,7 @@ class AIServiceProducer {
         var annotation = injectionPoint.getAnnotated().getAnnotation(AI.class);
 
         if (annotation.provider() == AIProvider.CUSTOM) {
-            throw new IllegalArgumentException("AIProvider.CUSTOM is not supported via @AI annotation. Just make your impl @ApplicationScoped and then directly @Inject it.");
+            throw new IllegalArgumentException("AIProvider.CUSTOM is not supported via @AI annotation. Use serviceClass instead of provider.");
         }
 
         if (!isJsonAvailable()) {
@@ -64,7 +64,7 @@ class AIServiceProducer {
                     + " E.g. org.eclipse.parsson:parsson:1.1.7");
         }
 
-        var provider = annotation.provider().name();
+        var provider = annotation.serviceClass() == AIService.class ? annotation.provider().name() : annotation.serviceClass().getName();
         var apiKey = resolveELIfNecessary(beanManager, annotation.apiKey());
         var model = resolveELIfNecessary(beanManager, annotation.model());
         var endpoint = resolveELIfNecessary(beanManager, annotation.endpoint());
