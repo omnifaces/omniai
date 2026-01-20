@@ -14,8 +14,8 @@ package org.omnifaces.ai;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -44,7 +44,7 @@ public class ModerationResult implements Serializable {
      */
     public ModerationResult(boolean flagged, Map<String, Double> scores) {
         this.flagged = flagged;
-        this.scores = Collections.unmodifiableMap(new LinkedHashMap<>(scores));
+        this.scores = Collections.unmodifiableMap(new TreeMap<>(scores));
     }
 
     /**

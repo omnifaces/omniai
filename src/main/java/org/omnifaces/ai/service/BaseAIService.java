@@ -27,11 +27,12 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIConfig;
@@ -351,17 +352,21 @@ public abstract class BaseAIService implements AIService {
      * @return The system prompt.
      */
     protected String buildModerateContentPrompt(ModerationOptions options) {
+        var scores = Json.createObjectBuilder();
+        options.getCategories().forEach(category -> scores.add(category, 0.0));
+        var scoresTemplateString = Json.createObjectBuilder().add("scores", scores).build().toString();
         return """
             You are a content moderation system.
             Analyze the provided content.
             Categories: %s.
             Rules:
+            - Categories are comma separated.
             - Score each category from 0.0 (none) to 1.0 (very strong).
-            - Collect the scores in a JSON format like this example: `{"scores": {"hate": 0.05, "violence": 0.12, ...}}`
+            - Collect all the scores in a JSON format using this template: `%s`
             Output format:
             - Only the scores in JSON format.
             - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(String.join(", " + options.getCategories()));
+        """.formatted(String.join(", ", options.getCategories()), scoresTemplateString);
     }
 
     /**
@@ -386,7 +391,7 @@ public abstract class BaseAIService implements AIService {
      */
     protected ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIApiResponseException {
         var responseJson = parseJson(responseBody);
-        var scores = new HashMap<String, Double>();
+        var scores = new TreeMap<String, Double>();
         var flagged = false;
 
         if (responseJson.containsKey("scores")) {

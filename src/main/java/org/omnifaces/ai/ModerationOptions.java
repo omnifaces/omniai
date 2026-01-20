@@ -13,13 +13,13 @@
 package org.omnifaces.ai;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.TreeSet;
 
 /**
  * Options for AI content moderation.
@@ -55,10 +55,10 @@ public class ModerationOptions implements Serializable {
         PROFANITY("profanity", false);
 
         /** All category names. */
-        public static final Set<String> ALL_CATEGORY_NAMES = Arrays.stream(values()).map(Category::getName).collect(Collectors.toUnmodifiableSet());
+        public static final Set<String> ALL_CATEGORY_NAMES = Set.copyOf(Arrays.stream(values()).map(Category::getName).collect(toCollection(TreeSet::new)));
 
         /** Category names supported by OpenAI v1 moderation API. */
-        public static final Set<String> OPENAI_SUPPORTED_CATEGORY_NAMES = Arrays.stream(values()).filter(Category::isOpenAISupported).map(Category::getName).collect(Collectors.toUnmodifiableSet());
+        public static final Set<String> OPENAI_SUPPORTED_CATEGORY_NAMES = Set.copyOf(Arrays.stream(values()).filter(Category::isOpenAISupported).map(Category::getName).collect(toCollection(TreeSet::new)));
 
         private final String name;
         private final boolean openAISupported;
@@ -155,7 +155,7 @@ public class ModerationOptions implements Serializable {
      * Use {@link ModerationOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
-        private Set<String> categories = new HashSet<>(Category.OPENAI_SUPPORTED_CATEGORY_NAMES);
+        private Set<String> categories = new TreeSet<>(Category.OPENAI_SUPPORTED_CATEGORY_NAMES);
         private double threshold = DEFAULT_THRESHOLD;
 
         private Builder() {}
@@ -167,7 +167,7 @@ public class ModerationOptions implements Serializable {
          * @return This builder instance for chaining.
          */
         public Builder categories(Category... categories) {
-            this.categories = new HashSet<>(Arrays.stream(categories).map(Category::getName).toList());
+            this.categories = new TreeSet<>(Arrays.stream(categories).map(Category::getName).toList());
             return this;
         }
 

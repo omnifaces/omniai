@@ -184,6 +184,26 @@ public record AIConfig(String provider, String apiKey, String model, String endp
     }
 
     /**
+     * Creates a new configuration with the specified properties and default model and endpoint.
+     *
+     * @param provider The AI provider name or custom service class name.
+     * @return A new configuration instance.
+     */
+    public static AIConfig of(String provider) {
+        return of(provider, null);
+    }
+
+    /**
+     * Creates a new configuration with the specified properties and default model and endpoint.
+     *
+     * @param provider The AI provider.
+     * @return A new configuration instance.
+     */
+    public static AIConfig of(AIProvider provider) {
+        return of(provider.name());
+    }
+
+    /**
      * Creates a full property key by prepending the OmniAI property prefix.
      *
      * @param suffix The property name suffix (e.g., "AZURE_RESOURCE").
