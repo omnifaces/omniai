@@ -42,6 +42,8 @@ On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optio
 </dependency>
 ```
 
+You can also use it on Java SE, you'll still need the JSON-P implementation, but you cannot use the CDI annotation.
+
 ## Supported Providers
 
 | Provider | Default Model in OmniAI 1.0 | API Key Required | Available Models |
@@ -326,7 +328,7 @@ Yes, significantly:
 Likely yes for startup and per-request overhead:
 - No classpath scanning or proxy generation at startup
 - Minimal reflection — only used once during service instantiation, not per-request
-- No abstraction layers around HTTP — direct [`HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html) usage
+- No abstraction layers around HTTP — direct `java.net.http.HttpClient` usage
 - Simple interface dispatch, no dynamic proxies
 - Services are stateless and cached via ConcurrentHashMap
 
