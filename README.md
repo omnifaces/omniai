@@ -96,6 +96,32 @@ private AIService jakartaExpert;
 private AIService imageGenerator;
 ```
 
+### Multi-Provider Aggregation
+
+Need diverse perspectives? OmniAI makes it easy to query multiple providers and combine their responses:
+
+```java
+@Inject @AI(apiKey = "#{config.openaiApiKey}")
+private AIService gpt;
+
+@Inject @AI(provider = GOOGLE, apiKey = "#{config.googleApiKey}")
+private AIService gemini;
+
+@Inject @AI(provider = XAI, apiKey = "#{config.xaiApiKey}")
+private AIService grok;
+
+public String getConsensusAnswer(String question) {
+    var responses = Stream.of(gpt, gemini, grok)
+        .parallel()
+        .map(ai -> ai.chat(question))
+        .toList();
+
+    return gpt.summarize(String.join("\n\n", responses), 200);
+}
+```
+
+This pattern is useful for reducing bias, cross-validating answers, or getting a balanced summary from multiple AI perspectives.
+
 ## Features
 
 ### Chat
