@@ -95,7 +95,7 @@ final class AIApiClient {
                 var statusCode = response.statusCode();
 
                 if (statusCode >= AIApiBadRequestException.STATUS_CODE) {
-                    return CompletableFuture.failedFuture(AIApiException.forStatusCode(statusCode, request.uri().toString().split("\\?", 2)[0] + ": "+  response.body()));
+                    return CompletableFuture.failedFuture(AIApiException.fromStatusCode(request.uri(), statusCode, response.body()));
                 }
 
                 return CompletableFuture.completedFuture(response.body());
@@ -107,7 +107,7 @@ final class AIApiClient {
                     return CompletableFuture.failedFuture(cause);
                 }
                 else if (attempt >= MAX_RETRIES - 1 || !isRetryable(cause)) {
-                    return CompletableFuture.failedFuture(new AIApiException("Request failed (" + attempt + " retries)", cause, 0));
+                    return CompletableFuture.failedFuture(new AIApiException("Request failed (" + attempt + " retries)", cause));
                 }
 
                 var delayed = CompletableFuture.delayedExecutor(INITIAL_BACKOFF_MS * (1L << attempt), TimeUnit.MILLISECONDS);
@@ -129,6 +129,10 @@ final class AIApiClient {
             return false;
         }
 
+        System.out.println("======================================================================================");
+        throwable.printStackTrace();
+        System.out.println("======================================================================================");
+
         return Stream.iterate(throwable, Objects::nonNull, Throwable::getCause)
             .filter(IOException.class::isInstance)
             .findFirst()
@@ -137,7 +141,7 @@ final class AIApiClient {
                       .map(Throwable::getMessage)
                       .filter(Objects::nonNull)
                       .map(String::toLowerCase)
-                      .anyMatch(msg -> msg.contains("terminated") || msg.contains("reset") || msg.contains("refused"))
+                      .anyMatch(msg -> msg.contains("timed") || msg.contains("terminated") || msg.contains("reset") || msg.contains("refused"))
             )
             .orElse(false);
     }

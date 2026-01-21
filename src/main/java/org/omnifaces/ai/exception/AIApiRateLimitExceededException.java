@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.exception;
 
+import java.net.URI;
+
 /**
  * Exception thrown when the AI API returns HTTP 429 Too Many Requests.
  * <p>
@@ -28,11 +30,12 @@ public class AIApiRateLimitExceededException extends AIApiException {
     public static final int STATUS_CODE = 429;
 
     /**
-     * Constructs a new rate limit exceeded exception with the specified message.
+     * Constructs a new rate limit exceeded exception with the specified HTTP request URI and HTTP response body.
      *
-     * @param message The detail message.
+     * @param uri The HTTP request URI.
+     * @param responseBody The HTTP response body.
      */
-    public AIApiRateLimitExceededException(String message) {
-        super(message, STATUS_CODE);
+    public AIApiRateLimitExceededException(URI uri, String responseBody) {
+        super(uri, STATUS_CODE, responseBody);
     }
 }

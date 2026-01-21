@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.exception;
 
+import java.net.URI;
+
 /**
  * Exception thrown when an AI API request fails with an HTTP error status code.
  * <p>
@@ -35,48 +37,71 @@ public class AIApiException extends AIException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The HTTP request URI. */
+    private final URI uri;
+
     /** The HTTP status code. */
     private final int statusCode;
 
+    /** The HTTP response body. */
+    private final String responseBody;
+
     /**
-     * Creates the appropriate exception subclass based on the HTTP status code.
+     * Creates and returns the most specific {@link AIApiException} subclass that matches the given HTTP status code.
+     * <p>
+     * If no specific exception type is defined for the status code, a generic {@link AIApiException} is returned.
+     * The created exception includes the request URI, status code, and response body (when available) to help with debugging.
      *
-     * @param statusCode The HTTP status code.
-     * @param message The error message containing error details.
-     * @return The appropriate exception subclass, or a generic {@code AIApiException} for unmapped status codes.
+     * @param uri The URI of the HTTP request that caused the error (used in exception messages).
+     * @param statusCode The HTTP status code returned by the server.
+     * @param responseBody The response body (may be {@code null} or empty).
+     * @return a subclass of {@link AIApiException} matching the status code, or a generic {@link AIApiException}.
      */
-    public static AIApiException forStatusCode(int statusCode, String message) {
+    public static AIApiException fromStatusCode(URI uri, int statusCode, String responseBody) {
         return switch (statusCode) {
-            case AIApiBadRequestException.STATUS_CODE -> new AIApiBadRequestException("API bad request: " + message);
-            case AIApiAuthenticationException.STATUS_CODE -> new AIApiAuthenticationException("API authentication failed: " + message);
-            case AIApiAuthorizationException.STATUS_CODE -> new AIApiAuthorizationException("API authorization failed: " + message);
-            case AIApiEndpointNotFoundException.STATUS_CODE -> new AIApiEndpointNotFoundException("API endpoint not found: " + message);
-            case AIApiRateLimitExceededException.STATUS_CODE -> new AIApiRateLimitExceededException("API rate limit exceeded: " + message);
-            case AIApiServiceUnavailableException.STATUS_CODE -> new AIApiServiceUnavailableException("API service unavailable: " + message);
-            default -> new AIApiException("API error " + statusCode + ": " + message, statusCode);
+            case AIApiBadRequestException.STATUS_CODE -> new AIApiBadRequestException(uri, responseBody);
+            case AIApiAuthenticationException.STATUS_CODE -> new AIApiAuthenticationException(uri, responseBody);
+            case AIApiAuthorizationException.STATUS_CODE -> new AIApiAuthorizationException(uri, responseBody);
+            case AIApiEndpointNotFoundException.STATUS_CODE -> new AIApiEndpointNotFoundException(uri, responseBody);
+            case AIApiRateLimitExceededException.STATUS_CODE -> new AIApiRateLimitExceededException(uri, responseBody);
+            case AIApiServiceUnavailableException.STATUS_CODE -> new AIApiServiceUnavailableException(uri, responseBody);
+            default -> new AIApiException(uri, statusCode, responseBody);
         };
     }
 
     /**
-     * Constructs a new API exception with the specified message and status code.
+     * Constructs a new API exception with the specified URI, status code, and response body.
      *
-     * @param message The detail message.
+     * @param uri The HTTP request URI.
      * @param statusCode The HTTP status code.
+     * @param responseBody The HTTP response body.
      */
-    public AIApiException(String message, int statusCode) {
-        this(message, null, statusCode);
+    public AIApiException(URI uri, int statusCode, String responseBody) {
+        super("HTTP " + statusCode + " at " + URI.create(uri.toString().split("\\?", 2)[0]) + ": " + responseBody);
+        this.uri = uri;
+        this.statusCode = statusCode;
+        this.responseBody = responseBody;
     }
 
     /**
-     * Constructs a new API exception with the specified message, cause, and status code.
+     * Constructs a new API exception with the specified message, and cause. Use this when request threw an exception instead of returning a response.
      *
      * @param message The detail message.
      * @param cause The cause of this exception.
-     * @param statusCode The HTTP status code.
      */
-    public AIApiException(String message, Throwable cause, int statusCode) {
+    public AIApiException(String message, Throwable cause) {
         super(message, cause);
-        this.statusCode = statusCode;
+        this.uri = null;
+        this.statusCode = 0;
+        this.responseBody = null;
+    }
+
+    /**
+     * returns The HTTP request URI.
+     * @return The HTTP request URI.
+     */
+    public URI getUri() {
+        return uri;
     }
 
     /**
@@ -85,5 +110,13 @@ public class AIApiException extends AIException {
      */
     public int getStatusCode() {
         return statusCode;
+    }
+
+    /**
+     * Returns The HTTP response body.
+     * @return The HTTP response body.
+     */
+    public String getResponseBody() {
+        return responseBody;
     }
 }

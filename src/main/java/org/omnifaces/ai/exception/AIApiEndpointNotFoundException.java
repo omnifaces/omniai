@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.exception;
 
+import java.net.URI;
+
 /**
  * Exception thrown when the AI API returns HTTP 404 Not Found.
  * <p>
@@ -28,11 +30,12 @@ public class AIApiEndpointNotFoundException extends AIApiException {
     public static final int STATUS_CODE = 404;
 
     /**
-     * Constructs a new endpoint not found exception with the specified message.
+     * Constructs a new endpoint not found exception with the specified HTTP request URI and HTTP response body.
      *
-     * @param message The detail message.
+     * @param uri The HTTP request URI.
+     * @param responseBody The HTTP response body.
      */
-    public AIApiEndpointNotFoundException(String message) {
-        super(message, STATUS_CODE);
+    public AIApiEndpointNotFoundException(URI uri, String responseBody) {
+        super(uri, STATUS_CODE, responseBody);
     }
 }

@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.exception;
 
+import java.net.URI;
+
 /**
  * Exception thrown when the AI API returns HTTP 403 Forbidden.
  * <p>
@@ -28,11 +30,12 @@ public class AIApiAuthorizationException extends AIApiException {
     public static final int STATUS_CODE = 403;
 
     /**
-     * Constructs a new authorization exception with the specified message.
+     * Constructs a new authorization exception with the specified HTTP request URI and HTTP response body.
      *
-     * @param message The detail message.
+     * @param uri The HTTP request URI.
+     * @param responseBody The HTTP response body.
      */
-    public AIApiAuthorizationException(String message) {
-        super(message, STATUS_CODE);
+    public AIApiAuthorizationException(URI uri, String responseBody) {
+        super(uri, STATUS_CODE, responseBody);
     }
 }
