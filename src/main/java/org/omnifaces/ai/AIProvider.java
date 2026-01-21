@@ -37,9 +37,9 @@ import org.omnifaces.ai.service.XAIService;
  * <pre>
  * var service = AIConfig.of(AIProvider.ANTHROPIC, "your-anthropic-api-key").createService();
  * </pre>
- * For {@link AIProvider#CUSTOM}, you'll need to provide the FQN of your custom {@link AIService} implementation instead of the AIProvider enum:
+ * For {@link AIProvider#CUSTOM}, you'll need to provide the {@link Class} instance of your custom {@link AIService} implementation instead of the AIProvider enum:
  * <pre>
- * var service = AIConfig.of("com.example.YourCustomAIService", "your-api-key").createService();
+ * var service = AIConfig.of(YourCustomAIService.class, "your-api-key").createService();
  * </pre>
  *
  * @author Bauke Scholtz
@@ -147,7 +147,7 @@ public enum AIProvider {
     OLLAMA("Ollama", OllamaAIService.class, false, "gemma3", "http://localhost:11434"),
 
     /**
-     * Custom: provide the FQN of your custom {@link AIService} implementation as the provider in {@link AIConfig},
+     * Custom: provide the {@link Class} instance of your custom {@link AIService} implementation as the provider in {@link AIConfig},
      * or use {@link AI#serviceClass()} when using CDI injection.
      * If you have a great one, feel free to submit it to OmniAI so it ends up as a new enum entry here :)
      */
@@ -186,7 +186,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's service class.
-     * If this returns {@code null}, then the end-user needs to provide a FQN of the custom {@link AIService} implementation as {@link AIConfig#provider()}.
+     * If this returns {@code null}, then the end-user needs to provide a {@link Class} instance of the custom {@link AIService} implementation as {@link AIConfig#provider()}.
      * @return The AI provider's service class.
      */
     public Class<? extends AIService> getServiceClass() {
