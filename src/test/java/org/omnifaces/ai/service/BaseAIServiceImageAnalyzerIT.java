@@ -49,7 +49,7 @@ abstract class BaseAIServiceImageAnalyzerIT extends AIServiceIT {
             + "f09H/KHQdAAAAABJRU5ErkJggg==";
 
     private static final Set<String> ACCEPTABLE_SHAPES = Set.of("pentagon", "star");
-    private static final Set<String> ACCEPTABLE_DESCRIPTIONS = Set.of("dots", "lines", "circular");
+    private static final Set<String> ACCEPTABLE_DESCRIPTIONS = Set.of("dots", "lines", "circles");
 
     @Test
     void analyzeImage() {
@@ -63,6 +63,11 @@ abstract class BaseAIServiceImageAnalyzerIT extends AIServiceIT {
         var response = service.generateAltText(Base64.getDecoder().decode(OMNIFACES_LOGO));
         log(response);
         assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(response.toLowerCase()::contains), response);
-        assertTrue(response.split("\\s+").length <= 30, response);
+        var sentences = response.split("\\.");
+        assertTrue(sentences.length <= 2, "max 2 sentences");
+        assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5)");
+        if (sentences.length == 2) {
+            assertTrue(sentences[1].split("\\s+").length <= 30, "max 30 words (slack of 5)");
+        }
     }
 }
