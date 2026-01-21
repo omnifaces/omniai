@@ -455,14 +455,15 @@ public abstract class BaseAIService implements AIService {
     protected String buildGenerateAltTextPrompt() {
         return """
             You are an expert at writing web alt text.
-            Write concise, descriptive alt text for the image (1-2 sentences, 10-30 words).
+            Write concise, descriptive alt text for the image in at most 2 sentences.
+            Each sentence can have at most %d words.
             Rules:
             - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
             - Do not include phrases like "image of" unless necessary.
             Output format:
             - Plain text description only.
             - No explanations, no notes, no extra text, no markdown formatting.
-        """;
+        """.formatted(DEFAULT_WORDS_PER_KEYPOINT);
     }
 
 
