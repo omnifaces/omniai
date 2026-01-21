@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -28,6 +29,7 @@ import org.omnifaces.ai.AIService;
  * Base class for IT tests on AI service instances. Each instance has its own provider and model.
  */
 @TestInstance(Lifecycle.PER_CLASS)
+@ExtendWith(FailFastOnRateLimitExtension.class)
 abstract class AIServiceIT {
 
     private static final Logger logger = Logger.getLogger(AIServiceIT.class.getName());
