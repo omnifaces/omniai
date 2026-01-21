@@ -20,7 +20,7 @@ package org.omnifaces.ai;
  * Capabilities are deliberately separated into <em>analysis</em> (understanding/processing input) and <em>generation</em> (producing new content) to allow
  * fine-grained support checks, since many models support one direction but not the other (e.g., vision input but no image output).
  * <p>
- * Not all providers/models support every capability. Callers should use {@link AIProvider#supportsCapability(AICapability)} or equivalent to check availability
+ * Not all providers/models support every capability. Callers should use {@link AIService#supportsCapability(AICapability)} or equivalent to check availability
  * before invoking related operations.
  *
  * @author Bauke Scholtz

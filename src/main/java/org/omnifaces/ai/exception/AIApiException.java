@@ -27,7 +27,7 @@ import java.net.URI;
  * <li>{@link AIApiServiceUnavailableException} - 503 Service Unavailable
  * </ul>
  * <p>
- * Use {@link #forStatusCode(int, String)} to create the appropriate subclass based on HTTP status code.
+ * Use {@link #fromStatusCode(URI, int, String)} to create the appropriate subclass based on HTTP status code.
  *
  * @author Bauke Scholtz
  * @since 1.0
