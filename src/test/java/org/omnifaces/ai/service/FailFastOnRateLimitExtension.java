@@ -12,14 +12,21 @@
  */
 package org.omnifaces.ai.service;
 
-import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.omnifaces.ai.exception.AIApiRateLimitExceededException;
 import org.opentest4j.TestAbortedException;
 
-public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExecutionExceptionHandler, AfterTestExecutionCallback {
+/**
+ * JUnit 5 extension that fails fast on AI API rate limit errors.
+ * <p>
+ * When an {@link AIApiRateLimitExceededException} is thrown during a test, this extension marks the test class as rate-limited and aborts (skips) all
+ * subsequent tests in the same class to prevent unnecessary API calls and wasted time / quota.
+ *
+ * @see AIApiRateLimitExceededException
+ */
+public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExecutionExceptionHandler {
 
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(FailFastOnRateLimitExtension.class);
 
@@ -39,11 +46,6 @@ public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExe
         }
 
         throw throwable;
-    }
-
-    @Override
-    public void afterTestExecution(ExtensionContext context) {
-        // NOOP.
     }
 
     private ExtensionContext.Store getStore(ExtensionContext context) {
