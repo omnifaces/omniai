@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.service;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Base64;
@@ -49,7 +50,7 @@ abstract class BaseAIServiceImageAnalyzerIT extends AIServiceIT {
             + "f09H/KHQdAAAAABJRU5ErkJggg==";
 
     private static final Set<String> ACCEPTABLE_SHAPES = Set.of("pentagon", "pentagram", "star");
-    private static final Set<String> ACCEPTABLE_DESCRIPTIONS = Set.of("dots", "circles", "circular");
+    private static final Set<String> ACCEPTABLE_DESCRIPTIONS = Set.of("circles", "circular");
 
     @Test
     void analyzeImage() {
@@ -62,12 +63,12 @@ abstract class BaseAIServiceImageAnalyzerIT extends AIServiceIT {
     void generateAltText() {
         var response = service.generateAltText(Base64.getDecoder().decode(OMNIFACES_LOGO));
         log(response);
-        assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(response.toLowerCase()::contains), response);
         var sentences = response.split("\\.");
-        assertTrue(sentences.length <= 2, "max 2 sentences");
-        assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5)");
-        if (sentences.length == 2) {
-            assertTrue(sentences[1].split("\\s+").length <= 30, "max 30 words (slack of 5)");
-        }
+        assertAll(
+            () -> assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains), response),
+            () -> assertTrue(sentences.length <= 2, "max 2 sentences"),
+            () -> assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5) in 1st sentence"),
+            () -> assertTrue(sentences.length < 2 || sentences[1].split("\\s+").length <= 30, "max 30 words (slack of 5) in 2nd sentence")
+        );
     }
 }
