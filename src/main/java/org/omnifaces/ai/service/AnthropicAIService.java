@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -71,6 +72,14 @@ public class AnthropicAIService extends BaseAIService {
      */
     public AnthropicAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION, IMAGE_ANALYSIS -> true;
+            default -> false;
+        };
     }
 
     @Override

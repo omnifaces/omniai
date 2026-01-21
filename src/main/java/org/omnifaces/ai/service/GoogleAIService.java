@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -69,6 +70,17 @@ public class GoogleAIService extends BaseAIService {
      */
     public GoogleAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        var fullModelName = getModelName().toLowerCase();
+
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION, IMAGE_ANALYSIS -> true;
+            case IMAGE_GENERATION -> fullModelName.contains("image");
+            default -> false;
+        };
     }
 
     @Override

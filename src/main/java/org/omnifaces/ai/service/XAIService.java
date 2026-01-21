@@ -18,7 +18,9 @@ import java.util.Set;
 
 import jakarta.json.Json;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.GenerateImageOptions;
@@ -56,6 +58,8 @@ public class XAIService extends OpenAIService {
 
     private static final long serialVersionUID = 1L;
 
+    private static final AIModelVersion GROK_4 = AIModelVersion.of("grok", 4);
+
     /**
      * Constructs an xAI service with the specified configuration.
      *
@@ -64,6 +68,24 @@ public class XAIService extends OpenAIService {
      */
     public XAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        var currentModelVersion = getModelVersion();
+        var fullModelName = getModelName().toLowerCase();
+
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION -> true;
+            case IMAGE_ANALYSIS -> currentModelVersion.gte(GROK_4) || fullModelName.contains("vision");
+            case IMAGE_GENERATION -> fullModelName.contains("image");
+            default -> false;
+        };
+    }
+
+    @Override
+    protected boolean supportsModerationCapability(Set<String> categories) {
+        return false;
     }
 
     @Override
@@ -80,10 +102,5 @@ public class XAIService extends OpenAIService {
             .add("response_format", "b64_json")
             .build()
             .toString();
-    }
-
-    @Override
-    protected boolean supportsModerationCapability(Set<String> categories) {
-        return false;
     }
 }

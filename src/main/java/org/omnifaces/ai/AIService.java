@@ -34,6 +34,7 @@ import org.omnifaces.ai.exception.AIException;
  * @since 1.0
  * @see AIProvider
  * @see AIConfig
+ * @see AICapability
  */
 public interface AIService extends Serializable {
 
@@ -481,7 +482,27 @@ public interface AIService extends Serializable {
      * @return The AI model version for this AI service.
      * @see AIModelVersion#of(AIService)
      */
-    default AIModelVersion getAIModelVersion() {
+    default AIModelVersion getModelVersion() {
         return AIModelVersion.of(this);
     }
+
+    /**
+     * Returns whether the given capability is supported by this AI service, which is usually determined by {@link #getModelName()} or {@link #getModelVersion()}.
+     * <p>
+     * <strong>Important:</strong> This is a <em>hint</em> for callers. Implementations are <em>not required</em> to enforce this check before executing
+     * operations such as {@link #analyzeImage(byte[], String)}, {@link #generateImage(String)}, etc.
+     * <p>
+     * This method exists primarily as a convenience for callers who want to:
+     * <ul>
+     * <li>avoid unnecessary API calls when a capability is known to be unsupported,</li>
+     * <li>present better UX (e.g. disable UI buttons), or</li>
+     * <li>choose a fallback provider/model at runtime.</li>
+     * </ul>
+     * If a caller invokes a method corresponding to an unsupported capability anyway, the implementation <strong>may</strong> fail fast. Typically by throwing
+     * {@code UnsupportedOperationException}.
+     *
+     * @param capabilitiy The AI capabilitiy to check.
+     * @return {@code true} if this service is expected to support the capability with the current configuration, {@code false} otherwise.
+     */
+    boolean supportsCapability(AICapability capabilitiy);
 }

@@ -87,6 +87,11 @@ public class AzureAIService extends OpenAIService {
     }
 
     @Override
+    protected boolean supportsModerationCapability(Set<String> categories) {
+        return false;
+    }
+
+    @Override
     protected Map<String, String> getRequestHeaders() {
         return Map.of("api-key", apiKey);
     }
@@ -94,10 +99,5 @@ public class AzureAIService extends OpenAIService {
     @Override
     protected URI resolveURI(String path) {
         return super.resolveURI(String.format("openai/v1/deployments/%s/%s", model, path));
-    }
-
-    @Override
-    protected boolean supportsModerationCapability(Set<String> categories) {
-        return false;
     }
 }

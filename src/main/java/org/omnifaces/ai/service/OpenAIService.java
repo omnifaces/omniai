@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
@@ -69,7 +70,9 @@ public class OpenAIService extends BaseAIService {
 
     private static final long serialVersionUID = 1L;
 
+    private static final AIModelVersion GPT_4 = AIModelVersion.of("gpt", 4);
     private static final AIModelVersion GPT_5 = AIModelVersion.of("gpt", 5);
+    private static final AIModelVersion DALL_E = AIModelVersion.of("dall-e");
 
     /**
      * Constructs an OpenAI service with the specified configuration.
@@ -79,6 +82,33 @@ public class OpenAIService extends BaseAIService {
      */
     public OpenAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        var currentModelVersion = getModelVersion();
+        var fullModelName = getModelName().toLowerCase();
+
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION, IMAGE_ANALYSIS -> true;
+            case IMAGE_GENERATION -> currentModelVersion.gte(DALL_E) || fullModelName.contains("image");
+            case AUDIO_ANALYSIS -> currentModelVersion.gte(GPT_4) || fullModelName.contains("transcribe");
+            case AUDIO_GENERATION -> currentModelVersion.gte(GPT_4) || fullModelName.contains("tts");
+            case VIDEO_ANALYSIS -> currentModelVersion.gte(GPT_5);
+            case VIDEO_GENERATION -> false;
+        };
+    }
+
+    /**
+     * Returns whether this service supports native moderation for the given categories.
+     * When {@code true}, {@link #moderateContent(String, ModerationOptions)} will use OpenAI's moderation API.
+     * When {@code false}, it falls back to the chat-based moderation in {@link BaseAIService}.
+     *
+     * @param categories The moderation categories to check.
+     * @return {@code true} if all categories are supported by OpenAI's moderation API.
+     */
+    protected boolean supportsModerationCapability(Set<String> categories) {
+        return categories.stream().allMatch(Category.OPENAI_SUPPORTED_CATEGORY_NAMES::contains);
     }
 
     @Override
@@ -137,7 +167,7 @@ public class OpenAIService extends BaseAIService {
             .add("role", "user")
             .add("content", message));
 
-        var currentModelVersion = getAIModelVersion();
+        var currentModelVersion = getModelVersion();
         var optionsBuilder = Json.createObjectBuilder()
             .add("model", model)
             .add("messages", messages)
@@ -263,17 +293,5 @@ public class OpenAIService extends BaseAIService {
         }
 
         return new ModerationResult(flagged, scores);
-    }
-
-    /**
-     * Returns whether this service supports native moderation for the given categories.
-     * When {@code true}, {@link #moderateContent(String, ModerationOptions)} will use OpenAI's moderation API.
-     * When {@code false}, it falls back to the chat-based moderation in {@link BaseAIService}.
-     *
-     * @param categories The moderation categories to check.
-     * @return {@code true} if all categories are supported by OpenAI's moderation API.
-     */
-    protected boolean supportsModerationCapability(Set<String> categories) {
-        return categories.stream().allMatch(Category.OPENAI_SUPPORTED_CATEGORY_NAMES::contains);
     }
 }

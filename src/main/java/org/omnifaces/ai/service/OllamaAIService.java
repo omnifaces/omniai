@@ -20,7 +20,9 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.ChatOptions;
@@ -58,6 +60,8 @@ public class OllamaAIService extends BaseAIService {
 
     private static final long serialVersionUID = 1L;
 
+    private static final AIModelVersion LLAMA_4 = AIModelVersion.of("llama", 4);
+
     /**
      * Constructs an Ollama service with the specified configuration.
      *
@@ -66,6 +70,18 @@ public class OllamaAIService extends BaseAIService {
      */
     public OllamaAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        var currentModelVersion = getModelVersion();
+        var fullModelName = getModelName().toLowerCase();
+
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION -> true;
+            case IMAGE_ANALYSIS -> currentModelVersion.gte(LLAMA_4) || fullModelName.contains("vision") || fullModelName.contains("llava") || fullModelName.contains("gemma");
+            default -> false;
+        };
     }
 
     @Override

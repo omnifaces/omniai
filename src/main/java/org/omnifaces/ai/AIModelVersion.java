@@ -25,7 +25,7 @@ import java.io.Serializable;
  * @param minorVersion The minor version number, may not be negative.
  * @author Bauke Scholtz
  * @since 1.0
- * @see AIService#getAIModelVersion()
+ * @see AIService#getModelVersion()
  */
 public record AIModelVersion(String modelName, int majorVersion, int minorVersion) implements Comparable<AIModelVersion>, Serializable {
 
