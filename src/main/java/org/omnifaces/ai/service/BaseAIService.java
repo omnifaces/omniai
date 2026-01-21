@@ -517,11 +517,12 @@ public abstract class BaseAIService implements AIService {
      * each reveived stream event data with help of supplied {@code streamEventDataProcessor}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload initial SSE POST request payload, usually a JSON object with instructions.
-     * @param streamEventDataProcessor Callback receiving each stream data chunk (often one delta/token/line).
+     * @param streamEventDataProcessor Callback receiving each event stream line, along with a {@link CompletableFuture} which needs to be marked complete
+     * when end of stream is reached.
      * @return A future that completes when stream ends or fails.
      * @throws AIException if anything fails during the process.
      */
-    protected CompletableFuture<Void> asyncPostAndExtractStreamEventData(String path, String payload, BiConsumer<CompletableFuture<Void>, String> streamEventDataProcessor) throws AIException {
+    protected CompletableFuture<Void> asyncPostAndProcessStreamEventData(String path, String payload, BiConsumer<CompletableFuture<Void>, String> streamEventDataProcessor) throws AIException {
         return API_CLIENT.stream(this, path, payload, streamEventDataProcessor);
     }
 

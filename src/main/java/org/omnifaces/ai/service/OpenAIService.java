@@ -140,40 +140,45 @@ public class OpenAIService extends BaseAIService {
             throw new UnsupportedOperationException("This feature is only supported in gpt-4 or newer");
         }
 
-        return asyncPostAndExtractStreamEventData("responses", buildChatPayload(message, options, true), (future, line) -> {
-            if (line.isBlank() || line.startsWith(":")) {
-                return;
+        return asyncPostAndProcessStreamEventData("responses", buildChatPayload(message, options, true), (future, line) -> processStreamEventData(future, line, onToken));
+    }
+
+    /**
+     * Processes each stream event data line for {@link #chatStream(String, ChatOptions, Consumer)}.
+     * You can override this method to customize the payload.
+     *
+     * @param future A {@link CompletableFuture} which needs to be marked complete when end of stream is reached.
+     * @param line Event stream line.
+     * @param onToken Callback receiving each stream data chunk (often one word/token/line).
+     */
+    protected void processStreamEventData(CompletableFuture<Void> future, String line, Consumer<String> onToken) {
+        if (line.startsWith("event:")) {
+            var event = line.substring(6).trim();
+
+            if (event.equals("response.completed") || event.equals("response.incomplete")) {
+                future.complete(null);
             }
+        }
+        else if (line.startsWith("data:")) {
+            var data = line.substring(5).trim();
 
-            if (line.startsWith("data:")) {
-                var data = line.substring(5).trim();
+            if (data.contains("response.output_text.delta")) { // Cheap pre-filter before expensive parse.
+                try {
+                    var json = parseJson(data);
 
-                if (data.contains("response.output_text.delta")) { // Cheap pre-filter before expensive parse.
-                    try {
-                        var json = parseJson(data);
+                    if ("response.output_text.delta".equals(json.getString("type", null))) {
+                        var token = json.getString("delta", "");
 
-                        if ("response.output_text.delta".equals(json.getString("type", null))) {
-                            var token = json.getString("delta", "");
-
-                            if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
-                                onToken.accept(token);
-                            }
+                        if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
+                            onToken.accept(token);
                         }
                     }
-                    catch (Exception e) {
-                        logger.log(WARNING, "Skipping unparseable stream event data: " + data, e);
-                    }
+                }
+                catch (Exception e) {
+                    logger.log(WARNING, "Skipping unparseable stream event data: " + data, e);
                 }
             }
-
-            if (line.startsWith("event:")) {
-                var event = line.substring(6).trim();
-
-                if (event.equals("response.completed") || event.equals("response.incomplete")) {
-                    future.complete(null);
-                }
-            }
-        });
+        }
     }
 
     @Override
