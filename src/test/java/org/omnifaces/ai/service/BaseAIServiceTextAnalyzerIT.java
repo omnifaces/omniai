@@ -64,8 +64,15 @@ abstract class BaseAIServiceTextAnalyzerIT extends AIServiceIT {
 
     @Test
     void translate() {
-        var response = service.translate("<p style='color:blue'>The cat #{bean.verb} on the mat.</p>", "en", "nl");
+        var response = service.translate("<section style='color:blue'>The cat #{bean.verb} on the mat.</section><script>{'key':'value'}</script>", "en", "nl");
         log(response);
-        assertEquals("<p style='color:blue'>De kat #{bean.verb} op de mat.</p>", response);
+        assertEquals("<section style='color:blue'>De kat #{bean.verb} op de mat.</section><script>{'key':'value'}</script>", response);
+    }
+
+    @Test
+    void translateAutomatically() {
+        var response = service.translate("<section style='color:blauw'>De kat #{boon.werkwoord} op de mat.</section><script>{'sleutel':'waarde'}</script>", null, "en");
+        log(response);
+        assertEquals("<section style='color:blauw'>The cat #{boon.werkwoord} on the mat.</section><script>{'sleutel':'waarde'}</script>", response);
     }
 }

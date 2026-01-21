@@ -241,27 +241,23 @@ public abstract class BaseAIService implements AIService {
      * @return The system prompt.
      */
     protected String buildTranslatePrompt(String sourceLang, String targetLang) {
-        var prompt = new StringBuilder("You are a professional translator.\n");
-
-        if (sourceLang == null) {
-            prompt.append("Detect the source language automatically.\n");
-            prompt.append("Translate ");
-        }
-        else {
-            prompt.append("Translate from ISO 639-1 code '").append(sourceLang.toLowerCase()).append("' ");
-        }
-
-        prompt.append("to ISO 639-1 code '").append(targetLang.toLowerCase()).append("'.\n");
-        prompt.append("""
-            Rules:
-            - Preserve ALL markup (XML/HTML tags, JSON keys/values) and placeholders (#{...}, ${...}, {{...}}) exactly.
-            - Keep original line breaks and overall layout as close as possible.
+        var sourcePrompt = sourceLang == null
+                ? "Detect the source language automatically."
+                : "Translate from ISO 639-1 code '%s'".formatted(sourceLang.toLowerCase());
+        return """
+            You are a professional translator.
+            %s
+            Translate to ISO 639-1 code '%s'.
+            Rules for every input:
+            - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
+            Rules if the input is parseable as HTML/XML:
+            - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
+            - Preserve ALL HTML/XML attribute values (style="...", class="...", id="...", data-*, etc.) EXACTLY as-is.
             Output format:
-            - Only the translated text.
+            - Only the translated input.
             - No explanations, no notes, no extra text, no markdown formatting.
-        """);
-
-        return prompt.toString();
+            - Keep exact same line breaks, spacing and structure where possible.
+        """.formatted(sourcePrompt, targetLang.toLowerCase());
     }
 
     /**
