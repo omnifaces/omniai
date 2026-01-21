@@ -16,4 +16,3 @@ target/
 
 # Env
 .env.*
-/*.sh
