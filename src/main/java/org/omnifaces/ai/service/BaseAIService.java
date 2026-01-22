@@ -164,7 +164,7 @@ public abstract class BaseAIService implements AIService {
 
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(), buildChatPayload(message, options, true), event -> processStreamEvent(event, onToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(), buildChatPayload(message, options, true), event -> processChatStreamEvent(event, onToken)).handle((result, exception) -> {
             if (exception == null) {
                 return result;
             }
@@ -180,7 +180,7 @@ public abstract class BaseAIService implements AIService {
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
      * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
      */
-    protected boolean processStreamEvent(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEvent(Event event, Consumer<String> onToken) {
         throw new UnsupportedOperationException("Please implement processStreamEvent(Event event, Consumer<String> onToken) method in class " + getClass().getSimpleName());
     }
 

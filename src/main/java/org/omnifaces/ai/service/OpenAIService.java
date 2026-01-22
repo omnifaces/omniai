@@ -206,7 +206,7 @@ public class OpenAIService extends BaseAIService {
     }
 
     @Override
-    protected boolean processStreamEvent(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEvent(Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             return !"response.completed".equals(event.value()) && !"response.incomplete".equals(event.value());
         }

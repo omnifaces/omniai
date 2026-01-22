@@ -143,7 +143,7 @@ public class AnthropicAIService extends BaseAIService {
     }
 
     @Override
-    protected boolean processStreamEvent(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEvent(Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             return !"message_stop".equals(event.value()) && !"content_block_stop".equals(event.value());
         }

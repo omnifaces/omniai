@@ -98,7 +98,7 @@ public class MistralAIService extends OpenAIService {
     }
 
     @Override
-    protected boolean processStreamEvent(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEvent(Event event, Consumer<String> onToken) {
         if (event.type() == DATA) {
             if ("DONE".equalsIgnoreCase(event.value())) {
                 return false;
