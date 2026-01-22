@@ -179,7 +179,7 @@ public class GenerateImageOptions implements Serializable {
         public Builder size(String size) {
             requireNonNull(size, "size");
 
-            if (size == null || !SIZE_PATTERN.matcher(size).matches()) {
+            if (!SIZE_PATTERN.matcher(size).matches()) {
                 throw new IllegalArgumentException("Invalid size: " + size);
             }
 
@@ -208,7 +208,7 @@ public class GenerateImageOptions implements Serializable {
         public Builder aspectRatio(String aspectRatio) {
             requireNonNull(aspectRatio, "aspectRatio");
 
-            if (aspectRatio == null || !ASPECT_RATIO_PATTERN.matcher(aspectRatio).matches()) {
+            if (!ASPECT_RATIO_PATTERN.matcher(aspectRatio).matches()) {
                 throw new IllegalArgumentException("Invalid aspect ratio: " + aspectRatio);
             }
 

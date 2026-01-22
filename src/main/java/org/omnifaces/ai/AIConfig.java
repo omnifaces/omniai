@@ -204,7 +204,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
         if (isBlank(key) || isBlank(value)) {
             throw new IllegalArgumentException("key or value cannot be blank");
         }
-        var newProperties = new HashMap<String, String>(properties);
+        var newProperties = new HashMap<>(properties);
         newProperties.put(key.strip(), value.strip());
         return withProperties(newProperties);
     }
@@ -216,7 +216,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @return A new configuration instance with the property removed.
      */
     public AIConfig withoutProperty(String key) {
-        var newProperties = new HashMap<String, String>(properties);
+        var newProperties = new HashMap<>(properties);
         newProperties.remove(key);
         return withProperties(newProperties);
     }

@@ -134,7 +134,7 @@ final class AIApiClient {
         return withRetry(() -> client.sendAsync(request, ofLines()).thenCompose(response -> handleResponse(request, response, r -> r.body().collect(joining("\n")), r -> consumeEventStream(r, eventProcessor))), attempt);
     }
 
-    private <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
+    private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
         var statusCode = response.statusCode();
 
         if (statusCode >= AIApiBadRequestException.STATUS_CODE) {
@@ -144,13 +144,13 @@ final class AIApiClient {
         return successHandler.apply(response);
     }
 
-    private CompletableFuture<Void> consumeEventStream(HttpResponse<Stream<String>> response, Predicate<Event> eventProcessor) {
+    private static CompletableFuture<Void> consumeEventStream(HttpResponse<Stream<String>> response, Predicate<Event> eventProcessor) {
         var future = new CompletableFuture<Void>();
         runAsync(() -> processEvents(response, future, eventProcessor));
         return future;
     }
 
-    private void processEvents(HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
+    private static void processEvents(HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
         try {
             var lines = response.body().iterator();
 
@@ -173,7 +173,7 @@ final class AIApiClient {
         }
     }
 
-    private Event createEvent(String line) {
+    private static Event createEvent(String line) {
         if (line.startsWith("id:")) {
             var id = line.substring(3).trim();
             return new Event(Type.ID, id);
@@ -192,11 +192,11 @@ final class AIApiClient {
         }
     }
 
-    private <R> CompletableFuture<R> withRetry(Supplier<CompletableFuture<R>> action, int attempt) {
+    private static <R> CompletableFuture<R> withRetry(Supplier<CompletableFuture<R>> action, int attempt) {
         return action.get().exceptionallyCompose(throwable -> handleFailureWithRetry(action, attempt, throwable));
     }
 
-    private <R> CompletableFuture<R> handleFailureWithRetry(Supplier<CompletableFuture<R>> action, int attempt, Throwable throwable) {
+    private static <R> CompletableFuture<R> handleFailureWithRetry(Supplier<CompletableFuture<R>> action, int attempt, Throwable throwable) {
         var cause = (throwable instanceof CompletionException ce) ? ce.getCause() : throwable;
 
         if (cause instanceof AIException) {

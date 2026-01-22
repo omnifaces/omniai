@@ -52,7 +52,7 @@ public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExe
         throw throwable;
     }
 
-    private AIProvider getProvider(ExtensionContext context) {
+    private static AIProvider getProvider(ExtensionContext context) {
         if (!(context.getRequiredTestInstance() instanceof AIServiceIT instance)) {
             throw new IllegalStateException("FailFastOnRateLimitExtension must be used on subclasses of AIServiceIT");
         }
