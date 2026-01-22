@@ -86,6 +86,9 @@ public class GoogleAIService extends BaseAIService {
         return super.resolveURI(String.format("models/%s:%s?key=%s", model, path, apiKey));
     }
 
+    /**
+     * Returns {@code generateContent}.
+     */
     @Override
     protected String getChatPath() {
         return "generateContent";
