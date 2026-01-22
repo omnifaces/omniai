@@ -19,6 +19,7 @@ import org.omnifaces.ai.service.AnthropicAIService;
 import org.omnifaces.ai.service.AzureAIService;
 import org.omnifaces.ai.service.GoogleAIService;
 import org.omnifaces.ai.service.MetaAIService;
+import org.omnifaces.ai.service.MistralAIService;
 import org.omnifaces.ai.service.OllamaAIService;
 import org.omnifaces.ai.service.OpenAIService;
 import org.omnifaces.ai.service.OpenRouterAIService;
@@ -98,6 +99,16 @@ public enum AIProvider {
      * @see <a href="https://llama.developer.meta.com/docs/models/">Available Meta AI Models</a>
      */
     META("Meta AI", MetaAIService.class, true, "Llama-4-Scout-17B-16E-Instruct-FP8", "https://api.llama.com/v1"),
+
+    /**
+     * Mistral AI: Mistral Large, Mistral Medium, Mistral Small, etc.
+     * <p>
+     * Defaults currently to model {@code mistral-medium-2508} at endpoint {@code https://api.mistral.ai/v1}.
+     * @see MistralAIService
+     * @see <a href="https://llama.developer.meta.com/docs/api-keys/">Manage Mistral AI API Keys</a>
+     * @see <a href="https://docs.mistral.ai/getting-started/models/">Available Mistral AI Models</a>
+     */
+    MISTRAL("Mistral AI", MistralAIService.class, true, "mistral-medium-2508", "https://api.mistral.ai/v1"),
 
     /**
      * Azure OpenAI: OpenAI, Anthropic, xAI, DeepSeek, etc via Microsoft Azure.
