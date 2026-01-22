@@ -89,7 +89,7 @@ public class XAIService extends OpenAIService {
 
     @Override
     protected boolean supportsResponsesApi() {
-        return false;
+        return getModelVersion().gte(GROK_4);
     }
 
     @Override
