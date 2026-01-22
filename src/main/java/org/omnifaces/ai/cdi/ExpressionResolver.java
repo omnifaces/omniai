@@ -31,6 +31,10 @@ class ExpressionResolver {
 
     private static final Pattern EL_PATTERN = Pattern.compile("([$#]\\{)([^}]+)(})");
 
+    private ExpressionResolver() {
+        throw new AssertionError();
+    }
+
     /**
      * Resolves EL expressions in the given value using the provided BeanManager.
      *

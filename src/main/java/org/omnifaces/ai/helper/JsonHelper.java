@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.helper;
 
+import static java.util.Collections.emptyList;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
 import java.io.StringReader;
@@ -97,7 +98,7 @@ public final class JsonHelper {
 
     private static List<String> extractAllByPath(JsonValue root, String path) {
         if (root == null || path == null) {
-            return List.of();
+            return emptyList();
         }
 
         var currentNodes = List.of(root);
@@ -110,7 +111,7 @@ public final class JsonHelper {
             }
 
             if (nextNodes.isEmpty()) {
-                return List.of();
+                return emptyList();
             }
 
             currentNodes = nextNodes;
@@ -120,7 +121,7 @@ public final class JsonHelper {
 
         for (var terminal : currentNodes) {
             if (terminal == null) {
-                return null;
+                return emptyList();
             }
 
             var string = terminal instanceof JsonString jsonString ? jsonString.getString() : terminal.toString();

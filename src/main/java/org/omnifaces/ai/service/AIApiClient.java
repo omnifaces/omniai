@@ -168,8 +168,8 @@ final class AIApiClient {
 
             future.complete(null);
         }
-        catch (Throwable t) {
-            future.completeExceptionally(t);
+        catch (Exception e) {
+            future.completeExceptionally(e);
         }
     }
 
@@ -187,7 +187,7 @@ final class AIApiClient {
             return new Event(Type.DATA, data);
         }
         else {
-            logger.fine("Ignoring unknown SSE line: " + line);
+            logger.fine(() -> "Ignoring unknown SSE line: " + line);
             return null;
         }
     }

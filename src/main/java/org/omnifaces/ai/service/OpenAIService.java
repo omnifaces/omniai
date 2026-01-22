@@ -158,22 +158,20 @@ public class OpenAIService extends BaseAIService {
         if (event.type() == EVENT) {
             return !(event.value().equals("response.completed") || event.value().equals("response.incomplete"));
         }
-        else if (event.type() == DATA) {
-            if (event.value().contains("response.output_text.delta")) { // Cheap pre-filter before expensive parse.
-                try {
-                    var json = parseJson(event.value());
+        else if (event.type() == DATA && event.value().contains("response.output_text.delta")) { // Cheap pre-filter before expensive parse.
+            try {
+                var json = parseJson(event.value());
 
-                    if ("response.output_text.delta".equals(json.getString("type", null))) {
-                        var token = json.getString("delta", "");
+                if ("response.output_text.delta".equals(json.getString("type", null))) {
+                    var token = json.getString("delta", "");
 
-                        if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
-                            onToken.accept(token);
-                        }
+                    if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
+                        onToken.accept(token);
                     }
                 }
-                catch (Exception e) {
-                    logger.log(WARNING, "Skipping unparseable stream event data: " + event.value(), e);
-                }
+            }
+            catch (Exception e) {
+                logger.log(WARNING, e, () -> "Skipping unparseable stream event data: " + event.value());
             }
         }
 
