@@ -42,7 +42,7 @@ public interface AIService extends Serializable {
     // Chat Capabilities ----------------------------------------------------------------------------------------------
 
     /**
-     * Sends a message to the AI with default options.
+     * Sends a message to the AI with default system prompt from {@link #getChatPrompt()}.
      *
      * @param message The user's message to send to the AI.
      * @return The AI's response, never {@code null}.
@@ -50,7 +50,6 @@ public interface AIService extends Serializable {
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      * @throws AIException if the chat request fails.
      * @see #chat(String, ChatOptions)
-     * @see ChatOptions#DEFAULT
      */
     default String chat(String message) throws AIException {
         try {
@@ -62,17 +61,30 @@ public interface AIService extends Serializable {
     }
 
     /**
-     * Asynchronously sends a message to the AI with default options.
+     * Asynchronously sends a message to the AI with default system prompt from {@link #getChatPrompt()}.
      *
      * @param message The user's message to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
      * @see #chatAsync(String, ChatOptions)
-     * @see ChatOptions#DEFAULT
      */
     default CompletableFuture<String> chatAsync(String message) {
         return chatAsync(message, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build());
+    }
+
+    /**
+     * Send a message to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
+     *
+     * @param message The user's message to send to the AI.
+     * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
+     * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws UnsupportedOperationException if chat capability is not supported by the implementation.
+     * @see #chatStream(String, ChatOptions, Consumer)
+     */
+    default CompletableFuture<Void> chatStream(String message, Consumer<String> onToken) {
+        return chatStream(message, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build(), onToken);
     }
 
     /**
@@ -100,7 +112,7 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a message to the AI and returns a response.
      * <p>
-     * This is the core method for chat-based AI interactions.
+     * This is the core method for static chat-based AI interactions.
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      *
      * @param message The user's message to send to the AI.
@@ -114,7 +126,7 @@ public interface AIService extends Serializable {
     /**
      * Send a message to the AI and retrieve an asynchronous stream of tokens.
      * <p>
-     * This is the core method for chat-based AI interactions.
+     * This is the core method for streaming chat-based AI interactions.
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      *
      * @param message The user's message to send to the AI.
