@@ -127,7 +127,7 @@ final class AIApiClient {
     }
 
     private CompletableFuture<String> sendWithRetryAsync(HttpRequest request, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofString()).thenCompose(response -> handleResponse(request, response, r -> r.body(), r -> completedFuture(r.body()))), attempt);
+        return withRetry(() -> client.sendAsync(request, ofString()).thenCompose(response -> handleResponse(request, response, HttpResponse::body, r -> completedFuture(r.body()))), attempt);
     }
 
     private CompletableFuture<Void> streamWithRetryAsync(HttpRequest request, Predicate<Event> eventProcessor, int attempt) {
@@ -197,7 +197,7 @@ final class AIApiClient {
     }
 
     private static <R> CompletableFuture<R> handleFailureWithRetry(Supplier<CompletableFuture<R>> action, int attempt, Throwable throwable) {
-        var cause = (throwable instanceof CompletionException ce) ? ce.getCause() : throwable;
+        var cause = throwable instanceof CompletionException ce ? ce.getCause() : throwable;
 
         if (cause instanceof AIException) {
             return failedFuture(cause);
