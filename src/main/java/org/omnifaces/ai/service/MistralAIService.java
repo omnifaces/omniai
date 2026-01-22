@@ -14,6 +14,7 @@ package org.omnifaces.ai.service;
 
 import java.util.Set;
 
+import org.omnifaces.ai.AICapability;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -59,6 +60,14 @@ public class MistralAIService extends OpenAIService {
      */
     public MistralAIService(AIConfig config) {
         super(config);
+    }
+
+    @Override
+    public boolean supportsCapability(AICapability capability) {
+        return switch (capability) {
+            case TEXT_ANALYSIS, TEXT_GENERATION, IMAGE_ANALYSIS -> true;
+            default -> false;
+        };
     }
 
     @Override
