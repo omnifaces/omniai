@@ -29,11 +29,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
-import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIConfig;
@@ -46,6 +44,10 @@ import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 import org.omnifaces.ai.model.Sse.Event;
+import org.omnifaces.ai.service.modality.DefaultImageAnalyzer;
+import org.omnifaces.ai.service.modality.DefaultTextAnalyzer;
+import org.omnifaces.ai.service.modality.ImageAnalyzer;
+import org.omnifaces.ai.service.modality.TextAnalyzer;
 
 /**
  * Base class for AI service implementations providing common API functionality.
@@ -62,17 +64,8 @@ public abstract class BaseAIService implements AIService {
     private static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
-    private static final int DEFAULT_REASONING_TOKENS = 500;
-    private static final int DEFAULT_DETECTION_TOKENS = 100;
-    private static final int DEFAULT_WORDS_PER_KEYPOINT = 25;
-    private static final int DEFAULT_WORDS_PER_MODERATE_CONTENT_CATEGORY = 10;
-    private static final double DEFAULT_TEXT_ANALYSIS_TEMPERATURE = 0.5;
-    private static final double DEFAULT_TRANSLATE_TEMPERATURE = 0.3;
-    private static final double DEFAULT_DETECT_LANGUAGE_TEMPERATURE = 0.0;
-    private static final double DEFAULT_MODERATE_CONTENT_TEMPERATURE = 0.1;
-
     /** The shared HTTP client for API requests. */
-    protected static final AIApiClient API_CLIENT = AIApiClient.newInstance(DEFAULT_CONNECT_TIMEOUT, DEFAULT_REQUEST_TIMEOUT);
+    static final AIApiClient API_CLIENT = AIApiClient.newInstance(DEFAULT_CONNECT_TIMEOUT, DEFAULT_REQUEST_TIMEOUT);
 
     /** The AI provider for this service. */
     protected final AIProvider provider;
@@ -84,6 +77,11 @@ public abstract class BaseAIService implements AIService {
     protected final URI endpoint;
     /** The AI chat prompt. */
     protected final String prompt;
+
+    /** The text analyzer. */
+    protected final TextAnalyzer textAnalyzer;
+    /** The image analyzer. */
+    protected final ImageAnalyzer imageAnalyzer;
 
     /**
      * Constructs an AI service with the specified configuration.
@@ -103,6 +101,9 @@ public abstract class BaseAIService implements AIService {
         this.model = ofNullable(config.model()).or(() -> ofNullable(provider.getDefaultModel())).orElseGet(() -> config.require(PROPERTY_MODEL));
         this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))));
         this.prompt = config.prompt();
+
+        this.textAnalyzer = new DefaultTextAnalyzer();
+        this.imageAnalyzer = new DefaultImageAnalyzer();
     }
 
     @Override
@@ -130,42 +131,12 @@ public abstract class BaseAIService implements AIService {
         }
 
         var options = ChatOptions.newBuilder()
-            .systemPrompt(buildSummarizePrompt(maxWords))
-            .temperature(DEFAULT_TEXT_ANALYSIS_TEMPERATURE)
-            .maxTokens(estimateSummarizeMaxTokens(maxWords))
+            .systemPrompt(textAnalyzer.buildSummarizePrompt(maxWords))
+            .temperature(textAnalyzer.getDefaultCreativeTemperature())
+            .maxTokens(textAnalyzer.estimateSummarizeMaxTokens(maxWords, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options);
-    }
-
-    /**
-     * Builds the system prompt for {@link #summarizeAsync(String, int)}.
-     * You can override this method to customize the prompt.
-     *
-     * @param maxWords Maximum words in summary.
-     * @return The system prompt.
-     */
-    protected String buildSummarizePrompt(int maxWords) {
-        return """
-            You are a professional summarizer.
-            Summarize the provided text in at most %d words.
-            Rules:
-            - Provide one coherent summary.
-            Output format:
-            - Plain text summary only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(maxWords);
-    }
-
-    /**
-     * Estimates the maximum number of tokens for {@link #summarizeAsync(String, int)}.
-     * You can override this method to customize the estimation.
-     *
-     * @param maxWords Maximum words in summary.
-     * @return Estimated maximum number of tokens.
-     */
-    protected int estimateSummarizeMaxTokens(int maxWords) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(maxWords * getEstimatedTokensPerWord());
     }
 
     @Override
@@ -175,41 +146,12 @@ public abstract class BaseAIService implements AIService {
         }
 
         var options = ChatOptions.newBuilder()
-            .systemPrompt(buildExtractKeyPointsPrompt(maxPoints))
-            .temperature(DEFAULT_TEXT_ANALYSIS_TEMPERATURE)
-            .maxTokens(estimateExtractKeyPointsMaxTokens(maxPoints))
+            .systemPrompt(textAnalyzer.buildExtractKeyPointsPrompt(maxPoints))
+            .temperature(textAnalyzer.getDefaultCreativeTemperature())
+            .maxTokens(textAnalyzer.estimateExtractKeyPointsMaxTokens(maxPoints, getEstimatedTokensPerWord()))
             .build();
 
-        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(line -> line.strip()).filter(not(TextHelper::isBlank)).toList());
-    }
-
-    /**
-     * Builds the system prompt for {@link #extractKeyPointsAsync(String, int)}.
-     * You can override this method to customize the prompt.
-     *
-     * @param maxPoints Maximum number of key points.
-     * @return The system prompt.
-     */
-    protected String buildExtractKeyPointsPrompt(int maxPoints) {
-        return """
-            You are an expert at extracting key points.
-            Extract the %d most important key points from the provided text.
-            Each key point can have at most %d words.
-            Output format:
-            - One key point per line.
-            - No numbering, no bullets, no dashes, no explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(maxPoints, DEFAULT_WORDS_PER_KEYPOINT);
-    }
-
-    /**
-     * Estimates the maximum number of tokens for {@link #extractKeyPointsAsync(String, int)}.
-     * You can override this method to customize the estimation.
-     *
-     * @param maxPoints Maximum number of key points.
-     * @return Estimated maximum number of tokens.
-     */
-    protected int estimateExtractKeyPointsMaxTokens(int maxPoints) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(maxPoints * DEFAULT_WORDS_PER_KEYPOINT * getEstimatedTokensPerWord());
+        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
     }
 
 
@@ -226,51 +168,12 @@ public abstract class BaseAIService implements AIService {
         }
 
         var options = ChatOptions.newBuilder()
-            .systemPrompt(buildTranslatePrompt(sourceLang, targetLang))
-            .temperature(DEFAULT_TRANSLATE_TEMPERATURE)
-            .maxTokens(estimateTranslateMaxTokens(text))
+            .systemPrompt(textAnalyzer.buildTranslatePrompt(sourceLang, targetLang))
+            .temperature(0.1)
+            .maxTokens(textAnalyzer.estimateTranslateMaxTokens(text, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options);
-    }
-
-    /**
-     * Builds the system prompt for {@link #translateAsync(String, String, String)}.
-     * You can override this method to customize the prompt.
-     *
-     * @param sourceLang Source language ISO 639-1 code, or {@code null} for auto-detection.
-     * @param targetLang Target language ISO 639-1 code.
-     * @return The system prompt.
-     */
-    protected String buildTranslatePrompt(String sourceLang, String targetLang) {
-        var sourcePrompt = sourceLang == null
-                ? "Detect the source language automatically."
-                : "Translate from ISO 639-1 code '%s'".formatted(sourceLang.toLowerCase());
-        return """
-            You are a professional translator.
-            %s
-            Translate to ISO 639-1 code '%s'.
-            Rules for every input:
-            - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
-            Rules if the input is parseable as HTML/XML:
-            - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
-            - Preserve ALL HTML/XML attribute values (style="...", class="...", id="...", data-*, etc.) EXACTLY as-is.
-            Output format:
-            - Only the translated input.
-            - No explanations, no notes, no extra text, no markdown formatting.
-            - Keep exact same line breaks, spacing and structure where possible.
-        """.formatted(sourcePrompt, targetLang.toLowerCase());
-    }
-
-    /**
-     * Estimates the maximum number of tokens for {@link #translateAsync(String, String, String)}.
-     * You can override this method to customize the estimation.
-     *
-     * @param text The text to translate.
-     * @return Estimated maximum number of tokens.
-     */
-    protected int estimateTranslateMaxTokens(String text) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(text.split("\\s+").length * getEstimatedTokensPerWord());
     }
 
     @Override
@@ -280,9 +183,9 @@ public abstract class BaseAIService implements AIService {
         }
 
         var options = ChatOptions.newBuilder()
-            .systemPrompt(buildDetectLanguagePrompt())
-            .temperature(DEFAULT_DETECT_LANGUAGE_TEMPERATURE)
-            .maxTokens(estimateDetectLanguageMaxTokens())
+            .systemPrompt(textAnalyzer.buildDetectLanguagePrompt())
+            .temperature(0.0)
+            .maxTokens(textAnalyzer.estimateDetectLanguageMaxTokens(getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options).thenApply(response -> {
@@ -292,32 +195,6 @@ public abstract class BaseAIService implements AIService {
 
             return response.strip().toLowerCase().replaceAll("[^a-z]", "");
         });
-    }
-
-    /**
-     * Builds the system prompt for {@link #detectLanguageAsync(String)}.
-     * You can override this method to customize the prompt.
-     *
-     * @return The system prompt.
-     */
-    protected String buildDetectLanguagePrompt() {
-        return """
-            You are a language detection expert.
-            Determine the language of the provided text.
-            Output format:
-            - Only the ISO 639-1 two-letter code of the main language (e.g. en, fr, es, zh).
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """;
-    }
-
-    /**
-     * Estimates the maximum number of tokens for {@link #detectLanguageAsync(String)}.
-     * You can override this method to customize the estimation.
-     *
-     * @return Estimated maximum number of tokens.
-     */
-    protected int estimateDetectLanguageMaxTokens() {
-        return DEFAULT_DETECTION_TOKENS + (int) Math.ceil(2 * getEstimatedTokensPerWord());
     }
 
 
@@ -334,134 +211,20 @@ public abstract class BaseAIService implements AIService {
         }
 
         var chatOptions = ChatOptions.newBuilder()
-            .systemPrompt(buildModerateContentPrompt(options))
-            .temperature(DEFAULT_MODERATE_CONTENT_TEMPERATURE)
-            .maxTokens(estimateModerateContentMaxTokens(options))
+            .systemPrompt(textAnalyzer.buildModerateContentPrompt(options))
+            .temperature(0.1)
+            .maxTokens(textAnalyzer.estimateModerateContentMaxTokens(options, getEstimatedTokensPerWord()))
             .build();
 
-        return chatAsync(content, chatOptions).thenApply(response -> parseModerationResult(response, options));
-    }
-
-    /**
-     * Builds the system prompt for {@link #moderateContentAsync(String, ModerationOptions)}.
-     * You can override this method to customize the prompt.
-     *
-     * @param options Moderation options containing categories and threshold.
-     * @return The system prompt.
-     */
-    protected String buildModerateContentPrompt(ModerationOptions options) {
-        var scores = Json.createObjectBuilder();
-        options.getCategories().forEach(category -> scores.add(category, 0.0));
-        var scoresTemplateString = Json.createObjectBuilder().add("scores", scores).build().toString();
-        return """
-            You are a strict content moderation model whose only task is to evaluate safety violations.
-            Categories to evaluate:
-            %s
-            Rules:
-            - 0.0: no violation at all
-            - 0.1 - 0.3: mild / subtle undertone / possible concern
-            - 0.4 - 0.6: moderate / clear but not extreme
-            - 0.7 - 0.9: strong violation
-            - 1.0: extremely severe / blatant / dangerous content
-            Think carefully step by step:
-            1. Read the whole message
-            2. For each category, decide whether it applies
-            3. Assign a score using the scale above
-            4. Be objective; do not over-react to fictional, humorous, historical, or artistic context unless it clearly promotes harm
-            JSON template:
-            %s
-            Output format:
-            - Return ONLY valid JSON using the JSON template with scores substituted.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(String.join(", ", options.getCategories()), scoresTemplateString);
-    }
-
-    /**
-     * Estimates the maximum number of tokens for {@link #moderateContentAsync(String, ModerationOptions)}.
-     * You can override this method to customize the estimation.
-     *
-     * @param options Moderation options containing categories and threshold.
-     * @return Estimated maximum number of tokens.
-     */
-    protected int estimateModerateContentMaxTokens(ModerationOptions options) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(options.getCategories().size() * DEFAULT_WORDS_PER_MODERATE_CONTENT_CATEGORY * getEstimatedTokensPerWord());
-    }
-
-    /**
-     * Parses the moderation result from JSON response.
-     * You can override this method to customize the parsing.
-     *
-     * @param responseBody The JSON response from the AI model containing moderation scores.
-     * @param options The moderation options containing categories and threshold.
-     * @return The parsed moderation result.
-     * @throws AIApiResponseException If the response cannot be parsed as JSON.
-     */
-    protected ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIApiResponseException {
-        var responseJson = parseJson(responseBody);
-        var scores = new TreeMap<String, Double>();
-        var flagged = false;
-
-        if (responseJson.containsKey("scores")) {
-            var categoryScores = responseJson.getJsonObject("scores");
-            for (String category : options.getCategories()) {
-                if (categoryScores.containsKey(category)) {
-                    double score = categoryScores.getJsonNumber(category).doubleValue();
-                    scores.put(category, score);
-                    if (score > options.getThreshold()) {
-                        flagged = true;
-                    }
-                }
-            }
-        }
-
-        return new ModerationResult(flagged, scores);
+        return chatAsync(content, chatOptions).thenApply(response -> textAnalyzer.parseModerationResult(response, options));
     }
 
 
     // Image Analysis Implementation (delegates to analyzeImage) ------------------------------------------------------
 
-    /**
-     * Builds the system prompt for {@link #analyzeImageAsync(byte[], String)}.
-     * You can override this method to customize the prompt.
-     *
-     * @param prompt User-provided prompt, or {@code null} for default.
-     * @return The system prompt.
-     */
-    protected String buildAnalyzeImagePrompt(String prompt) {
-        return isBlank(prompt) ? """
-            You are an expert at analyzing images.
-            Describe this image in detail.
-            Rules:
-            - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
-            Output format:
-            - Plain text description only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """ : prompt;
-    }
-
     @Override
     public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException {
-        return analyzeImageAsync(image, buildGenerateAltTextPrompt());
-    }
-
-    /**
-     * Builds the system prompt for {@link #generateAltTextAsync(byte[])}.
-     * You can override this method to customize the prompt.
-     *
-     * @return The system prompt.
-     */
-    protected String buildGenerateAltTextPrompt() {
-        return """
-            You are an expert at writing web alt text.
-            Write concise, descriptive alt text for the image in at most 2 sentences.
-            Each sentence can have at most %d words.
-            Rules:
-            - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
-            - Do not include phrases like "image of" unless necessary.
-            Output format:
-            - Plain text description only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(DEFAULT_WORDS_PER_KEYPOINT);
+        return analyzeImageAsync(image, imageAnalyzer.buildGenerateAltTextPrompt());
     }
 
 

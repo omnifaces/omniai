@@ -18,8 +18,8 @@ import java.util.Set;
 
 import jakarta.json.Json;
 
-import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;

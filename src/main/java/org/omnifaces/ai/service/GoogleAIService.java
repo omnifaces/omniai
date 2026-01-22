@@ -22,8 +22,8 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
-import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIException;
@@ -95,7 +95,7 @@ public class GoogleAIService extends BaseAIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent("generateContent", buildVisionPayload(image, buildAnalyzeImagePrompt(prompt)));
+        return asyncPostAndExtractMessageContent("generateContent", buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
     }
 
     @Override

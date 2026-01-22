@@ -20,8 +20,8 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
-import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -89,7 +89,7 @@ public class OllamaAIService extends BaseAIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent("api/chat", buildVisionPayload(image, buildAnalyzeImagePrompt(prompt)));
+        return asyncPostAndExtractMessageContent("api/chat", buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
     }
 
     /**

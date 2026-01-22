@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 
 import jakarta.json.Json;
 
-import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
@@ -143,7 +143,7 @@ public class OpenAIService extends BaseAIService {
             throw new UnsupportedOperationException("This feature is only supported in gpt-4 or newer");
         }
 
-        return asyncPostAndProcessStreamEvents("responses", buildChatPayload(message, options, true), (event) -> processStreamEvent(event, onToken));
+        return asyncPostAndProcessStreamEvents("responses", buildChatPayload(message, options, true), event -> processStreamEvent(event, onToken));
     }
 
     /**
@@ -156,7 +156,7 @@ public class OpenAIService extends BaseAIService {
      */
     protected boolean processStreamEvent(Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
-            return !(event.value().equals("response.completed") || event.value().equals("response.incomplete"));
+            return !"response.completed".equals(event.value()) && !"response.incomplete".equals(event.value());
         }
         else if (event.type() == DATA && event.value().contains("response.output_text.delta")) { // Cheap pre-filter before expensive parse.
             try {
@@ -191,7 +191,7 @@ public class OpenAIService extends BaseAIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent(supportsResponsesApi() ? "responses" : "chat/completions", buildVisionPayload(image, buildAnalyzeImagePrompt(prompt)));
+        return asyncPostAndExtractMessageContent(supportsResponsesApi() ? "responses" : "chat/completions", buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
     }
 
     @Override

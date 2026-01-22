@@ -14,8 +14,8 @@ package org.omnifaces.ai.service;
 
 import java.util.Set;
 
-import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 
