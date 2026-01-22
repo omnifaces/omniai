@@ -181,7 +181,7 @@ public enum AIProvider {
     private final String defaultModel;
     private final String defaultEndpoint;
 
-    private AIProvider(String name, Class<? extends AIService> serviceClass, boolean apiKeyRequired, String defaultModel, String defaultEndpoint) {
+    AIProvider(String name, Class<? extends AIService> serviceClass, boolean apiKeyRequired, String defaultModel, String defaultEndpoint) {
         this.name = name;
         this.serviceClass = serviceClass;
         this.apiKeyRequired = apiKeyRequired;

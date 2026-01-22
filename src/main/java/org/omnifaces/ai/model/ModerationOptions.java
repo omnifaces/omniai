@@ -63,7 +63,7 @@ public class ModerationOptions implements Serializable {
         private final String name;
         private final boolean openAISupported;
 
-        private Category(String name, boolean openAIStandard) {
+        Category(String name, boolean openAIStandard) {
             this.name = name;
             this.openAISupported = openAIStandard;
         }
