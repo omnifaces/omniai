@@ -81,6 +81,14 @@ public class GoogleAIService extends BaseAIService {
         };
     }
 
+    /**
+     * Technically, Google AI API supports it, but not as SSE. It only supports JSON streaming. Chunks of a whole JSON object. Useless thus.
+     */
+    @Override
+    protected boolean supportsStreaming() {
+        return false;
+    }
+
     @Override
     protected URI resolveURI(String path) {
         return super.resolveURI(String.format("models/%s:%s?key=%s", model, path, apiKey));
@@ -90,7 +98,7 @@ public class GoogleAIService extends BaseAIService {
      * Returns {@code generateContent}.
      */
     @Override
-    protected String getChatPath() {
+    protected String getChatPath(boolean streaming) {
         return "generateContent";
     }
 

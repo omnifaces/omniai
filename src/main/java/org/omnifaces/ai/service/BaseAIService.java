@@ -134,9 +134,9 @@ public abstract class BaseAIService implements AIService {
     protected abstract String getChatPath(boolean streaming);
 
     /**
-     * Returns whether this AI service implementation supports chat streaming.
+     * Returns whether this AI service implementation supports chat streaming via SSE.
      * The default implementation returns false.
-     * @return Whether this AI service implementation supports chat streaming.
+     * @return Whether this AI service implementation supports chat streaming via SSE.
      */
     protected boolean supportsStreaming() {
         return false;
