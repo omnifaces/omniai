@@ -63,22 +63,22 @@ abstract class BaseAIServiceTextAnalyzerIT extends AIServiceIT {
 
     @Test
     void detectLanguage() {
-        var response = service.detectLanguage("De kat zat op de mat.");
+        var response = service.detectLanguage("De kat zat op de stoel.");
         log(response);
         assertEquals("nl", response);
     }
 
     @Test
     void translate() {
-        var response = service.translate("<section style='color:blue'>The cat #{bean.verb} on the mat.</section><script>{'key':'value'}</script>", "en", "nl");
+        var response = service.translate("<section style='color:blue'>The cat #{bean.verb} on the chair.</section><script>{'key':'value'}</script>", "en", "nl");
         log(response);
-        assertEquals("<section style='color:blue'>De kat #{bean.verb} op de mat.</section><script>{'key':'value'}</script>", response);
+        assertEquals("<section style='color:blue'>De kat #{bean.verb} op de stoel.</section><script>{'key':'value'}</script>", response);
     }
 
     @Test
     void translateAutomatically() {
-        var response = service.translate("<section style='color:blauw'>De kat #{boon.werkwoord} op de mat.</section><script>{'sleutel':'waarde'}</script>", null, "en");
+        var response = service.translate("<section style='color:blauw'>De kat #{boon.werkwoord} op de stoel.</section><script>{'sleutel':'waarde'}</script>", null, "en");
         log(response);
-        assertEquals("<section style='color:blauw'>The cat #{boon.werkwoord} on the mat.</section><script>{'sleutel':'waarde'}</script>", response);
+        assertEquals("<section style='color:blauw'>The cat #{boon.werkwoord} on the chair.</section><script>{'sleutel':'waarde'}</script>", response);
     }
 }
