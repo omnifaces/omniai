@@ -42,7 +42,7 @@ import java.util.Map;
  * @author Bauke Scholtz
  * @since 1.0
  */
-public record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, Map<String, String> properties) implements Serializable {
+public final record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, Map<String, String> properties) implements Serializable {
 
     // Just future-proofing potential Jakarta/MicroProfile config.
     private static final String PROPERTY_PREFIX = "org.omnifaces.ai.";

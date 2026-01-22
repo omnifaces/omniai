@@ -27,7 +27,7 @@ import java.io.Serializable;
  * @since 1.0
  * @see AIService#getModelVersion()
  */
-public record AIModelVersion(String modelName, int majorVersion, int minorVersion) implements Comparable<AIModelVersion>, Serializable {
+public final record AIModelVersion(String modelName, int majorVersion, int minorVersion) implements Comparable<AIModelVersion>, Serializable {
 
     /**
      * Validates and normalizes the record components.
