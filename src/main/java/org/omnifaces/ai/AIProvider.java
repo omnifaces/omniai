@@ -18,6 +18,7 @@ import org.omnifaces.ai.cdi.AI;
 import org.omnifaces.ai.service.AnthropicAIService;
 import org.omnifaces.ai.service.AzureAIService;
 import org.omnifaces.ai.service.GoogleAIService;
+import org.omnifaces.ai.service.HuggingFaceAIService;
 import org.omnifaces.ai.service.MetaAIService;
 import org.omnifaces.ai.service.MistralAIService;
 import org.omnifaces.ai.service.OllamaAIService;
@@ -105,7 +106,7 @@ public enum AIProvider {
      * <p>
      * Defaults currently to model {@code mistral-medium-2508} at endpoint {@code https://api.mistral.ai/v1}.
      * @see MistralAIService
-     * @see <a href="https://llama.developer.meta.com/docs/api-keys/">Manage Mistral AI API Keys</a>
+     * @see <a href="https://console.mistral.ai/home?workspace_dialog=apiKeys">Manage Mistral AI API Keys</a>
      * @see <a href="https://docs.mistral.ai/getting-started/models/">Available Mistral AI Models</a>
      */
     MISTRAL("Mistral AI", MistralAIService.class, true, "mistral-medium-2508", "https://api.mistral.ai/v1"),
@@ -129,6 +130,16 @@ public enum AIProvider {
      * @see <a href="https://openrouter.ai/models">Available OpenRouter Models</a>
      */
     OPENROUTER("OpenRouter", OpenRouterAIService.class, true, "google/gemma-3-27b-it:free", "https://openrouter.ai/api/v1"),
+
+    /**
+     * Hugging Face: OpenAI, Anthropic, Google, xAI, Meta, Ollama, etc via unified API.
+     * <p>
+     * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://openrouter.ai/api/v1}.
+     * @see HuggingFaceAIService
+     * @see <a href="https://huggingface.co/settings/tokens">Manage Hugging Face API Keys</a>
+     * @see <a href="https://huggingface.co/models">Available Hugging Face Models</a>
+     */
+    HUGGINGFACE("Hugging Face", HuggingFaceAIService.class, true, "google/gemma-3-27b-it", "https://router.huggingface.co/v1"),
 
     /**
      * Ollama: Local models, e.g. Llama, Gemma, Mistral, etc via local server.
