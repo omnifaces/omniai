@@ -26,12 +26,12 @@ package org.omnifaces.ai;
  * enumerated here. Without the text modality the AI service wouldn't be able to process input and give response in
  * first place.
  * <p>
- * Not every provider or model supports every modality. Callers should use {@link AIService#supports(AIModality)}
+ * Not every provider or model supports every modality. Callers should use {@link AIService#supportsModality(AIModality)}
  * to check availability before attempting modality-specific operations.
  *
  * @author Bauke Scholtz
  * @since 1.0
- * @see AIService#supportsCapability(AIModality)
+ * @see AIService#supportsModality(AIModality)
  */
 public enum AIModality {
 
