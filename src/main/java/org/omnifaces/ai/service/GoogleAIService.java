@@ -12,7 +12,7 @@
  */
 package org.omnifaces.ai.service;
 
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMimeType;
+import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
 import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
@@ -166,7 +166,7 @@ public class GoogleAIService extends BaseAIService {
                     .add("parts", Json.createArrayBuilder()
                         .add(Json.createObjectBuilder()
                             .add("inline_data", Json.createObjectBuilder()
-                                .add("mime_type", guessImageMimeType(base64))
+                                .add("mime_type", guessImageMediaType(base64))
                                 .add("data", base64)))
                         .add(Json.createObjectBuilder()
                             .add("text", prompt)))))

@@ -12,7 +12,7 @@
  */
 package org.omnifaces.ai.service;
 
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMimeType;
+import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
 import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
@@ -158,7 +158,7 @@ public class AnthropicAIService extends BaseAIService {
                             .add("type", "image")
                             .add("source", Json.createObjectBuilder()
                                 .add("type", "base64")
-                                .add("media_type", guessImageMimeType(base64))
+                                .add("media_type", guessImageMediaType(base64))
                                 .add("data", base64)))
                         .add(Json.createObjectBuilder()
                             .add("type", "text")

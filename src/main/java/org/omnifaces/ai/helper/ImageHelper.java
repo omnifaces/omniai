@@ -33,22 +33,22 @@ import org.omnifaces.ai.exception.AIException;
  */
 public final class ImageHelper {
 
-    private static final String WEBP_MIME_TYPE = "image/webp";
-    private static final String JPEG_MIME_TYPE = "image/jpeg";
-    private static final String PNG_MIME_TYPE = "image/png";
-    private static final String GIF_MIME_TYPE = "image/gif";
-    private static final String BMP_MIME_TYPE = "image/bmp";
+    private static final String WEBP_MEDIA_TYPE = "image/webp";
+    private static final String JPEG_MEDIA_TYPE = "image/jpeg";
+    private static final String PNG_MEDIA_TYPE = "image/png";
+    private static final String GIF_MEDIA_TYPE = "image/gif";
+    private static final String BMP_MEDIA_TYPE = "image/bmp";
 
-    private static final Map<String, String> MIME_TYPES_BY_BASE64_HEADER = Map.of(
-        "UklGR", WEBP_MIME_TYPE,
-        "/9j/", JPEG_MIME_TYPE,
-        "iVBORw", PNG_MIME_TYPE,
-        "R0lGOD", GIF_MIME_TYPE,
-        "Qk0", BMP_MIME_TYPE
+    private static final Map<String, String> MEDIA_TYPES_BY_BASE64_HEADER = Map.of(
+        "UklGR", WEBP_MEDIA_TYPE,
+        "/9j/", JPEG_MEDIA_TYPE,
+        "iVBORw", PNG_MEDIA_TYPE,
+        "R0lGOD", GIF_MEDIA_TYPE,
+        "Qk0", BMP_MEDIA_TYPE
     );
 
-    private static final Set<String> MIME_TYPES_SUPPORTING_ALPHA_CHANNEL = Set.of(PNG_MIME_TYPE, GIF_MIME_TYPE);
-    private static final Set<String> MIME_TYPES_NEEDING_CONVERSION_TO_PNG = Set.of(GIF_MIME_TYPE, BMP_MIME_TYPE);
+    private static final Set<String> MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL = Set.of(PNG_MEDIA_TYPE, GIF_MEDIA_TYPE);
+    private static final Set<String> MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG = Set.of(GIF_MEDIA_TYPE, BMP_MEDIA_TYPE);
 
     private ImageHelper() {
         throw new AssertionError();
@@ -65,12 +65,12 @@ public final class ImageHelper {
      */
     public static String toImageBase64(byte[] image) {
         var base64 = encodeBase64(image);
-        var mimeType = guessImageMimeType(base64);
+        var mediaType = guessImageMediaType(base64);
 
-        if (MIME_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mimeType)) {
+        if (MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mediaType)) {
             base64 = encodeBase64(removeAnyAlphaChannel(image));
         }
-        else if (MIME_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mimeType)) {
+        else if (MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mediaType)) {
             base64 = encodeBase64(convertToPng(image));
         }
 
@@ -82,14 +82,14 @@ public final class ImageHelper {
     }
 
     /**
-     * Guesses the MIME type of an image based on its Base64 encoded header.
+     * Guesses the media type of an image based on its Base64 encoded header.
      *
      * @param base64 The Base64 encoded image string.
-     * @return The guessed MIME type.
+     * @return The guessed media type.
      * @throws AIException when the image is not recognized.
      */
-    public static String guessImageMimeType(String base64) {
-        for (var contentTypeByBase64Header : MIME_TYPES_BY_BASE64_HEADER.entrySet()) {
+    public static String guessImageMediaType(String base64) {
+        for (var contentTypeByBase64Header : MEDIA_TYPES_BY_BASE64_HEADER.entrySet()) {
             if (base64.startsWith(contentTypeByBase64Header.getKey())) {
                 return contentTypeByBase64Header.getValue();
             }
@@ -104,13 +104,13 @@ public final class ImageHelper {
      * This will automatically convert unsupported image types to PNG as far as possible.
      *
      * @param image The image bytes.
-     * @return The data URI string in the format {@code data:<mime-type>;base64,<data>}.
+     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
      * @throws AIException when image format is not supported or cannot be converted.
      */
     public static String toImageDataUri(byte[] image) {
         var base64 = toImageBase64(image);
-        var mimeType = guessImageMimeType(base64);
-        return "data:" + mimeType + ";base64," + base64;
+        var mediaType = guessImageMediaType(base64);
+        return "data:" + mediaType + ";base64," + base64;
     }
 
     /**
