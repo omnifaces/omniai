@@ -18,7 +18,6 @@ import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
 
@@ -26,7 +25,6 @@ import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 
@@ -89,29 +87,12 @@ public class GoogleAIService extends BaseAIService {
     }
 
     @Override
-    public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
-        return asyncPostAndExtractMessageContent("generateContent", buildChatPayload(message, options));
+    protected String getChatPath() {
+        return "generateContent";
     }
 
     @Override
-    public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent("generateContent", buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
-    }
-
-    @Override
-    public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
-        return asyncPostAndExtractImageContent("generateContent", buildGenerateImagePayload(prompt, options));
-    }
-
-    /**
-     * Builds the JSON request payload for {@link #chatAsync(String, ChatOptions)}.
-     * You can override this method to customize the payload.
-     *
-     * @param message The user message.
-     * @param options The chat options.
-     * @return The JSON request payload.
-     */
-    protected String buildChatPayload(String message, ChatOptions options) {
+    protected String buildChatPayload(String message, ChatOptions options, boolean streaming) {
         if (isBlank(message)) {
             throw new IllegalArgumentException("Message cannot be blank");
         }
@@ -146,14 +127,7 @@ public class GoogleAIService extends BaseAIService {
             .toString();
     }
 
-    /**
-     * Builds the JSON request payload for {@link #analyzeImageAsync(byte[], String)}.
-     * You can override this method to customize the payload.
-     *
-     * @param image The image bytes.
-     * @param prompt The analysis prompt.
-     * @return The JSON request payload.
-     */
+    @Override
     protected String buildVisionPayload(byte[] image, String prompt) {
         if (isBlank(prompt)) {
             throw new IllegalArgumentException("Prompt cannot be blank");
@@ -174,14 +148,7 @@ public class GoogleAIService extends BaseAIService {
             .toString();
     }
 
-    /**
-     * Builds the JSON request payload for {@link #generateImageAsync(String, GenerateImageOptions)}.
-     * You can override this method to customize the payload.
-     *
-     * @param prompt The image generation prompt.
-     * @param options The image generation options.
-     * @return The JSON request payload.
-     */
+    @Override
     protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
         if (isBlank(prompt)) {
             throw new IllegalArgumentException("Prompt cannot be blank");

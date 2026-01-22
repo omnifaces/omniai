@@ -41,6 +41,7 @@ import org.omnifaces.ai.exception.AIApiResponseException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 import org.omnifaces.ai.model.Sse.Event;
@@ -119,6 +120,30 @@ public abstract class BaseAIService implements AIService {
     @Override
     public String getChatPrompt() {
         return prompt;
+    }
+
+
+    // Chat Implementation --------------------------------------------------------------------------------------------
+
+    /**
+     * Returns the path of the chat endpoint. E.g. {@code chat/completions} or {@code responses}.
+     * @return the path of the chat endpoint.
+     */
+    protected abstract String getChatPath();
+
+    /**
+     * Builds the JSON request payload for all chat operations.
+     *
+     * @param message The user message.
+     * @param options The chat options.
+     * @param streaming Whether to stream the chat response.
+     * @return The JSON request payload.
+     */
+    protected abstract String buildChatPayload(String message, ChatOptions options, boolean streaming);
+
+    @Override
+    public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
+        return asyncPostAndExtractMessageContent(getChatPath(), buildChatPayload(message, options, false).toString());
     }
 
 
@@ -222,11 +247,47 @@ public abstract class BaseAIService implements AIService {
 
     // Image Analysis Implementation (delegates to analyzeImage) ------------------------------------------------------
 
+    /**
+     * Builds the JSON request payload for all vision operations.
+     * @param image The image bytes.
+     * @param prompt The analysis prompt.
+     * @return The JSON request payload.
+     */
+    protected abstract String buildVisionPayload(byte[] image, String prompt);
+
+    @Override
+    public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
+        return asyncPostAndExtractMessageContent(getChatPath(), buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
+    }
+
     @Override
     public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException {
         return analyzeImageAsync(image, imageAnalyzer.buildGenerateAltTextPrompt());
     }
 
+    /**
+     * Returns the path of the image generation endpoint. E.g. {@code images/generations}.
+     * The default implementation delegates to {@link #getChatPath()}.
+     * @return the path of the image generation endpoint.
+     */
+    protected String getGenerateImagePath() {
+        return getChatPath();
+    }
+
+    /**
+     * Builds the JSON request payload for all generate image operations.
+     * @param prompt The image generation prompt.
+     * @param options The image generation options.
+     * @return The JSON request payload.
+     */
+    protected String buildGenerateImagePayload(String prompt, GenerateImageOptions options) {
+        throw new UnsupportedOperationException("Please implement buildGenerateImagePayload(String prompt, GenerateImageOptions options) method in class " + getClass().getSimpleName());
+    }
+
+    @Override
+    public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
+        return asyncPostAndExtractImageContent(getGenerateImagePath(), buildGenerateImagePayload(prompt, options));
+    }
 
     // HTTP Helper Methods --------------------------------------------------------------------------------------------
 
@@ -393,5 +454,7 @@ public abstract class BaseAIService implements AIService {
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @return all possible paths to the image content in the JSON response of {@link #asyncPostAndExtractImageContent(String, String)}.
      */
-    protected abstract List<String> getResponseImageContentPaths();
+    protected List<String> getResponseImageContentPaths() {
+        throw new UnsupportedOperationException("Please implement getResponseImageContentPaths() method in class " + getClass().getSimpleName());
+    }
 }
