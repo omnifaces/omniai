@@ -100,7 +100,7 @@ public class AnthropicAIService extends BaseAIService {
     }
 
     @Override
-    protected String getChatPath() {
+    protected String getChatPath(boolean streaming) {
         return "messages";
     }
 

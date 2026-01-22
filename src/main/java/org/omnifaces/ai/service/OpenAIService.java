@@ -144,7 +144,7 @@ public class OpenAIService extends BaseAIService {
      * If {@link #supportsResponsesApi()} then returns {@code responses} else {@code chat/completions}.
      */
     @Override
-    protected String getChatPath() {
+    protected String getChatPath(boolean streaming) {
         return supportsResponsesApi() ? "responses" : "chat/completions";
     }
 

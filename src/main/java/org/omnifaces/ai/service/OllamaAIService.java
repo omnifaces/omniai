@@ -84,7 +84,7 @@ public class OllamaAIService extends BaseAIService {
      * Returns {@code api/chat}.
      */
     @Override
-    protected String getChatPath() {
+    protected String getChatPath(boolean streaming) {
         return "api/chat";
     }
 

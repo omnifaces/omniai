@@ -128,9 +128,10 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Returns the path of the chat endpoint. E.g. {@code chat/completions} or {@code responses}.
+     * @param streaming Whether this is for chat streaming endpoint.
      * @return the path of the chat endpoint.
      */
-    protected abstract String getChatPath();
+    protected abstract String getChatPath(boolean streaming);
 
     /**
      * Returns whether this AI service implementation supports chat streaming.
@@ -146,14 +147,14 @@ public abstract class BaseAIService implements AIService {
      *
      * @param message The user message.
      * @param options The chat options.
-     * @param streaming Whether to stream the chat response.
+     * @param streaming Whether this is for chat streaming endpoint.
      * @return The JSON request payload.
      */
     protected abstract String buildChatPayload(String message, ChatOptions options, boolean streaming);
 
     @Override
     public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
-        return asyncPostAndExtractMessageContent(getChatPath(), buildChatPayload(message, options, false).toString());
+        return asyncPostAndExtractMessageContent(getChatPath(false), buildChatPayload(message, options, false).toString());
     }
 
     @Override
@@ -164,7 +165,7 @@ public abstract class BaseAIService implements AIService {
 
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(), buildChatPayload(message, options, true), event -> processChatStreamEvent(event, onToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), buildChatPayload(message, options, true), event -> processChatStreamEvent(event, onToken)).handle((result, exception) -> {
             if (exception == null) {
                 return result;
             }
@@ -295,7 +296,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent(getChatPath(), buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
+        return asyncPostAndExtractMessageContent(getChatPath(false), buildVisionPayload(image, isBlank(prompt) ? imageAnalyzer.buildAnalyzeImagePrompt() : prompt));
     }
 
     @Override
@@ -305,11 +306,11 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Returns the path of the image generation endpoint. E.g. {@code images/generations}.
-     * The default implementation delegates to {@link #getChatPath()}.
+     * The default implementation delegates to {@link #getChatPath(boolean)}
      * @return the path of the image generation endpoint.
      */
     protected String getGenerateImagePath() {
-        return getChatPath();
+        return getChatPath(false);
     }
 
     /**
