@@ -38,9 +38,9 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
+import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
-import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -169,8 +169,11 @@ public class OpenAIService extends BaseAIService {
         var currentModelVersion = getModelVersion();
         var supportsResponsesApi = supportsResponsesApi();
         var payload = Json.createObjectBuilder()
-            .add("model", model)
-            .add(supportsResponsesApi ? "max_output_tokens" : currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens", options.getMaxTokens());
+            .add("model", model);
+
+        if (options.getMaxTokens() != null) {
+            payload.add(supportsResponsesApi ? "max_output_tokens" : currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens", options.getMaxTokens());
+        }
 
         var input = Json.createArrayBuilder();
 

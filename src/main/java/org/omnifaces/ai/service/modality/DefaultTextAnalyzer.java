@@ -24,8 +24,8 @@ import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 
 /**
- * Default implementation of {@link TextAnalyzer} that provides sensible, general-purpose prompt templates, token
- * estimation logic, and response parsing suitable for most modern large language models (LLMs).
+ * Default implementation of {@link TextAnalyzer} that provides sensible, general-purpose prompt templates, and
+ * response parsing suitable for most modern large language models (LLMs).
  * <p>
  * This class is intended as a reasonable fallback / starting point when no provider-specific implementation is
  * available or desired. It uses widely compatible prompt patterns that perform acceptably on models from OpenAI,
@@ -36,7 +36,6 @@ import org.omnifaces.ai.model.ModerationResult;
  * Subclass and override individual methods when you need to:
  * <ul>
  * <li>adapt prompts to a specific model's preferred style / few-shot examples</li>
- * <li>use model-family-specific tokenizers for more accurate estimation</li>
  * <li>support non-JSON moderation formats</li>
  * <li>change default temperature, output formatting rules, or safety instructions</li>
  * </ul>
@@ -81,11 +80,6 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
     }
 
     @Override
-    public int estimateSummarizeMaxTokens(int maxWords, double estimatedTokensPerWord) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(maxWords * estimatedTokensPerWord);
-    }
-
-    @Override
     public String buildExtractKeyPointsPrompt(int maxPoints) {
         return """
             You are an expert at extracting key points.
@@ -95,11 +89,6 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
             - One key point per line.
             - No numbering, no bullets, no dashes, no explanations, no notes, no extra text, no markdown formatting.
         """.formatted(maxPoints, DEFAULT_MAX_WORDS_PER_KEYPOINT);
-    }
-
-    @Override
-    public int estimateExtractKeyPointsMaxTokens(int maxPoints, double estimatedTokensPerWord) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(maxPoints * DEFAULT_MAX_WORDS_PER_KEYPOINT * estimatedTokensPerWord);
     }
 
     @Override
@@ -124,11 +113,6 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
     }
 
     @Override
-    public int estimateTranslateMaxTokens(String text, double estimatedTokensPerWord) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(text.split("\\s+").length * estimatedTokensPerWord);
-    }
-
-    @Override
     public String buildDetectLanguagePrompt() {
         return """
             You are a language detection expert.
@@ -137,11 +121,6 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
             - Only the ISO 639-1 two-letter code of the main language (e.g. en, fr, es, zh).
             - No explanations, no notes, no extra text, no markdown formatting.
         """;
-    }
-
-    @Override
-    public int estimateDetectLanguageMaxTokens(double estimatedTokensPerWord) {
-        return DEFAULT_DETECTION_TOKENS + (int) Math.ceil(2 * estimatedTokensPerWord);
     }
 
     @Override
@@ -171,12 +150,6 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
             - No explanations, no notes, no extra text, no markdown formatting.
         """.formatted(String.join(", ", options.getCategories()), scoresTemplateString);
     }
-
-    @Override
-    public int estimateModerateContentMaxTokens(ModerationOptions options, double estimatedTokensPerWord) {
-        return DEFAULT_REASONING_TOKENS + (int) Math.ceil(options.getCategories().size() * DEFAULT_WORDS_PER_MODERATE_CONTENT_CATEGORY * estimatedTokensPerWord);
-    }
-
 
     @Override
     public ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {

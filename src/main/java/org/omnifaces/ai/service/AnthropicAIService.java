@@ -112,8 +112,11 @@ public class AnthropicAIService extends BaseAIService {
         }
 
         var payload = Json.createObjectBuilder()
-            .add("model", model)
-            .add("max_tokens", options.getMaxTokens());
+            .add("model", model);
+
+        if (options.getMaxTokens() != null) {
+            payload.add("max_tokens", options.getMaxTokens());
+        }
 
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());

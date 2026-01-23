@@ -42,8 +42,8 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import org.omnifaces.ai.exception.AIBadRequestException;
-import org.omnifaces.ai.exception.AIHttpException;
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.exception.AIHttpException;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
 

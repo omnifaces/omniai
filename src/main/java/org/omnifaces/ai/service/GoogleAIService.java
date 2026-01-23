@@ -136,8 +136,11 @@ public class GoogleAIService extends BaseAIService {
                         .add("text", message)))));
 
         var generationConfig = Json.createObjectBuilder()
-            .add("temperature", options.getTemperature())
-            .add("maxOutputTokens", options.getMaxTokens());
+            .add("temperature", options.getTemperature());
+
+        if (options.getMaxTokens() != null) {
+            generationConfig.add("maxOutputTokens", options.getMaxTokens());
+        }
 
         if (options.getTopP() != 1.0) {
             generationConfig.add("topP", options.getTopP());

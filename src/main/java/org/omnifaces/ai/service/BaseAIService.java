@@ -40,8 +40,8 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
@@ -199,7 +199,6 @@ public abstract class BaseAIService implements AIService {
         var options = ChatOptions.newBuilder()
             .systemPrompt(textAnalyzer.buildSummarizePrompt(maxWords))
             .temperature(textAnalyzer.getDefaultCreativeTemperature())
-            .maxTokens(textAnalyzer.estimateSummarizeMaxTokens(maxWords, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options);
@@ -214,7 +213,6 @@ public abstract class BaseAIService implements AIService {
         var options = ChatOptions.newBuilder()
             .systemPrompt(textAnalyzer.buildExtractKeyPointsPrompt(maxPoints))
             .temperature(textAnalyzer.getDefaultCreativeTemperature())
-            .maxTokens(textAnalyzer.estimateExtractKeyPointsMaxTokens(maxPoints, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
@@ -236,7 +234,6 @@ public abstract class BaseAIService implements AIService {
         var options = ChatOptions.newBuilder()
             .systemPrompt(textAnalyzer.buildTranslatePrompt(sourceLang, targetLang))
             .temperature(0.1)
-            .maxTokens(textAnalyzer.estimateTranslateMaxTokens(text, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options);
@@ -251,7 +248,6 @@ public abstract class BaseAIService implements AIService {
         var options = ChatOptions.newBuilder()
             .systemPrompt(textAnalyzer.buildDetectLanguagePrompt())
             .temperature(0.0)
-            .maxTokens(textAnalyzer.estimateDetectLanguageMaxTokens(getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(text, options).thenApply(response -> {
@@ -279,7 +275,6 @@ public abstract class BaseAIService implements AIService {
         var chatOptions = ChatOptions.newBuilder()
             .systemPrompt(textAnalyzer.buildModerateContentPrompt(options))
             .temperature(0.1)
-            .maxTokens(textAnalyzer.estimateModerateContentMaxTokens(options, getEstimatedTokensPerWord()))
             .build();
 
         return chatAsync(content, chatOptions).thenApply(response -> textAnalyzer.parseModerationResult(response, options));
@@ -502,6 +497,13 @@ public abstract class BaseAIService implements AIService {
 
     // JSON parsing helper --------------------------------------------------------------------------------------------
 
+    /**
+     * Try to parse the given SSE event data line as JSON.
+     * @param eventData SSE event data line.
+     * @param logger The logger to emit WARNING when JSON parsing threw exception.
+     * @param processor The JSON processor.
+     * @return {@code true} to continue stream in case of exception, else the result of the given JSON processor.
+     */
     static boolean tryParseEventDataJson(String eventData, Logger logger, Predicate<JsonObject> processor) {
         JsonObject json;
 

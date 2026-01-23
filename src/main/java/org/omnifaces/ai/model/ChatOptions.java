@@ -32,17 +32,8 @@ public class ChatOptions implements Serializable {
     /** Creative temperature: {@value}. */
     public static final double CREATIVE_TEMPERATURE = 1.2;
 
-    /** Default max tokens: {@value}. */
-    public static final int DEFAULT_MAX_TOKENS = 1000;
-
     /** Default Top-P: {@value}. */
     public static final double DEFAULT_TOP_P = 1.0;
-
-    /** Default frequency penalty: {@value}. */
-    public static final double DEFAULT_FREQUENCY_PENALTY = 0.0;
-
-    /** Default presence penalty: {@value}. */
-    public static final double DEFAULT_PRESENCE_PENALTY = 0.0;
 
     /** Default chat options with temperature of {@value #DEFAULT_TEMPERATURE}. */
     public static final ChatOptions DEFAULT = ChatOptions.newBuilder().build();
@@ -58,7 +49,7 @@ public class ChatOptions implements Serializable {
     /** The sampling temperature. */
     private final double temperature;
     /** The maximum number of tokens. */
-    private final int maxTokens;
+    private final Integer maxTokens;
     /** The Top-P value. */
     private final double topP;
 
@@ -94,7 +85,7 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Gets the maximum number of tokens to generate in the response. Defaults to {@value #DEFAULT_MAX_TOKENS}.
+     * Gets the maximum number of tokens to generate in the response. Defaults to {@code null}.
      * <p>
      * A token is a model-specific unit of text which varies per input and output language.
      * In English 1000 tokens is roughly 750 words, but in e.g. Spanish it would be roughly 700 words due to more inflection and functions in the language.
@@ -105,9 +96,9 @@ public class ChatOptions implements Serializable {
      * If the thinking process is complex, the response may be shorter.
      * Your input plus this limit must fit within the model's maximum context size.
      *
-     * @return The maximum token limit for the completion.
+     * @return The maximum token limit for the completion, or {@code null} to use the AI service's default.
      */
-    public int getMaxTokens() {
+    public Integer getMaxTokens() {
         return maxTokens;
     }
 
@@ -148,7 +139,7 @@ public class ChatOptions implements Serializable {
     public static class Builder {
         private String systemPrompt = null;
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
-        private int maxTokens = ChatOptions.DEFAULT_MAX_TOKENS;
+        private Integer maxTokens = null;
         private double topP = ChatOptions.DEFAULT_TOP_P;
 
         private Builder() {}
@@ -187,7 +178,7 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Sets the maximum number of tokens to generate in the chat completion. Defaults to {@value ChatOptions#DEFAULT_MAX_TOKENS}.
+         * Sets the maximum number of tokens to generate in the chat completion. Defaults to {@code null}.
          * <p>
          * A token is a model-specific unit of text which varies per input and output language.
          * In English 1000 tokens is roughly 750 words, but in e.g. Spanish it would be roughly 700 words due to more inflection and functions in the language.
@@ -198,12 +189,12 @@ public class ChatOptions implements Serializable {
          * If the thinking process is complex, the response may be shorter.
          * Your input plus this limit must fit within the model's maximum context size.
          *
-         * @param maxTokens The maximum number of tokens to generate. Must be positive.
+         * @param maxTokens The maximum number of tokens to generate. Must be positive, or {@code null} to use the AI service's default.
          * @return This builder instance for chaining.
          * @throws IllegalArgumentException if maxTokens is less than 1.
          */
-        public Builder maxTokens(int maxTokens) {
-            if (maxTokens < 1) {
+        public Builder maxTokens(Integer maxTokens) {
+            if (maxTokens != null && maxTokens < 1) {
                 throw new IllegalArgumentException("Max tokens must be positive");
             }
 

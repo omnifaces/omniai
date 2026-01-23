@@ -18,7 +18,7 @@ import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 
 /**
- * Contract for prompt construction, token estimation and result parsing for text analysis features of an {@link AIService}.
+ * Contract for prompt construction and result parsing for text analysis features of an {@link AIService}.
  * <p>
  * Covers:
  * <ul>
@@ -73,30 +73,12 @@ public interface TextAnalyzer {
     String buildSummarizePrompt(int maxWords);
 
     /**
-     * Estimates the maximum number of tokens for {@link AIService#summarize(String, int)} and {@link AIService#summarizeAsync(String, int)}.
-     *
-     * @param maxWords Maximum words in summary.
-     * @param estimatedMaxTokensPerWord Estimated max tokens per word. You can use the value from {@link AIService#getEstimatedTokensPerWord()}.
-     * @return Estimated maximum number of tokens.
-     */
-    int estimateSummarizeMaxTokens(int maxWords, double estimatedMaxTokensPerWord);
-
-    /**
      * Builds the system prompt for {@link AIService#extractKeyPoints(String, int)} and {@link AIService#extractKeyPointsAsync(String, int)}.
      *
      * @param maxPoints Maximum number of key points.
      * @return The system prompt.
      */
     String buildExtractKeyPointsPrompt(int maxPoints);
-
-    /**
-     * Estimates the maximum number of tokens for {@link AIService#extractKeyPoints(String, int)} and {@link AIService#extractKeyPointsAsync(String, int)}.
-     *
-     * @param maxPoints Maximum number of key points.
-     * @param estimatedMaxTokensPerWord Estimated max tokens per word. You can use the value from {@link AIService#getEstimatedTokensPerWord()}.
-     * @return Estimated maximum number of tokens.
-     */
-    int estimateExtractKeyPointsMaxTokens(int maxPoints, double estimatedMaxTokensPerWord);
 
     /**
      * Builds the system prompt for {@link AIService#translate(String, String, String)} and {@link AIService#translateAsync(String, String, String)}.
@@ -108,28 +90,11 @@ public interface TextAnalyzer {
     String buildTranslatePrompt(String sourceLang, String targetLang);
 
     /**
-     * Estimates the maximum number of tokens for {@link AIService#translate(String, String, String)} and {@link AIService#translateAsync(String, String, String)}.
-     *
-     * @param text The text to translate.
-     * @param estimatedMaxTokensPerWord Estimated max tokens per word. You can use the value from {@link AIService#getEstimatedTokensPerWord()}.
-     * @return Estimated maximum number of tokens.
-     */
-    int estimateTranslateMaxTokens(String text, double estimatedMaxTokensPerWord);
-
-    /**
      * Builds the system prompt for {@link AIService#detectLanguage(String)} and {@link AIService#detectLanguageAsync(String)}.
      *
      * @return The system prompt.
      */
     String buildDetectLanguagePrompt();
-
-    /**
-     * Estimates the maximum number of tokens for {@link AIService#detectLanguage(String)} and {@link AIService#detectLanguageAsync(String)}.
-     *
-     * @param estimatedMaxTokensPerWord Estimated max tokens per word. You can use the value from {@link AIService#getEstimatedTokensPerWord()}.
-     * @return Estimated maximum number of tokens.
-     */
-    int estimateDetectLanguageMaxTokens(double estimatedMaxTokensPerWord);
 
 
     /**
@@ -139,15 +104,6 @@ public interface TextAnalyzer {
      * @return The system prompt.
      */
     String buildModerateContentPrompt(ModerationOptions options);
-
-    /**
-     * Estimates the maximum number of tokens for {@link AIService#moderateContent(String, ModerationOptions)} and {@link AIService#moderateContentAsync(String, ModerationOptions)}.
-     *
-     * @param options Moderation options containing categories and threshold.
-     * @param estimatedMaxTokensPerWord Estimated max tokens per word. You can use the value from {@link AIService#getEstimatedTokensPerWord()}.
-     * @return Estimated maximum number of tokens.
-     */
-    int estimateModerateContentMaxTokens(ModerationOptions options, double estimatedMaxTokensPerWord);
 
     /**
      * Parses the moderation result from response returned by {@link AIService#moderateContent(String, ModerationOptions)} and {@link AIService#moderateContentAsync(String, ModerationOptions)}.

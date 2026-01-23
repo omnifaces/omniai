@@ -107,8 +107,11 @@ public class OllamaAIService extends BaseAIService {
             .add("content", message));
 
         var optionsBuilder = Json.createObjectBuilder()
-            .add("temperature", options.getTemperature())
-            .add("num_predict", options.getMaxTokens());
+            .add("temperature", options.getTemperature());
+
+        if (options.getMaxTokens() != null) {
+            optionsBuilder.add("num_predict", options.getMaxTokens());
+        }
 
         if (options.getTopP() != 1.0) {
             optionsBuilder.add("top_p", options.getTopP());
