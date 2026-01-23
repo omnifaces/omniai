@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.modality;
 
+import static java.util.Optional.ofNullable;
 import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -22,6 +23,7 @@ import java.util.function.Consumer;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
+import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
@@ -36,6 +38,10 @@ import org.omnifaces.ai.model.Sse.Event;
  */
 public class AnthropicAITextHandler extends BaseAITextHandler {
 
+    private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
+    private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_0 = 4096;
+    private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_X = 8192;
+
     @Override
     public JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming) {
         if (isBlank(message)) {
@@ -43,11 +49,8 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
         }
 
         var payload = Json.createObjectBuilder()
-            .add("model", service.getModelName());
-
-        if (options.getMaxTokens() != null) {
-            payload.add("max_tokens", options.getMaxTokens());
-        }
+            .add("model", service.getModelName())
+            .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X));
 
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());
