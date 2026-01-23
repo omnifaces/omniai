@@ -261,13 +261,13 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
         var digits = new StringBuilder();
 
         for (var c : fullModelName.toCharArray()) {
+            var isDigit = Character.isDigit(c);
+
             if (!foundMajor) {
-                if (Character.isDigit(c)) {
-                    foundMajor = true;
-                }
+                foundMajor = isDigit;
             }
             else if (!foundSeparator) {
-                if (!Character.isDigit(c)) {
+                if (!isDigit) {
                     if (!Character.isLetterOrDigit(c)) {
                         foundSeparator = true;
                     }
@@ -276,13 +276,11 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
                     }
                 }
             }
+            else if (isDigit) {
+                digits.append(c);
+            }
             else {
-                if (Character.isDigit(c)) {
-                    digits.append(c);
-                }
-                else {
-                    break;
-                }
+                break;
             }
         }
 
