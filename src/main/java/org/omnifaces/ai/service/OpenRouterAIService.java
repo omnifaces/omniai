@@ -83,4 +83,9 @@ public class OpenRouterAIService extends OpenAIService {
     protected boolean supportsResponsesApi() {
         return false;
     }
+
+    @Override
+    protected boolean supportsStreaming() {
+        return true;
+    }
 }

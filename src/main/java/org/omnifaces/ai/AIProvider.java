@@ -112,7 +112,7 @@ public enum AIProvider {
     MISTRAL("Mistral AI", MistralAIService.class, true, "mistral-medium-2508", "https://api.mistral.ai/v1"),
 
     /**
-     * Azure OpenAI: OpenAI, Anthropic, xAI, DeepSeek, etc via Microsoft Azure.
+     * Azure OpenAI: Aggregates a broad range of AI models via a unified OpenAI-compatible API at Microsoft Azure.
      * <p>
      * Defaults currently to model {@code gpt-5-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
      * @see AzureAIService
@@ -122,17 +122,17 @@ public enum AIProvider {
     AZURE("Azure OpenAI", AzureAIService.class, true, "gpt-5-mini", "https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1"),
 
     /**
-     * OpenRouter: OpenAI, Anthropic, Google, xAI, Meta, Ollama, etc via unified API.
+     * OpenRouter: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
-     * Defaults currently to model {@code google/gemma-3-27b-it:free} at endpoint {@code https://openrouter.ai/api/v1}.
+     * Defaults currently to model {@code deepseek/deepseek-v3.2} at endpoint {@code https://openrouter.ai/api/v1}.
      * @see OpenRouterAIService
      * @see <a href="https://openrouter.ai/settings/keys/">Manage OpenRouter API Keys</a>
      * @see <a href="https://openrouter.ai/models">Available OpenRouter Models</a>
      */
-    OPENROUTER("OpenRouter", OpenRouterAIService.class, true, "google/gemma-3-27b-it:free", "https://openrouter.ai/api/v1"),
+    OPENROUTER("OpenRouter", OpenRouterAIService.class, true, "deepseek/deepseek-v3.2", "https://openrouter.ai/api/v1"),
 
     /**
-     * Hugging Face: OpenAI, Anthropic, Google, xAI, Meta, Ollama, etc via unified API.
+     * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://openrouter.ai/api/v1}.
      * @see HuggingFaceAIService
