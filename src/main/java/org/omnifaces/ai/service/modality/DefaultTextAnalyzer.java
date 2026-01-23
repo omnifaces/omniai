@@ -50,16 +50,12 @@ import org.omnifaces.ai.model.ModerationResult;
  */
 public class DefaultTextAnalyzer implements TextAnalyzer {
 
-    /** Default reasoning tokens: {@value} */
-    protected static final int DEFAULT_REASONING_TOKENS = 500;
-    /** Default detection tokens: {@value} */
-    protected static final int DEFAULT_DETECTION_TOKENS = 100;
+    /** Default text analysis temperature: {@value} */
+    protected static final double DEFAULT_TEXT_ANALYSIS_TEMPERATURE = 0.5;
     /** Default max words per keypoint: {@value} */
     protected static final int DEFAULT_MAX_WORDS_PER_KEYPOINT = 25;
     /** Default words per moderate content category: {@value} */
     protected static final int DEFAULT_WORDS_PER_MODERATE_CONTENT_CATEGORY = 10;
-    /** Default text analysis temperature: {@value} */
-    protected static final double DEFAULT_TEXT_ANALYSIS_TEMPERATURE = 0.5;
 
     @Override
     public double getDefaultCreativeTemperature() {
