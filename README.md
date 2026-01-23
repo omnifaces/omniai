@@ -44,18 +44,20 @@ On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optio
 
 You can also use it on Java SE, you'll still need the JSON-P implementation, but you cannot use the CDI annotation.
 
-## Supported Providers
+## Supported Providers (in 1.0-SNAPSHOT)
 
-| Provider | Default Model in OmniAI 1.0 | API Key Required | Available Models |
+| Provider | Default Model | API Key Required | Available Models |
 |----------|---------------|------------------|------------------|
 | OpenAI | gpt-5-mini | [Yes](https://platform.openai.com/api-keys) | [List](https://platform.openai.com/docs/models) |
 | Anthropic | claude-sonnet-4-5-20250929 | [Yes](https://platform.claude.com/settings/keys) | [List](https://platform.claude.com/docs/en/about-claude/models/overview) |
 | Google AI | gemini-2.5-flash | [Yes](https://aistudio.google.com/app/api-keys) | [List](https://ai.google.dev/gemini-api/docs/models) |
 | xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) | [List](https://docs.x.ai/docs/models) |
+| Mistral | mistral-medium-2508 | [Yes](https://console.mistral.ai/home?workspace_dialog=apiKeys) | [List](https://docs.mistral.ai/getting-started/models) |
 | Meta AI | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) | [List](https://llama.developer.meta.com/docs/models/) |
 | Azure OpenAI | gpt-5-mini | [Yes](https://portal.azure.com) | [List](https://ai.azure.com/catalog) |
-| OpenRouter | google/gemma-3-27b-it:free | [Yes](https://openrouter.ai/settings/keys) | [List](https://openrouter.ai/models) |
-| Ollama | llama3.2 | No (localhost) | [List](https://ollama.com/library) |
+| OpenRouter | deepseek/deepseek-v3.2 | [Yes](https://openrouter.ai/settings/keys) | [List](https://openrouter.ai/models) |
+| Hugging Face | google/gemma-3-27b-it | [Yes](https://huggingface.co/settings/tokens) | [List](https://huggingface.co/models) |
+| Ollama | gemma3 | No (localhost) | [List](https://ollama.com/library) |
 | Custom | - | - | - |
 
 ## Quick Start
@@ -124,7 +126,7 @@ public String getConsensusAnswer(String question) {
 
 This pattern is useful for reducing bias, cross-validating answers, or getting a balanced summary from multiple AI perspectives.
 
-## Features
+## Features (in 1.0-SNAPSHOT)
 
 ### Chat
 
@@ -142,6 +144,18 @@ String response = service.chat("Explain microservices",
         .temperature(0.7)
         .maxTokens(500)
         .build());
+
+// Streaming
+service.chatStream(message, options, token -> {
+    // handle partial response
+    System.out.print(token);
+}).exceptionally(e -> {
+    // handle exception
+    System.out.println("\n\n Error occurred: " + e);
+}).thenRun(() -> {
+    // handle completion
+    System.out.println("\n\n");
+});
 ```
 
 ### Text Analysis
@@ -239,12 +253,12 @@ private AIService custom;
 | **Dependencies** | JSON-P only (CDI/EL optional) | Multiple modules | Spring framework | TBD (in development) |
 | **Learning Curve** | Low | Medium-High | Medium (if Spring-familiar) | TBD |
 
-### Feature Comparison
+### Feature Comparison (in 1.0-SNAPSHOT)
 
 | Feature | OmniAI | LangChain4J | Spring AI | Jakarta Agentic |
 |---------|--------|-------------|-----------|-----------------|
 | **Chat/Completion** | ✅ | ✅ | ✅ | ✅ (planned) |
-| **Streaming** | ❌ | ✅ | ✅ | TBD |
+| **Streaming** | ✅ | ✅ | ✅ | TBD |
 | **Function Calling** | ❌ | ✅ | ✅ | TBD |
 | **RAG Support** | ❌ | ✅ (extensive) | ✅ | TBD |
 | **Vector Stores** | ❌ | ✅ (many) | ✅ (many) | TBD |
@@ -258,21 +272,21 @@ private AIService custom;
 | **Agents** | ❌ | ✅ | ✅ | ✅ (core focus) |
 | **Prompt Templates** | ❌ | ✅ | ✅ | TBD |
 
-### Provider Support
+### Provider Support (
 
 | Provider | OmniAI | LangChain4J | Spring AI |
 |----------|--------|-------------|-----------|
 | OpenAI | ✅ | ✅ | ✅ |
 | Anthropic | ✅ | ✅ | ✅ |
 | Google AI | ✅ | ✅ | ✅ |
-| Azure OpenAI | ✅ | ✅ | ✅ |
-| Ollama | ✅ | ✅ | ✅ |
 | xAI (Grok) | ✅ | ❌ | ❌ |
+| Mistral | ✅ | ✅ | ✅ |
 | Meta AI | ✅ | ❌ | ❌ |
+| Azure OpenAI | ✅ | ✅ | ✅ |
 | OpenRouter | ✅ | ❌ | ❌ |
+| Hugging Face | ✅ | ✅ | ✅ |
+| Ollama | ✅ | ✅ | ✅ |
 | AWS Bedrock | ❌ | ✅ | ✅ |
-| Mistral | ❌ | ✅ | ✅ |
-| Hugging Face | ❌ | ✅ | ✅ |
 
 ### CDI Integration
 
