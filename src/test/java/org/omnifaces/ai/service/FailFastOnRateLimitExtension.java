@@ -20,16 +20,16 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.omnifaces.ai.AIProvider;
-import org.omnifaces.ai.exception.AIApiRateLimitExceededException;
+import org.omnifaces.ai.exception.AIRateLimitExceededException;
 import org.opentest4j.TestAbortedException;
 
 /**
  * JUnit 5 extension that fails fast on AI API rate limit errors.
  * <p>
- * When an {@link AIApiRateLimitExceededException} is thrown during a test, this extension marks the provider as rate-limited and aborts (skips) all
+ * When an {@link AIRateLimitExceededException} is thrown during a test, this extension marks the provider as rate-limited and aborts (skips) all
  * subsequent tests for this provider to prevent unnecessary API calls and wasted time / quota.
  *
- * @see AIApiRateLimitExceededException
+ * @see AIRateLimitExceededException
  */
 public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExecutionExceptionHandler {
 
@@ -45,7 +45,7 @@ public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExe
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        if (throwable instanceof AIApiRateLimitExceededException) {
+        if (throwable instanceof AIRateLimitExceededException) {
             RATE_LIMIT_HITS.computeIfAbsent(getProvider(context), p -> new AtomicBoolean(false)).set(true);
         }
 

@@ -19,7 +19,7 @@ import java.util.TreeMap;
 import jakarta.json.Json;
 
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiResponseException;
+import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 
@@ -179,7 +179,7 @@ public class DefaultTextAnalyzer implements TextAnalyzer {
 
 
     @Override
-    public ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIApiResponseException {
+    public ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
         var responseJson = parseJson(responseBody);
         var scores = new TreeMap<String, Double>();
         var flagged = false;

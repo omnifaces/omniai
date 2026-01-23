@@ -31,8 +31,8 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiResponseException;
-import org.omnifaces.ai.exception.AIApiTokenLimitExceededException;
+import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 
@@ -149,7 +149,7 @@ public class AnthropicAIService extends BaseAIService {
 
         if (event.type() == EVENT) {
             if ("max_tokens".equals(event.value())) {
-                throw new AIApiTokenLimitExceededException();
+                throw new AITokenLimitExceededException();
             }
 
             return !"message_stop".equals(event.value()) && !"content_block_stop".equals(event.value());
@@ -166,7 +166,7 @@ public class AnthropicAIService extends BaseAIService {
                     }
                 }
                 else if ("error".equals(type)) {
-                    throw new AIApiResponseException("Error event returned", event.value());
+                    throw new AIResponseException("Error event returned", event.value());
                 }
 
                 return true;

@@ -19,16 +19,16 @@ import java.util.concurrent.CompletionException;
  * <p>
  * This is the root of the OmniAI exception hierarchy:
  * <ul>
- * <li>{@link AIApiException} - HTTP-level errors (4xx/5xx status codes)
- * <li>{@link AIApiResponseException} - Response content errors (parsing, missing content)
- * <li>{@link AIApiTokenLimitExceededException} - Token limit exceeded error
+ * <li>{@link AIHttpException} - HTTP-level errors (4xx/5xx status codes)
+ * <li>{@link AIResponseException} - Response content errors (parsing, missing content)
+ * <li>{@link AITokenLimitExceededException} - Token limit exceeded error
  * </ul>
  *
  * @author Bauke Scholtz
  * @since 1.0
- * @see AIApiException
- * @see AIApiResponseException
- * @see AIApiTokenLimitExceededException
+ * @see AIHttpException
+ * @see AIResponseException
+ * @see AITokenLimitExceededException
  */
 public class AIException extends RuntimeException {
 

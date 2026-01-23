@@ -30,7 +30,7 @@ import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiTokenLimitExceededException;
+import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.Sse.Event;
@@ -176,7 +176,7 @@ public class GoogleAIService extends BaseAIService {
                 }
 
                 if ("MAX_TOKENS".equals(finishReason)) {
-                    throw new AIApiTokenLimitExceededException();
+                    throw new AITokenLimitExceededException();
                 }
 
                 return true;

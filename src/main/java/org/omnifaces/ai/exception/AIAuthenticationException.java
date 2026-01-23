@@ -15,27 +15,27 @@ package org.omnifaces.ai.exception;
 import java.net.URI;
 
 /**
- * Exception thrown when the AI API returns HTTP 403 Forbidden.
+ * Exception thrown when the AI API returns HTTP 401 Unauthorized.
  * <p>
- * This typically indicates insufficient permissions for the requested operation, such as accessing a model or feature not included in your subscription or wrong country.
+ * This typically indicates a missing or invalid API key.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIApiAuthorizationException extends AIApiException {
+public class AIAuthenticationException extends AIHttpException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Forbidden: {@value}. */
-    public static final int STATUS_CODE = 403;
+    /** The HTTP status code for Unauthorized: {@value}. */
+    public static final int STATUS_CODE = 401;
 
     /**
-     * Constructs a new authorization exception with the specified HTTP request URI and HTTP response body.
+     * Constructs a new authentication exception with the specified HTTP request URI and HTTP response body.
      *
      * @param uri The HTTP request URI.
      * @param responseBody The HTTP response body.
      */
-    public AIApiAuthorizationException(URI uri, String responseBody) {
+    public AIAuthenticationException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
 }

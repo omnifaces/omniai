@@ -40,7 +40,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiResponseException;
+import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatOptions;
@@ -256,7 +256,7 @@ public abstract class BaseAIService implements AIService {
 
         return chatAsync(text, options).thenApply(response -> {
             if (isBlank(response)) {
-                throw new AIApiResponseException("Response is empty", response);
+                throw new AIResponseException("Response is empty", response);
             }
 
             return response.strip().toLowerCase().replaceAll("[^a-z]", "");
@@ -399,9 +399,9 @@ public abstract class BaseAIService implements AIService {
      *
      * @param responseBody The API response body, usually a JSON object with the AI response, along with some meta data.
      * @return The extracted message content from the API response body.
-     * @throws AIApiResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected message content.
+     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected message content.
      */
-    protected String extractMessageContent(String responseBody) throws AIApiResponseException {
+    protected String extractMessageContent(String responseBody) throws AIResponseException {
         var responseJson = parseResponseBodyAndCheckErrorMessages(responseBody);
         var messageContentPaths = getResponseMessageContentPaths();
 
@@ -417,7 +417,7 @@ public abstract class BaseAIService implements AIService {
             }
         }
 
-        throw new AIApiResponseException("No message content found at paths " + messageContentPaths, responseBody);
+        throw new AIResponseException("No message content found at paths " + messageContentPaths, responseBody);
     }
 
     /**
@@ -428,9 +428,9 @@ public abstract class BaseAIService implements AIService {
      *
      * @param responseBody The API response body, usually a JSON object with the AI response, along with some meta data.
      * @return The extracted image content from the API response body.
-     * @throws AIApiResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected image content.
+     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected image content.
      */
-    protected byte[] extractImageContent(String responseBody) throws AIApiResponseException {
+    protected byte[] extractImageContent(String responseBody) throws AIResponseException {
         var responseJson = parseResponseBodyAndCheckErrorMessages(responseBody);
         var imageContentPaths = getResponseImageContentPaths();
 
@@ -446,22 +446,22 @@ public abstract class BaseAIService implements AIService {
                     return Base64.getDecoder().decode(imageContent);
                 }
                 catch (Exception e) {
-                    throw new AIApiResponseException("Cannot Base64-decode image", responseBody, e);
+                    throw new AIResponseException("Cannot Base64-decode image", responseBody, e);
                 }
             }
         }
 
-        throw new AIApiResponseException("No image content found at paths " + imageContentPaths, responseBody);
+        throw new AIResponseException("No image content found at paths " + imageContentPaths, responseBody);
     }
 
-    private JsonObject parseResponseBodyAndCheckErrorMessages(String responseBody) throws AIApiResponseException {
+    private JsonObject parseResponseBodyAndCheckErrorMessages(String responseBody) throws AIResponseException {
         var responseJson = parseJson(responseBody);
 
         for (var errorMessagePath : getResponseErrorMessagePaths()) {
             var errorMessage = extractByPath(responseJson, errorMessagePath);
 
             if (!isBlank(errorMessage)) {
-                throw new AIApiResponseException(errorMessage, responseBody);
+                throw new AIResponseException(errorMessage, responseBody);
             }
         }
 

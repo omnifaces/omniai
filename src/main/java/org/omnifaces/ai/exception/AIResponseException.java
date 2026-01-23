@@ -22,13 +22,13 @@ package org.omnifaces.ai.exception;
  * <li>The response JSON is missing expected content.
  * </ul>
  * <p>
- * This differs from {@link AIApiException} which represents HTTP-level errors (4xx/5xx status codes).
+ * This differs from {@link AIHttpException} which represents HTTP-level errors (4xx/5xx status codes).
  * {@code AIApiResponseException} is thrown when the HTTP request succeeded but the response content is unusable.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIApiResponseException extends AIException {
+public class AIResponseException extends AIException {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,7 +41,7 @@ public class AIApiResponseException extends AIException {
      * @param message The detail message.
      * @param responseBody The HTTP response body.
      */
-    public AIApiResponseException(String message, String responseBody) {
+    public AIResponseException(String message, String responseBody) {
         this(message, responseBody, null);
     }
 
@@ -52,7 +52,7 @@ public class AIApiResponseException extends AIException {
      * @param responseBody The HTTP response body.
      * @param cause The cause of this exception.
      */
-    public AIApiResponseException(String message, String responseBody, Throwable cause) {
+    public AIResponseException(String message, String responseBody, Throwable cause) {
         super(message + ": " + responseBody, cause);
         this.responseBody = responseBody;
     }

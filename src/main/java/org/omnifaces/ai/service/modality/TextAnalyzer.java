@@ -13,7 +13,7 @@
 package org.omnifaces.ai.service.modality;
 
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiResponseException;
+import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
 
@@ -155,7 +155,7 @@ public interface TextAnalyzer {
      * @param responseBody The response from the AI model containing moderation scores.
      * @param options The moderation options containing categories and threshold.
      * @return The parsed moderation result.
-     * @throws AIApiResponseException If the response cannot be parsed.
+     * @throws AIResponseException If the response cannot be parsed.
      */
-    ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIApiResponseException;
+    ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException;
 }

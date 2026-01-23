@@ -12,24 +12,30 @@
  */
 package org.omnifaces.ai.exception;
 
-import org.omnifaces.ai.model.ChatOptions;
+import java.net.URI;
 
 /**
- * Exception thrown when the AI API returns a response indicating that the token limit has been exceeded.
+ * Exception thrown when the AI API returns HTTP 400 Bad Request.
  * <p>
- * This indicates the response was truncated. Consider increasing the max tokens amount in {@link ChatOptions}.
+ * This typically indicates an invalid or malformed request, such as missing required parameters, invalid JSON, or unsupported options.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIApiTokenLimitExceededException extends AIException {
+public class AIBadRequestException extends AIHttpException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The HTTP status code for Bad Request: {@value}. */
+    public static final int STATUS_CODE = 400;
+
     /**
-     * Constructs a new token limit exceeded exception with a default message of "max tokens reached".
+     * Constructs a new bad request exception with the specified HTTP request URI and HTTP response body.
+     *
+     * @param uri The HTTP request URI.
+     * @param responseBody The HTTP response body.
      */
-    public AIApiTokenLimitExceededException() {
-        super("max tokens reached");
+    public AIBadRequestException(URI uri, String responseBody) {
+        super(uri, STATUS_CODE, responseBody);
     }
 }

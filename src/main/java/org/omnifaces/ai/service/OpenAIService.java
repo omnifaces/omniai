@@ -38,8 +38,8 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.exception.AIApiResponseException;
-import org.omnifaces.ai.exception.AIApiTokenLimitExceededException;
+import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
@@ -236,7 +236,7 @@ public class OpenAIService extends BaseAIService {
             }
 
             if ("response.incomplete".equals(event.value())) {
-                throw new AIApiTokenLimitExceededException();
+                throw new AITokenLimitExceededException();
             }
         }
         else if (event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed"))) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
@@ -260,7 +260,7 @@ public class OpenAIService extends BaseAIService {
                 }
             }
             else if ("response.failed".equals(type)) {
-                throw new AIApiResponseException("Error event returned", event.value());
+                throw new AIResponseException("Error event returned", event.value());
             }
         }
 
@@ -290,7 +290,7 @@ public class OpenAIService extends BaseAIService {
                         var finishReason = extractByPath(json, "choices[*].finish_reason");
 
                         if ("length".equals(finishReason)) {
-                            throw new AIApiTokenLimitExceededException();
+                            throw new AITokenLimitExceededException();
                         }
                     }
 
@@ -376,14 +376,14 @@ public class OpenAIService extends BaseAIService {
      * @param responseBody The JSON response from OpenAI's moderation API.
      * @param options The moderation options containing categories and threshold.
      * @return The parsed moderation result.
-     * @throws AIApiResponseException If the response cannot be parsed as JSON or is missing moderation results.
+     * @throws AIResponseException If the response cannot be parsed as JSON or is missing moderation results.
      */
-    protected ModerationResult parseOpenAIModerationResult(String responseBody, ModerationOptions options) throws AIApiResponseException {
+    protected ModerationResult parseOpenAIModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
         var responseJson = parseJson(responseBody);
         var results = responseJson.getJsonArray("results");
 
         if (isEmpty(results)) {
-            throw new AIApiResponseException("Response is empty", responseBody);
+            throw new AIResponseException("Response is empty", responseBody);
         }
 
         var result = results.getJsonObject(0);

@@ -19,21 +19,21 @@ import java.net.URI;
  * <p>
  * This exception and its subclasses represent HTTP-level errors (4xx/5xx):
  * <ul>
- * <li>{@link AIApiBadRequestException} - 400 Bad Request
- * <li>{@link AIApiAuthenticationException} - 401 Unauthorized
- * <li>{@link AIApiAuthorizationException} - 403 Forbidden
- * <li>{@link AIApiEndpointNotFoundException} - 404 Not Found
- * <li>{@link AIApiRateLimitExceededException} - 429 Too Many Requests
- * <li>{@link AIApiServiceUnavailableException} - 503 Service Unavailable
+ * <li>{@link AIBadRequestException} - 400 Bad Request
+ * <li>{@link AIAuthenticationException} - 401 Unauthorized
+ * <li>{@link AIAuthorizationException} - 403 Forbidden
+ * <li>{@link AIEndpointNotFoundException} - 404 Not Found
+ * <li>{@link AIRateLimitExceededException} - 429 Too Many Requests
+ * <li>{@link AIServiceUnavailableException} - 503 Service Unavailable
  * </ul>
  * <p>
  * Use {@link #fromStatusCode(URI, int, String)} to create the appropriate subclass based on HTTP status code.
  *
  * @author Bauke Scholtz
  * @since 1.0
- * @see AIApiResponseException
+ * @see AIResponseException
  */
-public class AIApiException extends AIException {
+public class AIHttpException extends AIException {
 
     private static final long serialVersionUID = 1L;
 
@@ -47,25 +47,25 @@ public class AIApiException extends AIException {
     private final String responseBody;
 
     /**
-     * Creates and returns the most specific {@link AIApiException} subclass that matches the given HTTP status code.
+     * Creates and returns the most specific {@link AIHttpException} subclass that matches the given HTTP status code.
      * <p>
-     * If no specific exception type is defined for the status code, a generic {@link AIApiException} is returned.
+     * If no specific exception type is defined for the status code, a generic {@link AIHttpException} is returned.
      * The created exception includes the request URI, status code, and response body (when available) to help with debugging.
      *
      * @param uri The URI of the HTTP request that caused the error (used in exception messages).
      * @param statusCode The HTTP status code returned by the server.
      * @param responseBody The response body (may be {@code null} or empty).
-     * @return a subclass of {@link AIApiException} matching the status code, or a generic {@link AIApiException}.
+     * @return a subclass of {@link AIHttpException} matching the status code, or a generic {@link AIHttpException}.
      */
-    public static AIApiException fromStatusCode(URI uri, int statusCode, String responseBody) {
+    public static AIHttpException fromStatusCode(URI uri, int statusCode, String responseBody) {
         return switch (statusCode) {
-            case AIApiBadRequestException.STATUS_CODE -> new AIApiBadRequestException(uri, responseBody);
-            case AIApiAuthenticationException.STATUS_CODE -> new AIApiAuthenticationException(uri, responseBody);
-            case AIApiAuthorizationException.STATUS_CODE -> new AIApiAuthorizationException(uri, responseBody);
-            case AIApiEndpointNotFoundException.STATUS_CODE -> new AIApiEndpointNotFoundException(uri, responseBody);
-            case AIApiRateLimitExceededException.STATUS_CODE -> new AIApiRateLimitExceededException(uri, responseBody);
-            case AIApiServiceUnavailableException.STATUS_CODE -> new AIApiServiceUnavailableException(uri, responseBody);
-            default -> new AIApiException(uri, statusCode, responseBody);
+            case AIBadRequestException.STATUS_CODE -> new AIBadRequestException(uri, responseBody);
+            case AIAuthenticationException.STATUS_CODE -> new AIAuthenticationException(uri, responseBody);
+            case AIAuthorizationException.STATUS_CODE -> new AIAuthorizationException(uri, responseBody);
+            case AIEndpointNotFoundException.STATUS_CODE -> new AIEndpointNotFoundException(uri, responseBody);
+            case AIRateLimitExceededException.STATUS_CODE -> new AIRateLimitExceededException(uri, responseBody);
+            case AIServiceUnavailableException.STATUS_CODE -> new AIServiceUnavailableException(uri, responseBody);
+            default -> new AIHttpException(uri, statusCode, responseBody);
         };
     }
 
@@ -76,7 +76,7 @@ public class AIApiException extends AIException {
      * @param statusCode The HTTP status code.
      * @param responseBody The HTTP response body.
      */
-    public AIApiException(URI uri, int statusCode, String responseBody) {
+    public AIHttpException(URI uri, int statusCode, String responseBody) {
         super("HTTP " + statusCode + " at " + URI.create(uri.toString().split("\\?", 2)[0]) + ": " + responseBody);
         this.uri = uri;
         this.statusCode = statusCode;
@@ -89,7 +89,7 @@ public class AIApiException extends AIException {
      * @param message The detail message.
      * @param cause The cause of this exception.
      */
-    public AIApiException(String message, Throwable cause) {
+    public AIHttpException(String message, Throwable cause) {
         super(message, cause);
         this.uri = null;
         this.statusCode = 0;

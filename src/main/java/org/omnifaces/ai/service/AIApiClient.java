@@ -24,7 +24,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Function.identity;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
-import static org.omnifaces.ai.exception.AIApiException.fromStatusCode;
+import static org.omnifaces.ai.exception.AIHttpException.fromStatusCode;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -41,8 +41,8 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import org.omnifaces.ai.exception.AIApiBadRequestException;
-import org.omnifaces.ai.exception.AIApiException;
+import org.omnifaces.ai.exception.AIBadRequestException;
+import org.omnifaces.ai.exception.AIHttpException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
@@ -96,9 +96,9 @@ final class AIApiClient {
      * @param path the API path
      * @param body The request body
      * @return The response body as a string
-     * @throws AIApiException if the request fails
+     * @throws AIHttpException if the request fails
      */
-    public CompletableFuture<String> post(BaseAIService service, String path, String body) throws AIApiException {
+    public CompletableFuture<String> post(BaseAIService service, String path, String body) throws AIHttpException {
         return sendWithRetryAsync(newRequest(service, path, body, APPLICATION_JSON), 0);
     }
 
@@ -111,9 +111,9 @@ final class AIApiClient {
      * @param body The request body
      * @param eventProcessor The stream event processor.
      * @return A future that completes when stream ends or fails.
-     * @throws AIApiException if the request fails
+     * @throws AIHttpException if the request fails
      */
-    public CompletableFuture<Void> stream(BaseAIService service, String path, String body, Predicate<Event> eventProcessor) throws AIApiException {
+    public CompletableFuture<Void> stream(BaseAIService service, String path, String body, Predicate<Event> eventProcessor) throws AIHttpException {
         var request = newRequest(service, path, body, EVENT_STREAM);
         return streamWithRetryAsync(request, eventProcessor, 0);
     }
@@ -138,7 +138,7 @@ final class AIApiClient {
     private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
         var statusCode = response.statusCode();
 
-        if (statusCode >= AIApiBadRequestException.STATUS_CODE) {
+        if (statusCode >= AIBadRequestException.STATUS_CODE) {
             return failedFuture(fromStatusCode(request.uri(), statusCode, bodyExtractor.apply(response)));
         }
 
@@ -205,7 +205,7 @@ final class AIApiClient {
         }
 
         if (attempt >= MAX_RETRIES - 1 || !isRetryable(cause)) {
-            return failedFuture(new AIApiException("Request failed (" + attempt + " retries)", cause));
+            return failedFuture(new AIHttpException("Request failed (" + attempt + " retries)", cause));
         }
 
         return supplyAsync(() -> withRetry(action, attempt + 1), delayedExecutor(INITIAL_BACKOFF_MS * (1L << attempt), MILLISECONDS)).thenCompose(identity());

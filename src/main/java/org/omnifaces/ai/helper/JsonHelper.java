@@ -25,7 +25,7 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 
-import org.omnifaces.ai.exception.AIApiResponseException;
+import org.omnifaces.ai.exception.AIResponseException;
 
 /**
  * Utility class for JSON operations.
@@ -68,16 +68,16 @@ public final class JsonHelper {
      *
      * @param json The JSON string to parse.
      * @return The parsed JSON object.
-     * @throws AIApiResponseException If the string cannot be parsed as JSON.
+     * @throws AIResponseException If the string cannot be parsed as JSON.
      */
-    public static JsonObject parseJson(String json) throws AIApiResponseException {
+    public static JsonObject parseJson(String json) throws AIResponseException {
         var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some chat APIs stubbornly put JSON in markdown formatting like ```json\n{...}\n``` when asking for JSON-only output.
 
         try (var reader = Json.createReader(new StringReader(sanitizedJson))) {
             return reader.readObject();
         }
         catch (Exception e) {
-            throw new AIApiResponseException("Cannot parse json", json, e);
+            throw new AIResponseException("Cannot parse json", json, e);
         }
     }
 

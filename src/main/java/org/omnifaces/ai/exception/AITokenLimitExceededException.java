@@ -12,30 +12,24 @@
  */
 package org.omnifaces.ai.exception;
 
-import java.net.URI;
+import org.omnifaces.ai.model.ChatOptions;
 
 /**
- * Exception thrown when the AI API returns HTTP 429 Too Many Requests.
+ * Exception thrown when the AI API returns a response indicating that the token limit has been exceeded.
  * <p>
- * This indicates the rate limit has been exceeded. Consider implementing retry logic with exponential backoff, or reducing request frequency.
+ * This indicates the response was truncated. Consider increasing the max tokens amount in {@link ChatOptions}.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AIApiRateLimitExceededException extends AIApiException {
+public class AITokenLimitExceededException extends AIException {
 
     private static final long serialVersionUID = 1L;
 
-    /** The HTTP status code for Too Many Requests: {@value}. */
-    public static final int STATUS_CODE = 429;
-
     /**
-     * Constructs a new rate limit exceeded exception with the specified HTTP request URI and HTTP response body.
-     *
-     * @param uri The HTTP request URI.
-     * @param responseBody The HTTP response body.
+     * Constructs a new token limit exceeded exception with a default message of "max tokens reached".
      */
-    public AIApiRateLimitExceededException(URI uri, String responseBody) {
-        super(uri, STATUS_CODE, responseBody);
+    public AITokenLimitExceededException() {
+        super("max tokens reached");
     }
 }
