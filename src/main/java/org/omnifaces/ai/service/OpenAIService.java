@@ -37,6 +37,7 @@ import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIApiResponseException;
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.helper.JsonHelper;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -207,6 +208,21 @@ public class OpenAIService extends BaseAIService {
 
     @Override
     protected boolean processChatStreamEvent(Event event, Consumer<String> onToken) {
+        if (supportsResponsesApi()) {
+            return processChatStreamEventWithResponsesApi(event, onToken);
+        }
+        else {
+            return processChatStreamEventWithChatCompletionsApi(event, onToken);
+        }
+    }
+
+    /**
+     * Process chat stream event with {@code responses} API.
+     * @param event Stream event.
+     * @param onToken Callback receiving each stream data chunk (often one word/token/line).
+     * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
+     */
+    protected boolean processChatStreamEventWithResponsesApi(Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             return !"response.completed".equals(event.value()) && !"response.incomplete".equals(event.value());
         }
@@ -224,6 +240,38 @@ public class OpenAIService extends BaseAIService {
             }
             catch (Exception e) {
                 logger.log(WARNING, e, () -> "Skipping unparseable stream event data: " + event.value());
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Process chat stream event with {@code chat/completions} API.
+     * @param event Stream event.
+     * @param onToken Callback receiving each stream data chunk (often one word/token/line).
+     * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
+     */
+    protected boolean processChatStreamEventWithChatCompletionsApi(Event event, Consumer<String> onToken) {
+        if (event.type() == DATA) {
+            if ("DONE".equalsIgnoreCase(event.value())) {
+                return false;
+            }
+            else if (event.value().contains("chat.completion.chunk")) { // Cheap pre-filter before expensive parse.
+                try {
+                    var json = parseJson(event.value());
+
+                    if ("chat.completion.chunk".equals(json.getString("object", null))) {
+                        var token = JsonHelper.extractByPath(json, "choices[0].delta.content");
+
+                        if (token != null && !token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
+                            onToken.accept(token);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    logger.log(WARNING, e, () -> "Skipping unparseable stream event data: " + event.value());
+                }
             }
         }
 
