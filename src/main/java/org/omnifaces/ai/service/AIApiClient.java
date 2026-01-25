@@ -154,17 +154,45 @@ final class AIApiClient {
     private static void processEvents(HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
         try {
             var lines = response.body().iterator();
+            var dataBuffer = new StringBuilder();
 
             while (lines.hasNext()) {
                 var line = lines.next();
 
-                if (!line.isBlank() && !line.startsWith(":")) {
-                    var event = createEvent(line.strip());
-
-                    if (event != null && !eventProcessor.test(event)) {
-                        break;
+                if (line.isBlank()) {
+                    if (!processDataEvent(dataBuffer, eventProcessor)) {
+                        return;
                     }
+
+                    continue;
                 }
+
+                line = line.strip();
+
+                if (line.startsWith(":")) {
+                    continue;
+                }
+
+                var event = createEvent(line);
+
+                if (event == null) {
+                    continue;
+                }
+
+                if (event.type() == Type.DATA) {
+                    if (!dataBuffer.isEmpty()) {
+                        dataBuffer.append('\n');
+                    }
+
+                    dataBuffer.append(line.substring(5).strip());
+                }
+                else if (!processDataEvent(dataBuffer, eventProcessor) || !eventProcessor.test(event)) {
+                    return;
+                }
+            }
+
+            if (!processDataEvent(dataBuffer, eventProcessor)) {
+                return;
             }
 
             future.complete(null);
@@ -174,17 +202,29 @@ final class AIApiClient {
         }
     }
 
+    private static boolean processDataEvent(StringBuilder dataBuffer, Predicate<Event> eventProcessor) {
+        if (!dataBuffer.isEmpty()) {
+            if (!eventProcessor.test(new Event(Type.DATA, dataBuffer.toString()))) {
+                return false;
+            }
+
+            dataBuffer.setLength(0);
+        }
+
+        return true;
+    }
+
     private static Event createEvent(String line) {
         if (line.startsWith("id:")) {
-            var id = line.substring(3).trim();
+            var id = line.substring(3).strip();
             return new Event(Type.ID, id);
         }
         else if (line.startsWith("event:")) {
-            var event = line.substring(6).trim();
+            var event = line.substring(6).strip();
             return new Event(Type.EVENT, event);
         }
         else if (line.startsWith("data:")) {
-            var data = line.substring(5).trim();
+            var data = line.substring(5).strip();
             return new Event(Type.DATA, data);
         }
         else {
