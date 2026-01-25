@@ -64,11 +64,12 @@ public class OllamaAIService extends BaseAIService {
      * @see AIConfig
      */
     public OllamaAIService(AIConfig config) {
-        super(config, new AIStrategy(new OllamaAITextHandler(), new OllamaAIImageHandler()));
+        super(config, new AIStrategy(OllamaAITextHandler.instance(), OllamaAIImageHandler.instance()));
     }
 
     /**
      * Constructs an Ollama AI service with the specified configuration and strategy.
+     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
      *
      * @param config the AI configuration
      * @param strategy the AI strategy
@@ -76,7 +77,7 @@ public class OllamaAIService extends BaseAIService {
      * @see AIStrategy
      */
     public OllamaAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
+        super(config, strategy.withDefaults(OllamaAITextHandler.instance(), OllamaAIImageHandler.instance()));
     }
 
     @Override

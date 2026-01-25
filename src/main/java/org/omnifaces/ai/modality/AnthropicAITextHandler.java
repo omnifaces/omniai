@@ -43,7 +43,19 @@ import org.omnifaces.ai.service.AnthropicAIService;
  */
 public class AnthropicAITextHandler extends BaseAITextHandler {
 
+    private static final AnthropicAITextHandler INSTANCE = new AnthropicAITextHandler();
+
     private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
+
+    /**
+     * Returns the singleton instance of this handler.
+     *
+     * @return the singleton instance
+     */
+    public static AnthropicAITextHandler instance() {
+        return INSTANCE;
+    }
+
     private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_0 = 4096;
     private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_X = 8192;
 

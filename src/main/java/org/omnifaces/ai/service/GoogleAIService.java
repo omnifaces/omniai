@@ -63,11 +63,12 @@ public class GoogleAIService extends BaseAIService {
      * @see AIConfig
      */
     public GoogleAIService(AIConfig config) {
-        super(config, new AIStrategy(new GoogleAITextHandler(), new GoogleAIImageHandler()));
+        super(config, new AIStrategy(GoogleAITextHandler.instance(), GoogleAIImageHandler.instance()));
     }
 
     /**
-     * Constructs an Google AI service with the specified configuration and strategy.
+     * Constructs a Google AI service with the specified configuration and strategy.
+     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
      *
      * @param config the AI configuration
      * @param strategy the AI strategy
@@ -75,7 +76,7 @@ public class GoogleAIService extends BaseAIService {
      * @see AIStrategy
      */
     public GoogleAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
+        super(config, strategy.withDefaults(GoogleAITextHandler.instance(), GoogleAIImageHandler.instance()));
     }
 
     @Override

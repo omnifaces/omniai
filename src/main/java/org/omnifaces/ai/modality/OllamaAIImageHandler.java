@@ -23,4 +23,15 @@ import org.omnifaces.ai.service.OllamaAIService;
  */
 public class OllamaAIImageHandler extends BaseAIImageHandler {
 
+    private static final OllamaAIImageHandler INSTANCE = new OllamaAIImageHandler();
+
+    /**
+     * Returns the singleton instance of this handler.
+     *
+     * @return the singleton instance
+     */
+    public static OllamaAIImageHandler instance() {
+        return INSTANCE;
+    }
+
 }

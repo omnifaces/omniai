@@ -81,11 +81,12 @@ public class OpenAIService extends BaseAIService {
      * @see AIConfig
      */
     public OpenAIService(AIConfig config) {
-        super(config, new AIStrategy(new OpenAITextHandler(), new OpenAIImageHandler()));
+        super(config, new AIStrategy(OpenAITextHandler.instance(), OpenAIImageHandler.instance()));
     }
 
     /**
      * Constructs an OpenAI service with the specified configuration and strategy.
+     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
      *
      * @param config the AI configuration
      * @param strategy the AI strategy
@@ -93,7 +94,7 @@ public class OpenAIService extends BaseAIService {
      * @see AIStrategy
      */
     public OpenAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
+        super(config, strategy.withDefaults(OpenAITextHandler.instance(), OpenAIImageHandler.instance()));
     }
 
     @Override

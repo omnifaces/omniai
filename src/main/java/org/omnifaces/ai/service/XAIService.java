@@ -64,11 +64,12 @@ public class XAIService extends OpenAIService {
      * @see AIConfig
      */
     public XAIService(AIConfig config) {
-        super(config, new AIStrategy(new OpenAITextHandler(), new XAIImageHandler()));
+        super(config, new AIStrategy(OpenAITextHandler.instance(), XAIImageHandler.instance()));
     }
 
     /**
      * Constructs an xAI service with the specified configuration and strategy.
+     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
      *
      * @param config the AI configuration
      * @param strategy the AI strategy
@@ -76,7 +77,7 @@ public class XAIService extends OpenAIService {
      * @see AIStrategy
      */
     public XAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
+        super(config, strategy.withDefaults(OpenAITextHandler.instance(), XAIImageHandler.instance()));
     }
 
     @Override

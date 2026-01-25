@@ -42,7 +42,18 @@ import org.omnifaces.ai.service.OpenAIService;
  */
 public class OpenAITextHandler extends BaseAITextHandler {
 
+    private static final OpenAITextHandler INSTANCE = new OpenAITextHandler();
+
     private static final AIModelVersion GPT_5 = AIModelVersion.of("gpt", 5);
+
+    /**
+     * Returns the singleton instance of this handler.
+     *
+     * @return the singleton instance
+     */
+    public static OpenAITextHandler instance() {
+        return INSTANCE;
+    }
 
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {

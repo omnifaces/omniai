@@ -67,11 +67,12 @@ public class AnthropicAIService extends BaseAIService {
      * @see AIConfig
      */
     public AnthropicAIService(AIConfig config) {
-        super(config, new AIStrategy(new AnthropicAITextHandler(), new AnthropicAIImageHandler()));
+        super(config, new AIStrategy(AnthropicAITextHandler.instance(), AnthropicAIImageHandler.instance()));
     }
 
     /**
      * Constructs an Anthropic AI service with the specified configuration and strategy.
+     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
      *
      * @param config the AI configuration
      * @param strategy the AI strategy
@@ -79,7 +80,7 @@ public class AnthropicAIService extends BaseAIService {
      * @see AIStrategy
      */
     public AnthropicAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
+        super(config, strategy.withDefaults(AnthropicAITextHandler.instance(), AnthropicAIImageHandler.instance()));
     }
 
     @Override

@@ -28,6 +28,17 @@ import org.omnifaces.ai.service.OllamaAIService;
  */
 public class OpenAIImageHandler extends BaseAIImageHandler {
 
+    private static final OpenAIImageHandler INSTANCE = new OpenAIImageHandler();
+
+    /**
+     * Returns the singleton instance of this handler.
+     *
+     * @return the singleton instance
+     */
+    public static OpenAIImageHandler instance() {
+        return INSTANCE;
+    }
+
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
         return Json.createObjectBuilder()

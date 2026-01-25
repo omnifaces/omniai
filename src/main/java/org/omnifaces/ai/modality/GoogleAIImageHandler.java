@@ -28,6 +28,17 @@ import org.omnifaces.ai.service.GoogleAIService;
  */
 public class GoogleAIImageHandler extends BaseAIImageHandler {
 
+    private static final GoogleAIImageHandler INSTANCE = new GoogleAIImageHandler();
+
+    /**
+     * Returns the singleton instance of this handler.
+     *
+     * @return the singleton instance
+     */
+    public static GoogleAIImageHandler instance() {
+        return INSTANCE;
+    }
+
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
         var generationConfig = Json.createObjectBuilder()
