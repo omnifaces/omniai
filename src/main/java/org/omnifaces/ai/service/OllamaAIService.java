@@ -45,7 +45,8 @@ import org.omnifaces.ai.modality.OllamaAITextHandler;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#OLLAMA
- * @see AIConfig
+ * @see OllamaAITextHandler
+ * @see OllamaAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://docs.ollama.com/api/introduction">API Reference</a>.

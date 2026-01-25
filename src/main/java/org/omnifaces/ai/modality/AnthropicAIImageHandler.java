@@ -12,10 +12,13 @@
  */
 package org.omnifaces.ai.modality;
 
+import org.omnifaces.ai.service.AnthropicAIService;
+
 /**
  * Default image handler for Anthropic AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see AnthropicAIService
  */
 public class AnthropicAIImageHandler extends BaseAIImageHandler {}

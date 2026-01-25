@@ -46,7 +46,8 @@ import org.omnifaces.ai.modality.GoogleAITextHandler;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#GOOGLE
- * @see AIConfig
+ * @see GoogleAITextHandler
+ * @see GoogleAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://ai.google.dev/api">API Reference</a>

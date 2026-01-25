@@ -17,12 +17,14 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.GenerateImageOptions;
+import org.omnifaces.ai.service.OllamaAIService;
 
 /**
  * Default image handler for OpenAI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see OllamaAIService
  */
 public class OpenAIImageHandler extends BaseAIImageHandler {
 

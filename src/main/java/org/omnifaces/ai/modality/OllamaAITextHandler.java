@@ -21,12 +21,14 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.service.OllamaAIService;
 
 /**
  * Default text handler for Ollama AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see OllamaAIService
  */
 public class OllamaAITextHandler extends BaseAITextHandler {
 

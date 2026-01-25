@@ -12,11 +12,14 @@
  */
 package org.omnifaces.ai.modality;
 
+import org.omnifaces.ai.service.OllamaAIService;
+
 /**
  * Default image handler for Ollama AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see OllamaAIService
  */
 public class OllamaAIImageHandler extends BaseAIImageHandler {
 

@@ -60,7 +60,8 @@ import org.omnifaces.ai.model.ModerationResult;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#OPENAI
- * @see AIConfig
+ * @see OpenAITextHandler
+ * @see OpenAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://platform.openai.com/docs/api-reference">API Reference</a>

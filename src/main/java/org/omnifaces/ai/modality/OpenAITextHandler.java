@@ -38,6 +38,7 @@ import org.omnifaces.ai.service.OpenAIService;
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see OpenAIService
  */
 public class OpenAITextHandler extends BaseAITextHandler {
 
@@ -182,7 +183,7 @@ public class OpenAITextHandler extends BaseAITextHandler {
                             onToken.accept(token);
                         }
 
-                        var finishReason = extractByPath(json, "choices[*].finish_reason");
+                        var finishReason = extractByPath(json, "choices[0].finish_reason");
 
                         if ("length".equals(finishReason)) {
                             throw new AITokenLimitExceededException();

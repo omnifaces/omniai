@@ -47,7 +47,8 @@ import org.omnifaces.ai.modality.AnthropicAITextHandler;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#ANTHROPIC
- * @see AIConfig
+ * @see AnthropicAITextHandler
+ * @see AnthropicAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://platform.claude.com/docs/en/api/overview">API Reference</a>

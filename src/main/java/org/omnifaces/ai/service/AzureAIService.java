@@ -53,7 +53,7 @@ import org.omnifaces.ai.AIStrategy;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#AZURE
- * @see AIConfig
+ * @see OpenAIService
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://learn.microsoft.com/en-us/azure/ai-foundry/openai/latest">API Reference</a>

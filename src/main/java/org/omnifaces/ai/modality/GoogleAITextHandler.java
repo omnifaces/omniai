@@ -30,12 +30,14 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
+import org.omnifaces.ai.service.GoogleAIService;
 
 /**
  * Default text handler for Google AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see GoogleAIService
  */
 public class GoogleAITextHandler extends BaseAITextHandler {
 

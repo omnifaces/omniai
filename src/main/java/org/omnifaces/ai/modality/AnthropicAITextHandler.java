@@ -32,12 +32,14 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
+import org.omnifaces.ai.service.AnthropicAIService;
 
 /**
  * Default text handler for Anthropic AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see AnthropicAIService
  */
 public class AnthropicAITextHandler extends BaseAITextHandler {
 

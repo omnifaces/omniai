@@ -43,7 +43,6 @@ import org.omnifaces.ai.AIStrategy;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIProvider#HUGGINGFACE
- * @see AIConfig
  * @see OpenAIService
  * @see BaseAIService
  * @see AIService
