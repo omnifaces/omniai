@@ -12,42 +12,10 @@
  */
 package org.omnifaces.ai.modality;
 
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
-
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-
-import org.omnifaces.ai.AIService;
-
 /**
  * Default image handler for Anthropic AI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public class AnthropicAIImageHandler extends BaseAIImageHandler {
-
-    @Override
-    public JsonObject buildVisionPayload(AIService service, byte[] image, String prompt) {
-        var base64 = toImageBase64(image);
-        return Json.createObjectBuilder()
-            .add("model", service.getModelName())
-            .add("max_tokens", 1000)
-            .add("messages", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("role", "user")
-                    .add("content", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("type", "image")
-                            .add("source", Json.createObjectBuilder()
-                                .add("type", "base64")
-                                .add("media_type", guessImageMediaType(base64))
-                                .add("data", base64)))
-                        .add(Json.createObjectBuilder()
-                            .add("type", "text")
-                            .add("text", prompt)))))
-            .build();
-    }
-
-}
+public class AnthropicAIImageHandler extends BaseAIImageHandler {}

@@ -13,6 +13,8 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.FINE;
+import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
+import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -25,6 +27,7 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 
@@ -39,11 +42,7 @@ public class GoogleAITextHandler extends BaseAITextHandler {
     private static final Logger logger = Logger.getLogger(GoogleAITextHandler.class.getPackageName());
 
     @Override
-    public JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming) {
-        if (isBlank(message)) {
-            throw new IllegalArgumentException("Message cannot be blank");
-        }
-
+    public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder();
 
         if (!isBlank(options.getSystemPrompt())) {
@@ -53,12 +52,24 @@ public class GoogleAITextHandler extends BaseAITextHandler {
                         .add("text", options.getSystemPrompt()))));
         }
 
+        var parts = Json.createArrayBuilder();
+
+        for (var image : input.getImages()) {
+            var base64 = toImageBase64(image);
+
+            parts.add(Json.createObjectBuilder()
+                .add("inline_data", Json.createObjectBuilder()
+                    .add("mime_type", guessImageMediaType(base64))
+                    .add("data", base64)));
+        }
+
+        parts.add(Json.createObjectBuilder()
+            .add("text", input.getMessage()));
+
         payload.add("contents", Json.createArrayBuilder()
             .add(Json.createObjectBuilder()
                 .add("role", "user")
-                .add("parts", Json.createArrayBuilder()
-                    .add(Json.createObjectBuilder()
-                        .add("text", message)))));
+                .add("parts", parts)));
 
         var generationConfig = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());

@@ -18,6 +18,7 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.modality.BaseAITextHandler;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
@@ -50,12 +51,12 @@ public interface AITextHandler {
      * Builds the JSON request payload for all chat operations.
      *
      * @param service The visiting AI service.
-     * @param message The user message.
+     * @param input The chat input.
      * @param options The chat options.
      * @param streaming Whether this is for chat streaming endpoint.
      * @return The JSON request payload.
      */
-    JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming);
+    JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming);
 
     /**
      * Processes each stream event for {@link AIService#chatStream(String, ChatOptions, Consumer)}.

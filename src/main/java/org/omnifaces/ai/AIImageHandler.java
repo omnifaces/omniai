@@ -22,13 +22,10 @@ import org.omnifaces.ai.model.GenerateImageOptions;
  * <p>
  * Covers:
  * <ul>
- * <li>vision payload construction</li>
  * <li>detailed image analysis / description / VQA</li>
  * <li>alt-text generation</li>
  * <li>image generation</li>
  * </ul>
- * <p>
- * No temperature control is used. Most vision models produce deterministic or near-deterministic output.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -51,15 +48,6 @@ public interface AIImageHandler {
      * @return The system prompt.
      */
     String buildGenerateAltTextPrompt();
-
-    /**
-     * Builds the JSON request payload for all vision operations.
-     * @param service The involved AI service.
-     * @param image The image bytes.
-     * @param prompt The analysis prompt.
-     * @return The JSON request payload.
-     */
-    JsonObject buildVisionPayload(AIService service, byte[] image, String prompt);
 
     /**
      * Builds the JSON request payload for all generate image operations.

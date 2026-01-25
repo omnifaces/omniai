@@ -13,9 +13,8 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.WARNING;
+import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
-import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
 import static org.omnifaces.ai.model.Sse.Event.Type.EVENT;
@@ -29,6 +28,7 @@ import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
@@ -44,11 +44,7 @@ public class OpenAITextHandler extends BaseAITextHandler {
     private static final AIModelVersion GPT_5 = AIModelVersion.of("gpt", 5);
 
     @Override
-    public JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming) {
-        if (isBlank(message)) {
-            throw new IllegalArgumentException("Message cannot be blank");
-        }
-
+    public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var currentModelVersion = service.getModelVersion();
         var supportsResponsesApi = supportsResponsesApi(service);
         var payload = Json.createObjectBuilder()
@@ -58,24 +54,43 @@ public class OpenAITextHandler extends BaseAITextHandler {
             payload.add(supportsResponsesApi ? "max_output_tokens" : currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens", options.getMaxTokens());
         }
 
-        var input = Json.createArrayBuilder();
+        var message = Json.createArrayBuilder();
 
         if (!isBlank(options.getSystemPrompt())) {
             if (supportsResponsesApi) {
                 payload.add("instructions", options.getSystemPrompt());
             }
             else {
-                input.add(Json.createObjectBuilder()
-                        .add("role", "system")
-                        .add("content", options.getSystemPrompt()));
+                message.add(Json.createObjectBuilder()
+                    .add("role", "system")
+                    .add("content", options.getSystemPrompt()));
             }
         }
 
-        input.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("content", message));
+        var content = Json.createArrayBuilder();
 
-        payload.add(supportsResponsesApi ? "input" : "messages", input);
+        for (var image : input.getImages()) {
+            var img = Json.createObjectBuilder().add("type", supportsResponsesApi ? "input_image" : "image_url");
+
+            if (supportsResponsesApi) {
+                img.add("image_url", toImageDataUri(image));
+            }
+            else {
+                img.add("image_url", Json.createObjectBuilder().add("url", toImageDataUri(image)));
+            }
+
+            content.add(img);
+        }
+
+        content.add(Json.createObjectBuilder()
+            .add("type", supportsResponsesApi ? "input_text" : "text")
+            .add("text", input.getMessage()));
+
+        message.add(Json.createObjectBuilder()
+            .add("role", "user")
+            .add("content", content));
+
+        payload.add(supportsResponsesApi ? "input" : "messages", message);
 
         if (streaming) {
             if (!service.supportsStreaming()) {
@@ -95,7 +110,6 @@ public class OpenAITextHandler extends BaseAITextHandler {
 
         return payload.build();
     }
-
 
     @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
@@ -127,28 +141,22 @@ public class OpenAITextHandler extends BaseAITextHandler {
             }
         }
         else if (event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed"))) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
-            JsonObject json;
+            return tryParseEventDataJson(event.value(), json -> {
+                var type = json.getString("type", null);
 
-            try {
-                json = parseJson(event.value());
-            }
-            catch (Exception e) {
-                logger.log(WARNING, e, () -> "Skipping unparseable stream event data: " + event.value());
-                return true;
-            }
+                if ("response.output_text.delta".equals(type)) {
+                    var token = json.getString("delta", "");
 
-            var type = json.getString("type", null);
-
-            if ("response.output_text.delta".equals(type)) {
-                var token = json.getString("delta", "");
-
-                if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
-                    onToken.accept(token);
+                    if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
+                        onToken.accept(token);
+                    }
                 }
-            }
-            else if ("response.failed".equals(type)) {
-                throw new AIResponseException("Error event returned", event.value());
-            }
+                else if ("response.failed".equals(type)) {
+                    throw new AIResponseException("Error event returned", event.value());
+                }
+
+                return true;
+            });
         }
 
         return true;

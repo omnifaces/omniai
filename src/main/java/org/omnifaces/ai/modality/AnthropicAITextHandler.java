@@ -14,6 +14,8 @@ package org.omnifaces.ai.modality;
 
 import static java.util.Optional.ofNullable;
 import static java.util.logging.Level.FINE;
+import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
+import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
 import static org.omnifaces.ai.model.Sse.Event.Type.EVENT;
@@ -27,6 +29,7 @@ import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 
@@ -43,11 +46,7 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
     private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_X = 8192;
 
     @Override
-    public JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming) {
-        if (isBlank(message)) {
-            throw new IllegalArgumentException("Message cannot be blank");
-        }
-
+    public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder()
             .add("model", service.getModelName())
             .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X));
@@ -56,10 +55,27 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
             payload.add("system", options.getSystemPrompt());
         }
 
+        var content = Json.createArrayBuilder();
+
+        for (var image : input.getImages()) {
+            var base64 = toImageBase64(image);
+
+            content.add(Json.createObjectBuilder()
+                .add("type", "image")
+                .add("source", Json.createObjectBuilder()
+                    .add("type", "base64")
+                    .add("media_type", guessImageMediaType(base64))
+                    .add("data", base64)));
+        }
+
+        content.add(Json.createObjectBuilder()
+            .add("type", "text")
+            .add("text", input.getMessage()));
+
         payload.add("messages", Json.createArrayBuilder()
             .add(Json.createObjectBuilder()
                 .add("role", "user")
-                .add("content", message)));
+                .add("content", content)));
 
         if (streaming) {
             if (!service.supportsStreaming()) {

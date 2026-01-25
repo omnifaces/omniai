@@ -23,6 +23,7 @@ import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
+import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 
 import java.net.URI;
 import java.time.Duration;
@@ -43,6 +44,7 @@ import org.omnifaces.ai.AIStrategy;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -132,19 +134,19 @@ public abstract class BaseAIService implements AIService {
     protected abstract String getChatPath(boolean streaming);
 
     @Override
-    public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
-        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.textHandler().buildChatPayload(this, message, options, false).toString());
+    public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
+        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.textHandler().buildChatPayload(this, input, options, false).toString());
     }
 
     @Override
-    public CompletableFuture<Void> chatStream(String message, ChatOptions options, Consumer<String> onToken) {
+    public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) {
         if (!supportsStreaming()) {
             throw new UnsupportedOperationException("supportsStreaming() returned false, so ...");
         }
 
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), strategy.textHandler().buildChatPayload(this, message, options, true).toString(), event -> strategy.textHandler().processChatStreamEvent(this, event, onToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), strategy.textHandler().buildChatPayload(this, input, options, true).toString(), event -> strategy.textHandler().processChatStreamEvent(this, event, onToken)).handle((result, exception) -> {
             if (exception == null) {
                 return result;
             }
@@ -247,17 +249,21 @@ public abstract class BaseAIService implements AIService {
     }
 
 
-    // Image Analysis Implementation (delegates to analyzeImage) ------------------------------------------------------
+    // Image Analysis Implementation (delegates to chat) --------------------------------------------------------------
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.imageHandler().buildVisionPayload(this, image, isBlank(prompt) ? strategy.imageHandler().buildAnalyzeImagePrompt() : prompt).toString());
+        var input = ChatInput.newBuilder().message(isBlank(prompt) ? strategy.imageHandler().buildAnalyzeImagePrompt() : prompt).images(image).build();
+        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.textHandler().buildChatPayload(this, input, DETERMINISTIC, false).toString());
     }
 
     @Override
     public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException {
         return analyzeImageAsync(image, strategy.imageHandler().buildGenerateAltTextPrompt());
     }
+
+
+    // Image Generator Implementation ---------------------------------------------------------------------------------
 
     /**
      * Returns the path of the image generation endpoint. E.g. {@code images/generations}.

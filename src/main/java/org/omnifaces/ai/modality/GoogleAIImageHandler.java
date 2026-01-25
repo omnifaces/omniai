@@ -12,9 +12,6 @@
  */
 package org.omnifaces.ai.modality;
 
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
-
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
@@ -28,22 +25,6 @@ import org.omnifaces.ai.model.GenerateImageOptions;
  * @since 1.0
  */
 public class GoogleAIImageHandler extends BaseAIImageHandler {
-
-    @Override
-    public JsonObject buildVisionPayload(AIService service, byte[] image, String prompt) {
-        var base64 = toImageBase64(image);
-        return Json.createObjectBuilder()
-            .add("contents", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("parts", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("inline_data", Json.createObjectBuilder()
-                                .add("mime_type", guessImageMediaType(base64))
-                                .add("data", base64)))
-                        .add(Json.createObjectBuilder()
-                            .add("text", prompt)))))
-            .build();
-    }
 
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {

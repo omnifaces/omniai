@@ -12,13 +12,6 @@
  */
 package org.omnifaces.ai.modality;
 
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
-
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-
-import org.omnifaces.ai.AIService;
-
 /**
  * Default image handler for Ollama AI service.
  *
@@ -27,17 +20,4 @@ import org.omnifaces.ai.AIService;
  */
 public class OllamaAIImageHandler extends BaseAIImageHandler {
 
-    @Override
-    public JsonObject buildVisionPayload(AIService service, byte[] image, String prompt) {
-        return Json.createObjectBuilder()
-            .add("model", service.getModelName())
-            .add("messages", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("role", "user")
-                    .add("content", prompt)
-                    .add("images", Json.createArrayBuilder()
-                        .add(toImageBase64(image)))))
-            .add("stream", false)
-            .build();
-    }
 }

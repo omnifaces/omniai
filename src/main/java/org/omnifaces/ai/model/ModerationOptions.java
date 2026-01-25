@@ -94,7 +94,7 @@ public class ModerationOptions implements Serializable {
     /** Lenient threshold: {@value}. */
     public static final double LENIENT_THRESHOLD = 0.7;
 
-    /** Default moderation options checking all categories with medium threshold of 0.5. */
+    /** Default moderation options checking all categories defined in {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES} with medium threshold of 0.5. */
     public static final ModerationOptions DEFAULT = ModerationOptions.newBuilder().build();
 
     /** Strict moderation with lower threshold of {@value #STRICT_THRESHOLD}. */
@@ -214,10 +214,11 @@ public class ModerationOptions implements Serializable {
          * Finalizes the configuration and creates a {@link ModerationOptions} instance.
          *
          * @return A fully configured {@code ModerationOptions} object.
+         * @throws IllegalArgumentException if a categories is empty.
          */
         public ModerationOptions build() {
             if (categories.isEmpty()) {
-                throw new IllegalArgumentException("categories cannot be blank");
+                throw new IllegalArgumentException("Categories cannot be empty");
             }
 
             return new ModerationOptions(this);

@@ -12,14 +12,11 @@
  */
 package org.omnifaces.ai.modality;
 
-import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
-
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.GenerateImageOptions;
-import org.omnifaces.ai.service.OpenAIService;
 
 /**
  * Default image handler for OpenAI service.
@@ -28,32 +25,6 @@ import org.omnifaces.ai.service.OpenAIService;
  * @since 1.0
  */
 public class OpenAIImageHandler extends BaseAIImageHandler {
-
-    @Override
-    public JsonObject buildVisionPayload(AIService service, byte[] image, String prompt) {
-        var supportsResponsesApi = ((OpenAIService) service).supportsResponsesApi();
-        var imageJson = Json.createObjectBuilder()
-            .add("type", supportsResponsesApi ? "input_image" : "image_url");
-
-        if (supportsResponsesApi) {
-            imageJson.add("image_url", toImageDataUri(image));
-        }
-        else {
-            imageJson.add("image_url", Json.createObjectBuilder().add("url", toImageDataUri(image)));
-        }
-
-        return Json.createObjectBuilder()
-            .add("model", service.getModelName())
-            .add(supportsResponsesApi ? "input" : "messages", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("role", "user")
-                    .add("content", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("type", supportsResponsesApi ? "input_text" : "text")
-                            .add("text", prompt))
-                        .add(imageJson))))
-            .build();
-    }
 
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {

@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -57,16 +58,118 @@ public interface AIService extends Serializable {
      *     // handle exception
      * }
      * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(String)}.
      *
      * @param message The user's message to send to the AI.
      * @return The AI's response, never {@code null}.
      * @throws IllegalArgumentException if message is blank.
      * @throws AIException if the chat request fails.
-     * @see #chat(String, ChatOptions)
      */
     default String chat(String message) throws AIException {
         try {
             return chatAsync(message).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends input to the AI with default system prompt from {@link #getChatPrompt()}.
+     * <p>
+     * Usage example:
+     * <pre>
+     * try {
+     *     var input = ChatInput.newBuilder()
+     *         .message(message)
+     *         .images(imageBytes)
+     *         .build();
+     *     var response = service.chat(input);
+     *     // handle full response
+     * } catch (Exception e) {
+     *     // handle exception
+     * }
+     * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(ChatInput)}.
+     *
+     * @param input The user's input containing message and optional images.
+     * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws AIException if the chat request fails.
+     */
+    default String chat(ChatInput input) throws AIException {
+        try {
+            return chatAsync(input).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends a message to the AI and returns a response.
+     * <p>
+     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
+     * <p>
+     * Usage example:
+     * <pre>
+     * try {
+     *     var response = service.chat(message, options);
+     *     // handle full response
+     * } catch (Exception e) {
+     *     // handle exception
+     * }
+     * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(String, ChatOptions)}.
+     *
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws AIException if the chat request fails.
+     */
+    default String chat(String message, ChatOptions options) throws AIException {
+        try {
+            return chatAsync(message, options).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends input to the AI and returns a response.
+     * <p>
+     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * <p>
+     * Usage example:
+     * <pre>
+     * try {
+     *     var input = ChatInput.newBuilder()
+     *         .message(message)
+     *         .images(imageBytes)
+     *         .build();
+     *     var response = service.chat(input, options);
+     *     // handle full response
+     * } catch (Exception e) {
+     *     // handle exception
+     * }
+     * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
+     *
+     * @param input The user's input containing message and optional images.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws AIException if the chat request fails.
+     */
+    default String chat(ChatInput input, ChatOptions options) throws AIException {
+        try {
+            return chatAsync(input, options).join();
         }
         catch (CompletionException e) {
             throw AIException.asyncRequestFailed(e);
@@ -85,15 +188,97 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(ChatInput)}.
      *
      * @param message The user's message to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if message is blank.
-     * @see #chatAsync(String, ChatOptions)
      */
     default CompletableFuture<String> chatAsync(String message) {
-        return chatAsync(message, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build());
+        return chatAsync(ChatInput.newBuilder().message(message).build());
     }
+
+    /**
+     * Asynchronously sends input to the AI with default system prompt from {@link #getChatPrompt()}.
+     * <p>
+     * Usage example:
+     * <pre>
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .images(imageBytes)
+     *     .build();
+     * service.chatAsync(input).thenAccept(response -> {
+     *     // handle full response
+     * }).exceptionally(e -> {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
+     *
+     * @param input The user's input containing message and optional images.
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     */
+    default CompletableFuture<String> chatAsync(ChatInput input) {
+        return chatAsync(input, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build());
+    }
+
+    /**
+     * Asynchronously sends a message to the AI and returns a response.
+     * <p>
+     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
+     * <p>
+     * Usage example:
+     * <pre>
+     * service.chatAsync(message, options).thenAccept(response -> {
+     *     // handle full response
+     * }).exceptionally(e -> {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
+     *
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     */
+    default CompletableFuture<String> chatAsync(String message, ChatOptions options) {
+        return chatAsync(ChatInput.newBuilder().message(message).build(), options);
+    }
+
+    /**
+     * Asynchronously sends input to the AI and returns a response.
+     * <p>
+     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * <p>
+     * Usage example:
+     * <pre>
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .images(imageBytes)
+     *     .build();
+     * service.chatAsync(input, options).thenAccept(response -> {
+     *     // handle full response
+     * }).exceptionally(e -> {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
+     * <p>
+     * This is the core method for static chat-based AI interactions with images.
+     *
+     * @param input The user's input containing message and optional images.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     */
+    CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options);
 
     /**
      * Send a message to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
@@ -109,76 +294,53 @@ public interface AIService extends Serializable {
      *     // handle completion
      * });
      * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatStream(ChatInput, Consumer)}.
      *
      * @param message The user's message to send to the AI.
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
      * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
      * @throws IllegalArgumentException if message is blank.
      * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
-     * @see #chatStream(String, ChatOptions, Consumer)
      */
     default CompletableFuture<Void> chatStream(String message, Consumer<String> onToken) {
-        return chatStream(message, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build(), onToken);
+        return chatStream(ChatInput.newBuilder().message(message).build(), onToken);
     }
 
     /**
-     * Sends a message to the AI and returns a response.
-     * <p>
-     * This is the core method for chat-based AI interactions.
-     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
+     * Send input to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
      * <p>
      * Usage example:
      * <pre>
-     * try {
-     *     var response = service.chat(message, options);
-     *     // handle full response
-     * } catch (Exception e) {
-     *     // handle exception
-     * }
-     * </pre>
-     *
-     * @param message The user's message to send to the AI.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
-     * @return The AI's response, never {@code null}.
-     * @throws IllegalArgumentException if message is blank.
-     * @throws AIException if the chat request fails.
-     */
-    default String chat(String message, ChatOptions options) throws AIException {
-        try {
-            return chatAsync(message, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
-    }
-
-    /**
-     * Asynchronously sends a message to the AI and returns a response.
-     * <p>
-     * This is the core method for static chat-based AI interactions.
-     * The message represents the user's input, while the system prompt in options defines the AI's behavior.
-     * <p>
-     * Usage example:
-     * <pre>
-     * service.chatAsync(message, options).thenAccept(response -> {
-     *     // handle full response
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .images(imageBytes)
+     *     .build();
+     * service.chatStream(input, token -> {
+     *     // handle partial response
      * }).exceptionally(e -> {
      *     // handle exception
      *     return null;
+     * }).thenRun(() -> {
+     *     // handle completion
      * });
      * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatStream(ChatInput, ChatOptions, Consumer)}.
      *
-     * @param message The user's message to send to the AI.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
-     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
-     * @throws IllegalArgumentException if message is blank.
+     * @param input The user's input containing message and optional images.
+     * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
+     * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
      */
-    CompletableFuture<String> chatAsync(String message, ChatOptions options);
+    default CompletableFuture<Void> chatStream(ChatInput input, Consumer<String> onToken) {
+        return chatStream(input, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build(), onToken);
+    }
 
     /**
      * Send a message to the AI and retrieve an asynchronous stream of tokens.
      * <p>
-     * This is the core method for streaming chat-based AI interactions.
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
@@ -192,6 +354,8 @@ public interface AIService extends Serializable {
      *     // handle completion
      * });
      * </pre>
+     * <p>
+     * The default implementation delegates to {@link #chatStream(ChatInput, ChatOptions, Consumer)}.
      *
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -201,6 +365,40 @@ public interface AIService extends Serializable {
      * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
      */
     default CompletableFuture<Void> chatStream(String message, ChatOptions options, Consumer<String> onToken) {
+        return chatStream(ChatInput.newBuilder().message(message).build(), options, onToken);
+    }
+
+    /**
+     * Send input to the AI and retrieve an asynchronous stream of tokens.
+     * <p>
+     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * <p>
+     * Usage example:
+     * <pre>
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .images(imageBytes)
+     *     .build();
+     * service.chatStream(input, options, token -> {
+     *     // handle partial response
+     * }).exceptionally(e -> {
+     *     // handle exception
+     *     return null;
+     * }).thenRun(() -> {
+     *     // handle completion
+     * });
+     * </pre>
+     * <p>
+     * This is the core method for streaming chat-based AI interactions with images.
+     *
+     * @param input The user's input containing message and optional images.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
+     * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
+     */
+    default CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) {
         throw new UnsupportedOperationException();
     }
 
@@ -209,6 +407,8 @@ public interface AIService extends Serializable {
 
     /**
      * Summarizes text to given maximum word count.
+     * <p>
+     * The default implementation delegates to {@link #summarizeAsync(String, int)}.
      *
      * @param text The text to summarize.
      * @param maxWords Maximum number of words in the summary.
@@ -228,6 +428,8 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously summarizes text to given maximum word count.
+     * <p>
+     * This is the core method for summarization.
      *
      * @param text The text to summarize.
      * @param maxWords Maximum number of words in the summary.
@@ -235,12 +437,12 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if summarization is not supported by the implementation.
      */
-    default CompletableFuture<String> summarizeAsync(String text, int maxWords) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<String> summarizeAsync(String text, int maxWords);
 
     /**
      * Extracts key points from text as a list.
+     * <p>
+     * The default implementation delegates to {@link #extractKeyPointsAsync(String, int)}.
      *
      * @param text The text to extract key points from.
      * @param maxPoints Maximum number of key points to extract.
@@ -260,6 +462,8 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously extracts key points from text as a list.
+     * <p>
+     * This is the core method for key points extraction.
      *
      * @param text The text to extract key points from.
      * @param maxPoints Maximum number of key points to extract.
@@ -267,15 +471,15 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if key point extraction is not supported by the implementation.
      */
-    default CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints);
 
 
     // Text Translation Capabilities --------------------------------------------------------------------------------------
 
     /**
      * Detects the language of the given text.
+     * <p>
+     * The default implementation delegates to {@link #detectLanguageAsync(String)}.
      *
      * @param text The text to analyze.
      * @return The detected language code (ISO 639-1), never {@code null}.
@@ -294,18 +498,20 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously detects the language of the given text.
+     * <p>
+     * This is the core method for language detection.
      *
      * @param text The text to analyze.
      * @return A CompletableFuture that will contain the detected language code (ISO 639-1), never {@code null}.
      * @throws IllegalArgumentException if text is blank.
      * @throws UnsupportedOperationException if language detection is not supported by the implementation.
      */
-    default CompletableFuture<String> detectLanguageAsync(String text) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<String> detectLanguageAsync(String text);
 
     /**
      * Translates text from source language to target language while preserving any markup and placeholders.
+     * <p>
+     * The default implementation delegates to {@link #translateAsync(String, String, String)}.
      *
      * @param text The text to translate.
      * @param sourceLang Source language code (ISO 639-1), or {@code null} for auto-detection.
@@ -326,6 +532,8 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously translates text from source language to target language while preserving any markup and placeholders.
+     * <p>
+     * This is the core method for translation.
      *
      * @param text The text to translate.
      * @param sourceLang Source language code (ISO 639-1), or {@code null} for auto-detection.
@@ -334,9 +542,7 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if text or targetLang is blank.
      * @throws UnsupportedOperationException if translation is not supported by the implementation.
      */
-    default CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang);
 
 
     // Text Moderation Capabilities -----------------------------------------------------------------------------------
@@ -344,15 +550,13 @@ public interface AIService extends Serializable {
     /**
      * Moderates content with default options.
      * <p>
-     * Default implementation checks for all categories defined in {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES}.
+     * The default implementation delegates to {@link #moderateContentAsync(String)}.
      *
      * @param content The content to moderate.
      * @return Moderation result with detected violations, never {@code null}.
      * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation is not supported by the implementation.
      * @throws AIException if moderation fails.
-     * @see #moderateContent(String, ModerationOptions)
-     * @see ModerationOptions#DEFAULT
      */
     default ModerationResult moderateContent(String content) throws AIException {
         try {
@@ -366,14 +570,12 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously moderates content with default options.
      * <p>
-     * Default implementation checks for all categories defined in {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES}.
+     * The default implementation delegates to {@link #moderateContentAsync(String)} with {@link ModerationOptions#DEFAULT}.
      *
      * @param content The content to moderate.
      * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
      * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation is not supported by the implementation.
-     * @see #moderateContent(String, ModerationOptions)
-     * @see ModerationOptions#DEFAULT
      */
     default CompletableFuture<ModerationResult> moderateContentAsync(String content) {
         return moderateContentAsync(content, ModerationOptions.DEFAULT);
@@ -381,6 +583,8 @@ public interface AIService extends Serializable {
 
     /**
      * Moderates content to detect violations per {@link Category}.
+     * <p>
+     * The default implementation delegates to {@link #moderateContentAsync(String, ModerationOptions)}.
      *
      * @param content The content to moderate.
      * @param options Moderation options (categories to check, threshold, etc.).
@@ -400,6 +604,8 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously moderates content to detect violations per {@link Category}.
+     * <p>
+     * This is the core method for content moderation.
      *
      * @param content The content to moderate.
      * @param options Moderation options (categories to check, threshold, etc.).
@@ -407,9 +613,7 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if content is blank.
      * @throws UnsupportedOperationException if content moderation is not supported by the implementation.
      */
-    default CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options);
 
 
     // Image Analysis Capabilities ------------------------------------------------------------------------------------
@@ -418,6 +622,8 @@ public interface AIService extends Serializable {
      * Analyzes an image and generates a description based on the given prompt.
      * <p>
      * Useful for generating alt text for accessibility, extracting information from images, or describing visual content.
+     * <p>
+     * The default implementation delegates to {@link #analyzeImageAsync(byte[], String)}.
      *
      * @param image The image bytes to analyze.
      * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"),
@@ -440,6 +646,8 @@ public interface AIService extends Serializable {
      * Asynchronously analyzes an image and generates a description based on the given prompt.
      * <p>
      * Useful for generating alt text for accessibility, extracting information from images, or describing visual content.
+     * <p>
+     * This is the core method for image analysis.
      *
      * @param image The image bytes to analyze.
      * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"),
@@ -448,12 +656,12 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image analysis is not supported by the implementation.
      */
-    default CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt);
 
     /**
      * Generates alt text for an image suitable for accessibility purposes.
+     * <p>
+     * The default implementation delegates to {@link #generateAltTextAsync(byte[])}.
      *
      * @param image The image bytes to analyze.
      * @return Alt text description, never {@code null}.
@@ -471,20 +679,22 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates alt text for an image suitable for accessibility purposes.
+     * <p>
+     * This is the core method for image alt text generation.
      *
      * @param image The image bytes to analyze.
      * @return A CompletableFuture that will contain the alt text description, never {@code null}.
      * @throws UnsupportedOperationException if image analysis is not supported by the implementation.
      */
-    default CompletableFuture<String> generateAltTextAsync(byte[] image) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<String> generateAltTextAsync(byte[] image);
 
 
     // Image Generation Capabilities ----------------------------------------------------------------------------------
 
     /**
      * Generates an image based on a text prompt with default options.
+     * <p>
+     * The default implementation delegates to {@link #generateImageAsync(String)}.
      *
      * @param prompt The text prompt describing the image to generate.
      * @return Generated image bytes, never {@code null}.
@@ -505,13 +715,13 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates an image based on a text prompt with default options.
+     * <p>
+     * The default implementation delegates to {@link #generateImageAsync(String, GenerateImageOptions)} with {@link GenerateImageOptions#DEFAULT}.
      *
      * @param prompt The text prompt describing the image to generate.
      * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
      * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation is not supported by the implementation.
-     * @see #generateImage(String, GenerateImageOptions)
-     * @see GenerateImageOptions#DEFAULT
      */
     default CompletableFuture<byte[]> generateImageAsync(String prompt) {
         return generateImageAsync(prompt, GenerateImageOptions.DEFAULT);
@@ -519,6 +729,8 @@ public interface AIService extends Serializable {
 
     /**
      * Generates an image based on a text prompt.
+     * <p>
+     * The default implementation delegates to {@link #generateImageAsync(String, GenerateImageOptions)}.
      *
      * @param prompt The text prompt describing the image to generate.
      * @param options Image generation options (size, quality, style, etc.).
@@ -538,6 +750,8 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates an image based on a text prompt.
+     * <p>
+     * This is the core method for image generation.
      *
      * @param prompt The text prompt describing the image to generate.
      * @param options Image generation options (size, quality, style, etc.).
@@ -545,9 +759,7 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image generation is not supported by the implementation.
      */
-    default CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options);
 
 
     // Service Metadata -----------------------------------------------------------------------------------------------

@@ -12,12 +12,14 @@
  */
 package org.omnifaces.ai.modality;
 
+import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
+import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 
 /**
@@ -29,11 +31,7 @@ import org.omnifaces.ai.model.ChatOptions;
 public class OllamaAITextHandler extends BaseAITextHandler {
 
     @Override
-    public JsonObject buildChatPayload(AIService service, String message, ChatOptions options, boolean streaming) {
-        if (isBlank(message)) {
-            throw new IllegalArgumentException("Message cannot be blank");
-        }
-
+    public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var messages = Json.createArrayBuilder();
 
         if (!isBlank(options.getSystemPrompt())) {
@@ -42,9 +40,20 @@ public class OllamaAITextHandler extends BaseAITextHandler {
                 .add("content", options.getSystemPrompt()));
         }
 
-        messages.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("content", message));
+        var message = Json.createObjectBuilder().add("role", "user");
+
+        if (!input.getImages().isEmpty()) {
+            var images = Json.createArrayBuilder();
+
+            for (var image : input.getImages()) {
+                images.add(toImageBase64(image));
+            }
+
+            message.add("images", images);
+        }
+
+        messages.add(message
+            .add("content", input.getMessage()));
 
         var optionsBuilder = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());
