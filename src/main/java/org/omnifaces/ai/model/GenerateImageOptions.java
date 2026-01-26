@@ -233,8 +233,7 @@ public class GenerateImageOptions implements Serializable {
          * @throws NullPointerException when quality is null.
          */
         public Builder quality(String quality) {
-            requireNonNull(quality, "quality");
-            this.quality = quality;
+            this.quality = requireNonNull(quality, "quality");
             return this;
         }
 
@@ -253,8 +252,7 @@ public class GenerateImageOptions implements Serializable {
          * @throws NullPointerException when output format is null.
          */
         public Builder outputFormat(String outputFormat) {
-            requireNonNull(outputFormat, "outputFormat");
-            this.outputFormat = outputFormat;
+            this.outputFormat = requireNonNull(outputFormat, "outputFormat");
             return this;
         }
 

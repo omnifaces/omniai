@@ -12,7 +12,7 @@
  */
 package org.omnifaces.ai.model;
 
-import static org.omnifaces.ai.helper.TextHelper.isBlank;
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -119,10 +119,7 @@ public class ChatInput implements Serializable {
          * @throws IllegalArgumentException if message is blank.
          */
         public ChatInput build() {
-            if (isBlank(message)) {
-                throw new IllegalArgumentException("Message cannot be blank");
-            }
-
+            requireNonBlank(message, "message");
             return new ChatInput(this);
         }
     }

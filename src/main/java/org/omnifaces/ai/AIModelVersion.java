@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai;
 
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
+
 import java.io.Serializable;
 
 /**
@@ -32,22 +34,19 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     /**
      * Validates and normalizes the record components.
      *
-     * @param modelName The name of the AI model to match against, may not be empty.
+     * @param modelName The name of the AI model to match against, may not be blank.
      * @param majorVersion The major version number, may not be negative.
      * @param minorVersion The minor version number, may not be negative.
      * @throws IllegalArgumentException if modelName is blank, or if majorVersion or minorVersion is negative.
      */
     public AIModelVersion {
-        if (modelName == null || modelName.isBlank()) {
-            throw new IllegalArgumentException("Model name may not be blank");
-        }
+        modelName = requireNonBlank(modelName, "Model name").strip();
         if (majorVersion < 0) {
             throw new IllegalArgumentException("Major version may not be negative");
         }
         if (minorVersion < 0) {
             throw new IllegalArgumentException("Minor version may not be negative");
         }
-        modelName = modelName.strip();
     }
 
     /**

@@ -48,4 +48,18 @@ public final class TextHelper {
         return stripped.isEmpty() ? null : stripped;
     }
 
+    /**
+     * Checks that the given text is not blank and returns it. Throws an {@link IllegalArgumentException} if it is.
+     *
+     * @param text Text to check.
+     * @param varName Variable name to include in the exception message.
+     * @return The given text, guaranteed to be non-blank.
+     * @throws IllegalArgumentException If the given text is null or blank.
+     */
+    public static String requireNonBlank(String text, String varName) {
+        if (isBlank(text)) {
+            throw new IllegalArgumentException(varName + " cannot be blank");
+        }
+        return text;
+    }
 }

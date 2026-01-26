@@ -43,8 +43,7 @@ public final record AIStrategy(AITextHandler textHandler, AIImageHandler imageHa
      * @throws NullPointerException If {@code textHandler} is {@code null}.
      */
     public static AIStrategy of(AITextHandler textHandler) {
-        requireNonNull(textHandler, "textHandler");
-        return new AIStrategy(textHandler, null);
+        return new AIStrategy(requireNonNull(textHandler, "textHandler"), null);
     }
 
     /**
@@ -56,8 +55,7 @@ public final record AIStrategy(AITextHandler textHandler, AIImageHandler imageHa
      * @throws NullPointerException If {@code imageHandler} is {@code null}.
      */
     public static AIStrategy of(AIImageHandler imageHandler) {
-        requireNonNull(imageHandler, "imageHandler");
-        return new AIStrategy(null, imageHandler);
+        return new AIStrategy(null, requireNonNull(imageHandler, "imageHandler"));
     }
 
     /**
@@ -69,9 +67,7 @@ public final record AIStrategy(AITextHandler textHandler, AIImageHandler imageHa
      * @throws NullPointerException If {@code textHandler} or {@code imageHandler} is {@code null}.
      */
     public static AIStrategy of(AITextHandler textHandler, AIImageHandler imageHandler) {
-        requireNonNull(textHandler, "textHandler");
-        requireNonNull(imageHandler, "imageHandler");
-        return new AIStrategy(textHandler, imageHandler);
+        return new AIStrategy(requireNonNull(textHandler, "textHandler"), requireNonNull(imageHandler, "imageHandler"));
     }
 
     /**

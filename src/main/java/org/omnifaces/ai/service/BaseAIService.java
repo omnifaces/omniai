@@ -23,6 +23,7 @@ import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 
 import java.net.URI;
@@ -92,10 +93,7 @@ public abstract class BaseAIService implements AIService {
      * @throws IllegalStateException If a required configuration property is missing.
      */
     protected BaseAIService(AIConfig config, AIStrategy strategy) {
-        requireNonNull(config, "config");
-        requireNonNull(strategy, "strategy");
-
-        this.provider = config.resolveProvider();
+        this.provider = requireNonNull(config, "config").resolveProvider();
 
         if (provider.getServiceClass() != null && !provider.getServiceClass().isInstance(this)) {
             throw new IllegalArgumentException("Wrong AI provider for this service class");
@@ -105,7 +103,7 @@ public abstract class BaseAIService implements AIService {
         this.model = ofNullable(config.model()).or(() -> ofNullable(provider.getDefaultModel())).orElseGet(() -> config.require(PROPERTY_MODEL));
         this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))));
         this.prompt = config.prompt();
-        this.strategy = strategy;
+        this.strategy = requireNonNull(strategy, "strategy");
     }
 
     @Override
@@ -160,30 +158,22 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException {
-        if (isBlank(text)) {
-            throw new IllegalArgumentException("Text cannot be blank");
-        }
-
         var options = ChatOptions.newBuilder()
             .systemPrompt(strategy.textHandler().buildSummarizePrompt(maxWords))
             .temperature(strategy.textHandler().getDefaultCreativeTemperature())
             .build();
 
-        return chatAsync(text, options);
+        return chatAsync(requireNonBlank(text, "text"), options);
     }
 
     @Override
     public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException {
-        if (isBlank(text)) {
-            throw new IllegalArgumentException("Text cannot be blank");
-        }
-
         var options = ChatOptions.newBuilder()
             .systemPrompt(strategy.textHandler().buildExtractKeyPointsPrompt(maxPoints))
             .temperature(strategy.textHandler().getDefaultCreativeTemperature())
             .build();
 
-        return chatAsync(text, options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
+        return chatAsync(requireNonBlank(text, "text"), options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
     }
 
 
@@ -191,34 +181,22 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
-        if (isBlank(text)) {
-            throw new IllegalArgumentException("Text cannot be blank");
-        }
-
-        if (isBlank(targetLang)) {
-            throw new IllegalArgumentException("Target language cannot be blank");
-        }
-
         var options = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildTranslatePrompt(sourceLang, targetLang))
+            .systemPrompt(strategy.textHandler().buildTranslatePrompt(sourceLang, requireNonBlank(targetLang, "target language")))
             .temperature(0.1)
             .build();
 
-        return chatAsync(text, options);
+        return chatAsync(requireNonBlank(text, "text"), options);
     }
 
     @Override
     public CompletableFuture<String> detectLanguageAsync(String text) throws AIException {
-        if (isBlank(text)) {
-            throw new IllegalArgumentException("Text cannot be blank");
-        }
-
         var options = ChatOptions.newBuilder()
             .systemPrompt(strategy.textHandler().buildDetectLanguagePrompt())
             .temperature(0.0)
             .build();
 
-        return chatAsync(text, options).thenApply(response -> {
+        return chatAsync(requireNonBlank(text, "text"), options).thenApply(response -> {
             if (isBlank(response)) {
                 throw new AIResponseException("Response is empty", response);
             }
@@ -232,10 +210,6 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
-        if (isBlank(content)) {
-            throw new IllegalArgumentException("Content cannot be blank");
-        }
-
         if (options.getCategories().isEmpty()) {
             return completedFuture(ModerationResult.SAFE);
         }
@@ -245,7 +219,7 @@ public abstract class BaseAIService implements AIService {
             .temperature(0.1)
             .build();
 
-        return chatAsync(content, chatOptions).thenApply(response -> strategy.textHandler().parseModerationResult(response, options));
+        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> strategy.textHandler().parseModerationResult(response, options));
     }
 
 
@@ -276,11 +250,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
-        if (isBlank(prompt)) {
-            throw new IllegalArgumentException("Prompt cannot be blank");
-        }
-
-        return asyncPostAndExtractImageContent(getGenerateImagePath(), strategy.imageHandler().buildGenerateImagePayload(this, prompt, options).toString());
+        return asyncPostAndExtractImageContent(getGenerateImagePath(), strategy.imageHandler().buildGenerateImagePayload(this, requireNonBlank(prompt, "prompt"), options).toString());
     }
 
     // HTTP Helper Methods --------------------------------------------------------------------------------------------

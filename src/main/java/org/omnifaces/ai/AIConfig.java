@@ -13,9 +13,11 @@
 package org.omnifaces.ai;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.helper.TextHelper.stripToNull;
 
 import java.io.Serializable;
@@ -71,14 +73,10 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @param endpoint The API endpoint URL.
      * @param prompt The AI chat prompt.
      * @param properties Additional provider-specific properties.
+     * @throws NullPointerException If {@code provider} is {@code null}.
      */
     public AIConfig {
-        provider = stripToNull(provider);
-
-        if (provider == null) {
-            throw new IllegalArgumentException("provider is required");
-        }
-
+        provider = requireNonNull(stripToNull(provider), "provider");
         apiKey = stripToNull(apiKey);
         model = stripToNull(model);
         endpoint = stripToNull(endpoint);
@@ -201,11 +199,8 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @throws IllegalArgumentException If key or value is blank.
      */
     public AIConfig withProperty(String key, String value) {
-        if (isBlank(key) || isBlank(value)) {
-            throw new IllegalArgumentException("key or value cannot be blank");
-        }
         var newProperties = new HashMap<>(properties);
-        newProperties.put(key.strip(), value.strip());
+        newProperties.put(requireNonBlank(key, "key").strip(), requireNonBlank(value, "value").strip());
         return withProperties(newProperties);
     }
 
