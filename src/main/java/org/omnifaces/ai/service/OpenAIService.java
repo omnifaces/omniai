@@ -28,7 +28,6 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.modality.OpenAIImageHandler;
@@ -75,26 +74,13 @@ public class OpenAIService extends BaseAIService {
     private static final AIModelVersion DALL_E = AIModelVersion.of("dall-e");
 
     /**
-     * Constructs an OpenAI service with the specified configuration and default strategy.
+     * Constructs an OpenAI service with the specified configuration.
      *
      * @param config the AI configuration
      * @see AIConfig
      */
     public OpenAIService(AIConfig config) {
-        super(config, new AIStrategy(OpenAITextHandler.instance(), OpenAIImageHandler.instance()));
-    }
-
-    /**
-     * Constructs an OpenAI service with the specified configuration and strategy.
-     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
-     *
-     * @param config the AI configuration
-     * @param strategy the AI strategy
-     * @see AIConfig
-     * @see AIStrategy
-     */
-    public OpenAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy.withDefaults(OpenAITextHandler.instance(), OpenAIImageHandler.instance()));
+        super(config);
     }
 
     @Override

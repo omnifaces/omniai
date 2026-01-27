@@ -17,27 +17,16 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.GenerateImageOptions;
-import org.omnifaces.ai.service.OllamaAIService;
+import org.omnifaces.ai.service.OpenAIService;
 
 /**
  * Default image handler for OpenAI service.
  *
  * @author Bauke Scholtz
  * @since 1.0
- * @see OllamaAIService
+ * @see OpenAIService
  */
 public class OpenAIImageHandler extends BaseAIImageHandler {
-
-    private static final OpenAIImageHandler INSTANCE = new OpenAIImageHandler();
-
-    /**
-     * Returns the singleton instance of this handler.
-     *
-     * @return the singleton instance
-     */
-    public static OpenAIImageHandler instance() {
-        return INSTANCE;
-    }
 
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
@@ -50,5 +39,4 @@ public class OpenAIImageHandler extends BaseAIImageHandler {
             .add("output_format", options.getOutputFormat())
             .build();
     }
-
 }

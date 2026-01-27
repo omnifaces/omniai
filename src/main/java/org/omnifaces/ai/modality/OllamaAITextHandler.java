@@ -32,17 +32,6 @@ import org.omnifaces.ai.service.OllamaAIService;
  */
 public class OllamaAITextHandler extends BaseAITextHandler {
 
-    private static final OllamaAITextHandler INSTANCE = new OllamaAITextHandler();
-
-    /**
-     * Returns the singleton instance of this handler.
-     *
-     * @return the singleton instance
-     */
-    public static OllamaAITextHandler instance() {
-        return INSTANCE;
-    }
-
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var messages = Json.createArrayBuilder();

@@ -39,9 +39,10 @@ import java.util.function.Predicate;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIImageHandler;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
+import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
@@ -80,19 +81,20 @@ public abstract class BaseAIService implements AIService {
     protected final URI endpoint;
     /** The AI chat prompt. */
     protected final String prompt;
-    /** The AI strategy for this service. */
-    protected final AIStrategy strategy;
+    /** The AI text handler for this service. */
+    protected final AITextHandler textHandler;
+    /** The AI image handler for this service. */
+    protected final AIImageHandler imageHandler;
 
     /**
-     * Constructs an AI service with the specified configuration and strategy.
+     * Constructs an AI service with the specified configuration.
      *
-     * @param config The AI configuration containing provider, API key, model, and endpoint settings.
-     * @param strategy The AI strategy containing text handler and image handler.
-     * @throws NullPointerException when config or strategy is null.
-     * @throws IllegalArgumentException if the provider in the config doesn't match this service class.
-     * @throws IllegalStateException If a required configuration property is missing.
+     * @param config The AI configuration containing provider, API key, model, endpoint, prompt, and strategy settings.
+     * @throws NullPointerException when config is null.
+     * @throws IllegalArgumentException if the provider in the config doesn't match this service class, or if a handler class is unspecified.
+     * @throws IllegalStateException If a required configuration property is missing, or if a handler class cannot be instantiated.
      */
-    protected BaseAIService(AIConfig config, AIStrategy strategy) {
+    protected BaseAIService(AIConfig config) {
         this.provider = requireNonNull(config, "config").resolveProvider();
 
         if (provider.getServiceClass() != null && !provider.getServiceClass().isInstance(this)) {
@@ -103,7 +105,23 @@ public abstract class BaseAIService implements AIService {
         this.model = ofNullable(config.model()).or(() -> ofNullable(provider.getDefaultModel())).orElseGet(() -> config.require(PROPERTY_MODEL));
         this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))));
         this.prompt = config.prompt();
-        this.strategy = requireNonNull(strategy, "strategy");
+        this.textHandler = createHandler(config.strategy().textHandler(), provider.getDefaultTextHandler(), "text");
+        this.imageHandler = createHandler(config.strategy().imageHandler(), provider.getDefaultImageHandler(), "image");
+    }
+
+    private static <T> T createHandler(Class<? extends T> configuredHandler, Class<? extends T> defaultHandler, String handlerName) {
+        var handlerClass = configuredHandler == null ? defaultHandler : configuredHandler;
+
+        if (handlerClass == null) {
+            throw new IllegalArgumentException("No " + handlerName + " handler configured. Custom providers must supply handlers via AIConfig.withStrategy(AIStrategy).");
+        }
+
+        try {
+            return handlerClass.getDeclaredConstructor().newInstance();
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Cannot instantiate " + handlerName + " handler " + handlerClass.getName(), e);
+        }
     }
 
     @Override
@@ -133,7 +151,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
-        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.textHandler().buildChatPayload(this, input, options, false).toString());
+        return asyncPostAndExtractMessageContent(getChatPath(false), textHandler.buildChatPayload(this, input, options, false).toString());
     }
 
     @Override
@@ -144,7 +162,7 @@ public abstract class BaseAIService implements AIService {
 
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), strategy.textHandler().buildChatPayload(this, input, options, true).toString(), event -> strategy.textHandler().processChatStreamEvent(this, event, onToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), textHandler.buildChatPayload(this, input, options, true).toString(), event -> textHandler.processChatStreamEvent(this, event, onToken)).handle((result, exception) -> {
             if (exception == null) {
                 return result;
             }
@@ -159,8 +177,8 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException {
         var options = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildSummarizePrompt(maxWords))
-            .temperature(strategy.textHandler().getDefaultCreativeTemperature())
+            .systemPrompt(textHandler.buildSummarizePrompt(maxWords))
+            .temperature(textHandler.getDefaultCreativeTemperature())
             .build();
 
         return chatAsync(requireNonBlank(text, "text"), options);
@@ -169,8 +187,8 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException {
         var options = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildExtractKeyPointsPrompt(maxPoints))
-            .temperature(strategy.textHandler().getDefaultCreativeTemperature())
+            .systemPrompt(textHandler.buildExtractKeyPointsPrompt(maxPoints))
+            .temperature(textHandler.getDefaultCreativeTemperature())
             .build();
 
         return chatAsync(requireNonBlank(text, "text"), options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
@@ -182,7 +200,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
         var options = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildTranslatePrompt(sourceLang, requireNonBlank(targetLang, "target language")))
+            .systemPrompt(textHandler.buildTranslatePrompt(sourceLang, requireNonBlank(targetLang, "target language")))
             .temperature(0.1)
             .build();
 
@@ -192,7 +210,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> detectLanguageAsync(String text) throws AIException {
         var options = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildDetectLanguagePrompt())
+            .systemPrompt(textHandler.buildDetectLanguagePrompt())
             .temperature(0.0)
             .build();
 
@@ -215,11 +233,11 @@ public abstract class BaseAIService implements AIService {
         }
 
         var chatOptions = ChatOptions.newBuilder()
-            .systemPrompt(strategy.textHandler().buildModerateContentPrompt(options))
+            .systemPrompt(textHandler.buildModerateContentPrompt(options))
             .temperature(0.1)
             .build();
 
-        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> strategy.textHandler().parseModerationResult(response, options));
+        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> textHandler.parseModerationResult(response, options));
     }
 
 
@@ -227,13 +245,13 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        var input = ChatInput.newBuilder().message(isBlank(prompt) ? strategy.imageHandler().buildAnalyzeImagePrompt() : prompt).images(image).build();
-        return asyncPostAndExtractMessageContent(getChatPath(false), strategy.textHandler().buildChatPayload(this, input, DETERMINISTIC, false).toString());
+        var input = ChatInput.newBuilder().message(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : prompt).images(image).build();
+        return asyncPostAndExtractMessageContent(getChatPath(false), textHandler.buildChatPayload(this, input, DETERMINISTIC, false).toString());
     }
 
     @Override
     public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException {
-        return analyzeImageAsync(image, strategy.imageHandler().buildGenerateAltTextPrompt());
+        return analyzeImageAsync(image, imageHandler.buildGenerateAltTextPrompt());
     }
 
 
@@ -250,7 +268,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
-        return asyncPostAndExtractImageContent(getGenerateImagePath(), strategy.imageHandler().buildGenerateImagePayload(this, requireNonBlank(prompt, "prompt"), options).toString());
+        return asyncPostAndExtractImageContent(getGenerateImagePath(), imageHandler.buildGenerateImagePayload(this, requireNonBlank(prompt, "prompt"), options).toString());
     }
 
     // HTTP Helper Methods --------------------------------------------------------------------------------------------

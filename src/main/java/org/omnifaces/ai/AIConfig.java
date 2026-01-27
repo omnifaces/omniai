@@ -28,7 +28,7 @@ import java.util.Map;
  * Configuration for AI services.
  * <p>
  * This record holds the configuration properties needed to create an {@link AIService} instance.
- * The core properties are {@code provider}, {@code apiKey}, {@code model}, {@code endpoint}, and {@code prompt}.
+ * The core properties are {@code provider}, {@code apiKey}, {@code model}, {@code endpoint}, {@code prompt} and {@code strategy}.
  * Additional provider-specific properties can be stored in the {@code properties} map.
  * <p>
  * Use the static {@code of(...)} factory methods to create instances, and the {@code withXxx(...)} methods to create modified copies.
@@ -38,13 +38,15 @@ import java.util.Map;
  * @param model The AI model name.
  * @param endpoint The API endpoint URL.
  * @param prompt The AI chat prompt.
+ * @param strategy The AI strategy.
  * @param properties Additional provider-specific properties.
  * @see AIProvider
+ * @see AIStrategy
  * @see AIService
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, Map<String, String> properties) implements Serializable {
+public final record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, AIStrategy strategy, Map<String, String> properties) implements Serializable {
 
     // Just future-proofing potential Jakarta/MicroProfile config.
     private static final String PROPERTY_PREFIX = "org.omnifaces.ai.";
@@ -72,6 +74,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @param model The AI model name.
      * @param endpoint The API endpoint URL.
      * @param prompt The AI chat prompt.
+     * @param strategy The AI strategy.
      * @param properties Additional provider-specific properties.
      * @throws NullPointerException If {@code provider} is {@code null}.
      */
@@ -84,10 +87,11 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
         properties = properties == null ? emptyMap() : properties.entrySet().stream()
                 .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
                 .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
+        strategy = ofNullable(strategy).orElseGet(() -> new AIStrategy(null, null));
     }
 
     /**
-     * Creates a new {@code AIConfig} using the given provider and API key, with model, endpoint, and prompt left unset (to use provider defaults or be set
+     * Creates a new {@code AIConfig} using the given provider and API key, with model, endpoint, prompt, and strategy left unset (to use provider defaults or be set
      * later via {@code withXxx} methods).
      * <p>
      * This is the most common entry point when working with one of the built-in providers (e.g. {@link AIProvider#OPENAI}, {@link AIProvider#ANTHROPIC}).
@@ -98,12 +102,12 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @throws NullPointerException If {@code provider} is {@code null}.
      */
     public static AIConfig of(AIProvider provider, String apiKey) {
-        return new AIConfig(provider.name(), apiKey, null, null, null, emptyMap());
+        return new AIConfig(provider.name(), apiKey, null, null, null, null, emptyMap());
     }
 
     /**
      * Creates a new {@code AIConfig} for a custom {@link AIService} implementation using the provided service class, with all other properties (API key, model,
-     * endpoint, prompt) left unset (to be set later via {@code withXxx} methods).
+     * endpoint, prompt, and strategy) left unset (to be set later via {@code withXxx} methods).
      * <p>
      * For custom providers that still require an API key at construction time, prefer {@link #of(Class, String)} instead.
      *
@@ -113,12 +117,12 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @throws IllegalArgumentException If the class does not implement {@link AIService} (checked at service creation time).
      */
     public static AIConfig of(Class<? extends AIService> serviceClass) {
-        return new AIConfig(serviceClass.getName(), null, null, null, null, emptyMap());
+        return new AIConfig(serviceClass.getName(), null, null, null, null, null, emptyMap());
     }
 
     /**
      * Creates a new {@code AIConfig} for a custom {@link AIService} implementation using the provided service class and API key, with all other properties
-     * (model, endpoint, prompt) left unset (to be set later via {@code withXxx} methods).
+     * (model, endpoint, prompt, and strategy) left unset (to be set later via {@code withXxx} methods).
      *
      * @param serviceClass The custom class that implements {@link AIService} and has a public constructor accepting {@code AIConfig} (must not be {@code null}).
      * @param apiKey The authentication API key or token (recommended to be non-null; may be set later via {@link #withProperty} if obtained dynamically).
@@ -127,7 +131,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @throws IllegalArgumentException If the class does not implement {@link AIService} (checked at service creation time).
      */
     public static AIConfig of(Class<? extends AIService> serviceClass, String apiKey) {
-        return new AIConfig(serviceClass.getName(), apiKey, null, null, null, emptyMap());
+        return new AIConfig(serviceClass.getName(), apiKey, null, null, null, null, emptyMap());
     }
 
     /**
@@ -157,7 +161,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @return A new configuration instance with the updated model.
      */
     public AIConfig withModel(String model) {
-        return new AIConfig(provider, apiKey, model, endpoint, prompt, properties);
+        return new AIConfig(provider, apiKey, model, endpoint, prompt, strategy, properties);
     }
 
     /**
@@ -167,7 +171,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @return A new configuration instance with the updated endpoint.
      */
     public AIConfig withEndpoint(String endpoint) {
-        return new AIConfig(provider, apiKey, model, endpoint, prompt, properties);
+        return new AIConfig(provider, apiKey, model, endpoint, prompt, strategy, properties);
     }
 
     /**
@@ -177,7 +181,17 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @return A new configuration instance with the updated prompt.
      */
     public AIConfig withPrompt(String prompt) {
-        return new AIConfig(provider, apiKey, model, endpoint, prompt, properties);
+        return new AIConfig(provider, apiKey, model, endpoint, prompt, strategy, properties);
+    }
+
+    /**
+     * Returns a copy of this configuration with the specified strategy.
+     *
+     * @param strategy The AI strategy.
+     * @return A new configuration instance with the updated strategy.
+     */
+    public AIConfig withStrategy(AIStrategy strategy) {
+        return new AIConfig(provider, apiKey, model, endpoint, prompt, strategy, properties);
     }
 
     /**
@@ -187,7 +201,7 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * @return A new configuration instance with the updated properties.
      */
     public AIConfig withProperties(Map<String, String> properties) {
-        return new AIConfig(provider, apiKey, model, endpoint, prompt, properties);
+        return new AIConfig(provider, apiKey, model, endpoint, prompt, strategy, properties);
     }
 
     /**

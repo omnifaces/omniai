@@ -18,7 +18,6 @@ import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
 
 /**
  * AI service implementation using Hugging Face API.
@@ -53,25 +52,13 @@ public class HuggingFaceAIService extends OpenAIService {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Constructs an Hugging Face AI service with the specified configuration and default strategy.
+     * Constructs a Hugging Face AI service with the specified configuration.
      *
      * @param config the AI configuration
      * @see AIConfig
      */
     public HuggingFaceAIService(AIConfig config) {
         super(config);
-    }
-
-    /**
-     * Constructs an Hugging Face AI service with the specified configuration and strategy.
-     *
-     * @param config the AI configuration
-     * @param strategy the AI strategy
-     * @see AIConfig
-     * @see AIStrategy
-     */
-    public HuggingFaceAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy);
     }
 
     @Override

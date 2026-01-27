@@ -19,9 +19,6 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
-import org.omnifaces.ai.modality.OpenAITextHandler;
-import org.omnifaces.ai.modality.XAIImageHandler;
 
 /**
  * AI service implementation using xAI API.
@@ -58,26 +55,13 @@ public class XAIService extends OpenAIService {
     private static final AIModelVersion GROK_4 = AIModelVersion.of("grok", 4);
 
     /**
-     * Constructs an xAI service with the specified configuration and default strategy.
+     * Constructs an xAI service with the specified configuration.
      *
      * @param config the AI configuration
      * @see AIConfig
      */
     public XAIService(AIConfig config) {
-        super(config, new AIStrategy(OpenAITextHandler.instance(), XAIImageHandler.instance()));
-    }
-
-    /**
-     * Constructs an xAI service with the specified configuration and strategy.
-     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
-     *
-     * @param config the AI configuration
-     * @param strategy the AI strategy
-     * @see AIConfig
-     * @see AIStrategy
-     */
-    public XAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy.withDefaults(OpenAITextHandler.instance(), XAIImageHandler.instance()));
+        super(config);
     }
 
     @Override

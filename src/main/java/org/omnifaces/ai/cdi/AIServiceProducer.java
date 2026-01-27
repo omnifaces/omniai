@@ -24,8 +24,11 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 
 import org.omnifaces.ai.AIConfig;
+import org.omnifaces.ai.AIImageHandler;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
+import org.omnifaces.ai.AIStrategy;
+import org.omnifaces.ai.AITextHandler;
 
 /**
  * CDI producer for {@link AIService} instances based on the {@link AI} qualifier annotation.
@@ -71,7 +74,9 @@ class AIServiceProducer {
         var model = resolveELIfNecessary(beanManager, annotation.model());
         var endpoint = resolveELIfNecessary(beanManager, annotation.endpoint());
         var prompt = resolveELIfNecessary(beanManager, annotation.prompt());
-        var config = new AIConfig(provider, apiKey, model, endpoint, prompt, emptyMap());
+        var textHandler = annotation.textHandler() == AITextHandler.class ? null : annotation.textHandler();
+        var imageHandler = annotation.imageHandler() == AIImageHandler.class ? null : annotation.imageHandler();
+        var config = new AIConfig(provider, apiKey, model, endpoint, prompt, new AIStrategy(textHandler, imageHandler), emptyMap());
 
         return serviceCache.computeIfAbsent(config, AIConfig::createService);
     }

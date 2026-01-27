@@ -28,17 +28,6 @@ import org.omnifaces.ai.service.XAIService;
  */
 public class XAIImageHandler extends OpenAIImageHandler {
 
-    private static final XAIImageHandler INSTANCE = new XAIImageHandler();
-
-    /**
-     * Returns the singleton instance of this handler.
-     *
-     * @return the singleton instance
-     */
-    public static XAIImageHandler instance() {
-        return INSTANCE;
-    }
-
     @Override
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
         return Json.createObjectBuilder()

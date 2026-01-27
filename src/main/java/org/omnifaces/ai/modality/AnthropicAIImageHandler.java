@@ -21,17 +21,4 @@ import org.omnifaces.ai.service.AnthropicAIService;
  * @since 1.0
  * @see AnthropicAIService
  */
-public class AnthropicAIImageHandler extends BaseAIImageHandler {
-
-    private static final AnthropicAIImageHandler INSTANCE = new AnthropicAIImageHandler();
-
-    /**
-     * Returns the singleton instance of this handler.
-     *
-     * @return the singleton instance
-     */
-    public static AnthropicAIImageHandler instance() {
-        return INSTANCE;
-    }
-
-}
+public class AnthropicAIImageHandler extends BaseAIImageHandler {}

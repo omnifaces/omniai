@@ -25,8 +25,10 @@ import java.lang.annotation.Target;
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Qualifier;
 
+import org.omnifaces.ai.AIImageHandler;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
+import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.model.ChatOptions;
 
 /**
@@ -68,7 +70,7 @@ public @interface AI {
     AIProvider provider() default AIProvider.OPENAI;
 
     /**
-     * Custom AIService implementation class.
+     * Custom {@link AIService} implementation class.
      * Use this instead of {@link #provider()} when you have a custom implementation.
      * If specified (not {@link AIService AIService.class}), the {@link #provider()} is ignored.
      *
@@ -115,4 +117,23 @@ public @interface AI {
      */
     @Nonbinding
     String prompt() default "";
+
+    /**
+     * Custom {@link AITextHandler} implementation class.
+     * If not specified, uses the provider's default text handler as per {@link AIProvider#getDefaultTextHandler()}.
+     *
+     * @return The custom text handler class, or {@link AITextHandler AITextHandler.class} if not specified.
+     */
+    @Nonbinding
+    Class<? extends AITextHandler> textHandler() default AITextHandler.class;
+
+    /**
+     * Custom {@link AIImageHandler} implementation class.
+     * If not specified, uses the provider's default image handler as per {@link AIProvider#getDefaultImageHandler()}.
+     *
+     * @return The custom image handler class, or {@link AIImageHandler AIImageHandler.class} if not specified.
+     */
+    @Nonbinding
+    Class<? extends AIImageHandler> imageHandler() default AIImageHandler.class;
+
 }

@@ -41,18 +41,7 @@ import org.omnifaces.ai.service.GoogleAIService;
  */
 public class GoogleAITextHandler extends BaseAITextHandler {
 
-    private static final GoogleAITextHandler INSTANCE = new GoogleAITextHandler();
-
     private static final Logger logger = Logger.getLogger(GoogleAITextHandler.class.getPackageName());
-
-    /**
-     * Returns the singleton instance of this handler.
-     *
-     * @return the singleton instance
-     */
-    public static GoogleAITextHandler instance() {
-        return INSTANCE;
-    }
 
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {

@@ -19,7 +19,6 @@ import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
 import org.omnifaces.ai.modality.GoogleAIImageHandler;
 import org.omnifaces.ai.modality.GoogleAITextHandler;
 
@@ -57,26 +56,13 @@ public class GoogleAIService extends BaseAIService {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Constructs a Google AI service with the specified configuration and default strategy.
+     * Constructs a Google AI service with the specified configuration.
      *
      * @param config the AI configuration
      * @see AIConfig
      */
     public GoogleAIService(AIConfig config) {
-        super(config, new AIStrategy(GoogleAITextHandler.instance(), GoogleAIImageHandler.instance()));
-    }
-
-    /**
-     * Constructs a Google AI service with the specified configuration and strategy.
-     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
-     *
-     * @param config the AI configuration
-     * @param strategy the AI strategy
-     * @see AIConfig
-     * @see AIStrategy
-     */
-    public GoogleAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy.withDefaults(GoogleAITextHandler.instance(), GoogleAIImageHandler.instance()));
+        super(config);
     }
 
     @Override

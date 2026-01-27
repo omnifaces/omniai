@@ -12,73 +12,18 @@
  */
 package org.omnifaces.ai;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.Optional.ofNullable;
-
 import java.io.Serializable;
 
 /**
  * Strategy for AI services.
- * <p>
- * Use the static {@code of(...)} factory methods to create instances with non-null handlers,
- * or the canonical constructor directly when null handlers are acceptable (the corresponding
- * AI service implementation will then use its default handler).
  *
- * @param textHandler The text handler.
- * @param imageHandler The image handler
+ * @param textHandler The text handler, or {@code null} to use the AI provider's default.
+ * @param imageHandler The image handler, or {@code null} to use the AI provider's default.
+ * @see AIConfig
  * @see AIService
  * @see AITextHandler
  * @see AIImageHandler
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final record AIStrategy(AITextHandler textHandler, AIImageHandler imageHandler) implements Serializable {
-
-    /**
-     * Creates a new {@code AIStrategy} with only a text handler.
-     * The image handler will be {@code null}, causing the AI service to use its default image handler.
-     *
-     * @param textHandler The text handler (must not be {@code null}).
-     * @return A new strategy instance with the specified text handler.
-     * @throws NullPointerException If {@code textHandler} is {@code null}.
-     */
-    public static AIStrategy of(AITextHandler textHandler) {
-        return new AIStrategy(requireNonNull(textHandler, "textHandler"), null);
-    }
-
-    /**
-     * Creates a new {@code AIStrategy} with only an image handler.
-     * The text handler will be {@code null}, causing the AI service to use its default text handler.
-     *
-     * @param imageHandler The image handler (must not be {@code null}).
-     * @return A new strategy instance with the specified image handler.
-     * @throws NullPointerException If {@code imageHandler} is {@code null}.
-     */
-    public static AIStrategy of(AIImageHandler imageHandler) {
-        return new AIStrategy(null, requireNonNull(imageHandler, "imageHandler"));
-    }
-
-    /**
-     * Creates a new {@code AIStrategy} with both a text handler and an image handler.
-     *
-     * @param textHandler The text handler (must not be {@code null}).
-     * @param imageHandler The image handler (must not be {@code null}).
-     * @return A new strategy instance with the specified handlers.
-     * @throws NullPointerException If {@code textHandler} or {@code imageHandler} is {@code null}.
-     */
-    public static AIStrategy of(AITextHandler textHandler, AIImageHandler imageHandler) {
-        return new AIStrategy(requireNonNull(textHandler, "textHandler"), requireNonNull(imageHandler, "imageHandler"));
-    }
-
-    /**
-     * Returns a new {@code AIStrategy} with any {@code null} handlers replaced by the specified defaults.
-     *
-     * @param defaultTextHandler The default text handler to use if this strategy's text handler is {@code null}.
-     * @param defaultImageHandler The default image handler to use if this strategy's image handler is {@code null}.
-     * @return A new strategy instance with non-null handlers.
-     */
-    public AIStrategy withDefaults(AITextHandler defaultTextHandler, AIImageHandler defaultImageHandler) {
-        return new AIStrategy(ofNullable(textHandler).orElse(defaultTextHandler), ofNullable(imageHandler).orElse(defaultImageHandler));
-    }
-
-}
+public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler) implements Serializable {}

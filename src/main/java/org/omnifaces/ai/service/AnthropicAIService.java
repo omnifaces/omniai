@@ -20,7 +20,6 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.AIStrategy;
 import org.omnifaces.ai.modality.AnthropicAIImageHandler;
 import org.omnifaces.ai.modality.AnthropicAITextHandler;
 
@@ -61,26 +60,13 @@ public class AnthropicAIService extends BaseAIService {
     private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
 
     /**
-     * Constructs an Anthropic AI service with the specified configuration and default strategy.
+     * Constructs an Anthropic AI service with the specified configuration.
      *
      * @param config the AI configuration
      * @see AIConfig
      */
     public AnthropicAIService(AIConfig config) {
-        super(config, new AIStrategy(AnthropicAITextHandler.instance(), AnthropicAIImageHandler.instance()));
-    }
-
-    /**
-     * Constructs an Anthropic AI service with the specified configuration and strategy.
-     * If the strategy's text handler or image handler is {@code null}, the default handler will be used.
-     *
-     * @param config the AI configuration
-     * @param strategy the AI strategy
-     * @see AIConfig
-     * @see AIStrategy
-     */
-    public AnthropicAIService(AIConfig config, AIStrategy strategy) {
-        super(config, strategy.withDefaults(AnthropicAITextHandler.instance(), AnthropicAIImageHandler.instance()));
+        super(config);
     }
 
     @Override
