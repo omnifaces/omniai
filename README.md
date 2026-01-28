@@ -425,6 +425,7 @@ Bottom line: If you need a lightweight utility for AI chat/text operations in Ja
 - [OmniFaces](https://omnifaces.org)
 - [GitHub](https://github.com/omnifaces/omniai)
 - [Blog post: One API, any AI](https://balusc.omnifaces.org/2026/01/one-api-any-ai.html)
+- [Blog post: Real-time AI, your way](https://balusc.omnifaces.org/2026/01/real-time-ai-your-way.html)
 
 ## Credits
 
