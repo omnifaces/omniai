@@ -78,6 +78,11 @@ public class MistralAIService extends OpenAIService {
     }
 
     @Override
+    public boolean supportsStructuredOutput() {
+        return true; // Not model-bound, it's API-bound and supported since January 2025.
+    }
+
+    @Override
     public boolean supportsOpenAIResponsesApi() {
         return false;
     }
