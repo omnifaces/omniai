@@ -20,7 +20,7 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 <dependency>
     <groupId>org.omnifaces</groupId>
     <artifactId>omniai</artifactId>
-    <version>1.0-M1</version>
+    <version>1.0-M2</version>
 </dependency>
 ```
 
@@ -44,7 +44,7 @@ On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optio
 
 You can also use it on Java SE, you'll still need the JSON-P implementation, but you cannot use the CDI annotation.
 
-## Supported Providers (in 1.0-SNAPSHOT)
+## Supported Providers (in 1.0-M2)
 
 | Provider | Default Model | API Key Required | Available Models |
 |----------|---------------|------------------|------------------|
@@ -126,7 +126,7 @@ public String getConsensusAnswer(String question) {
 
 This pattern is useful for reducing bias, cross-validating answers, or getting a balanced summary from multiple AI perspectives.
 
-## Features (in 1.0-SNAPSHOT)
+## Features (in 1.0-M2)
 
 ### Chat
 
@@ -151,7 +151,7 @@ service.chatStream(message, options, token -> {
     System.out.print(token);
 }).exceptionally(e -> {
     // handle exception
-    System.out.println("\n\n Error occurred: " + e);
+    System.out.println("\n\nError occurred: " + e);
 }).thenRun(() -> {
     // handle completion
     System.out.println("\n\n");
@@ -226,7 +226,7 @@ All methods have async variants returning `CompletableFuture` (e.g., `summarizeA
 
 ## Custom Providers
 
-Implement `AIService` or extend `BaseAIService`:
+Implement `AIService` or extend `BaseAIService` or even `OpenAIService`, etc.
 
 ### Programmatic Configuration
 
@@ -242,6 +242,37 @@ AIService service = AIConfig.of(MyCustomAIService.class, "api-key").createServic
 private AIService custom;
 ```
 
+## Custom Handlers
+
+You can customize how requests are built and responses are parsed by providing custom handler implementations.
+
+```java
+// Custom OpenAI text handler for request tracking
+public class TrackingTextHandler extends OpenAITextHandler {
+    @Override
+    public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
+        return Json.createObjectBuilder(super.buildChatPayload(service, input, options, streaming))
+            .add("user", getCurrentUserId())
+            .build();
+    }
+}
+```
+
+### Programmatic Configuration
+
+```java
+AIStrategy strategy = new AIStrategy(TrackingTextHandler.class, null);
+AIService service = AIConfig.of("your-api-key").withStrategy(strategy).createService();
+```
+
+### CDI Integration
+
+```java                                                                                                                                                                                                                                              
+@Inject
+@AI(provider = OPENAI, apiKey = "#{config.openaiApiKey}", textHandler = TrackingTextHandler.class)
+private AIService trackedService;
+```
+
 ## OmniAI vs LangChain4J vs Spring AI vs Jakarta Agentic
 
 ### Philosophy
@@ -253,7 +284,7 @@ private AIService custom;
 | **Dependencies** | JSON-P only (CDI/EL optional) | Multiple modules | Spring framework | TBD (in development) |
 | **Learning Curve** | Low | Medium-High | Medium (if Spring-familiar) | TBD |
 
-### Feature Comparison (in 1.0-SNAPSHOT)
+### Feature Comparison (in 1.0-M2)
 
 | Feature | OmniAI | LangChain4J | Spring AI | Jakarta Agentic |
 |---------|--------|-------------|-----------|-----------------|
@@ -272,7 +303,7 @@ private AIService custom;
 | **Agents** | ❌ | ✅ | ✅ | ✅ (core focus) |
 | **Prompt Templates** | ❌ | ✅ | ✅ | TBD |
 
-### Provider Support (
+### Provider Support (in 1.0-M2)
 
 | Provider | OmniAI | LangChain4J | Spring AI |
 |----------|--------|-------------|-----------|
@@ -307,8 +338,8 @@ private AIService custom;
 
 ### Where OmniAI is Intentionally Simpler
 
-No streaming, tools, embeddings, RAG, memory, or agents. This isn't a gap - it's a design choice. OmniAI is a utility library, not a framework.
-  
+No tools, embeddings, RAG, memory, or agents. This isn't a gap - it's a design choice. OmniAI is a utility library, not a framework.
+
 ### Positioning
 
 | Library | Analogy |
@@ -332,8 +363,8 @@ If Jakarta Agentic matures, OmniAI could potentially be a lightweight implementa
 ### Is OmniAI smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniAI 1.0-M1 JAR: 71 KB vs LangChain4J: 2+ MB (with dependencies) — roughly 28x smaller
-- 33 source files, ~5,200 lines of code total
+- OmniAI 1.0-M2 JAR: 110 KB vs LangChain4J: 2+ MB (with dependencies) — roughly 20x smaller
+- 54 source files, ~7,300 lines of code (~2,900 actual code, rest is javadocs/comments)
 - Zero runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly
 - Only optional provided dependencies: Jakarta JSON-P, CDI, and EL APIs (which Jakarta EE servers already have)
 
