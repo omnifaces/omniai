@@ -109,7 +109,7 @@ class AIServiceProducer {
         if (stripped.contains("${config:")) {
             if (!isMicroprofileConfigAvailable()) {
                 throw new UnsupportedOperationException("You need a runtime implementation of microprofile-config-api in order for MP config resolution in @AI attributes to work."
-                    + " E.g. org.eclipse.microprofile.config:microprofile-config-api:3.1 or simply the Quarkus platform");
+                    + " E.g. io.smallrye.config:smallrye-config:3.15.1 or simply a MicroProfile-compatible runtime such as Quarkus");
             }
 
             return MicroprofileConfigExpressionResolver.resolveConfig(stripped);
@@ -117,12 +117,12 @@ class AIServiceProducer {
 
         if (!isELAwareBeanManagerAvailable(beanManager)) {
             throw new UnsupportedOperationException("You need a runtime implementation of jakarta.enterprise.cdi-el-api in order for EL resolution in @AI attributes to work."
-                    + " E.g. org.jboss.weld.servlet:weld-servlet-shaded:6.0.0.Final or org.jboss.weld.se:weld-se-core:6.0.0.Final");
+                    + " E.g. org.jboss.weld.servlet:weld-servlet-shaded:6.0.0.Final or org.jboss.weld.se:weld-se-core:6.0.0.Final or simply a Jakarta EE-compatible runtime such as WildFly");
         }
 
         if (!isELProcessorAvailable()) {
             throw new UnsupportedOperationException("You need a runtime implementation of jakarta.el-api in order for EL resolution in @AI attributes to work."
-                    + " E.g. org.glassfish.expressly:expressly:6.0.0");
+                    + " E.g. org.glassfish.expressly:expressly:6.0.0 or simply a Jakarta EE-compatible runtime such as WildFly");
         }
 
         return ELExpressionResolver.resolveEL(beanManager, stripped);
