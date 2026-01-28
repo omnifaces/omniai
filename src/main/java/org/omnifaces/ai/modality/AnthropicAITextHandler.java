@@ -16,6 +16,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
 import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
+import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
 import static org.omnifaces.ai.model.Sse.Event.Type.EVENT;
@@ -32,7 +33,6 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.AnthropicAIService;
 
@@ -107,7 +107,7 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
 
             payload.add("output_format", Json.createObjectBuilder()
                 .add("type", "json_schema")
-                .add("schema", options.getJsonSchema()));
+                .add("schema", addStrictAdditionalProperties(options.getJsonSchema())));
         }
 
         return payload.build();
@@ -116,22 +116,6 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
     @Override
     public List<String> getChatResponseContentPaths() {
         return List.of("content[0].text");
-    }
-
-    @Override
-    public JsonObject buildModerationJsonSchema(ModerationOptions options) {
-        var baseSchema = super.buildModerationJsonSchema(options);
-        var scoresSchema = baseSchema.getJsonObject("properties").getJsonObject("scores");
-
-        var strictScoresSchema = Json.createObjectBuilder(scoresSchema)
-            .add("additionalProperties", false);
-
-        return Json.createObjectBuilder()
-            .add("type", "object")
-            .add("properties", Json.createObjectBuilder().add("scores", strictScoresSchema))
-            .add("required", baseSchema.getJsonArray("required"))
-            .add("additionalProperties", false)
-            .build();
     }
 
     @Override

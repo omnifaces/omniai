@@ -176,4 +176,35 @@ public final class JsonHelper {
             }
         }
     }
+
+    /**
+     * Recursively adds {@code "additionalProperties": false} to all object-type schemas in the given JSON schema.
+     * <p>
+     * This is required by some AI providers (e.g., OpenAI, Anthropic) to enforce strict schema validation,
+     * ensuring the model only returns the specified properties.
+     *
+     * @param schema The JSON schema object to transform.
+     * @return A new JSON schema with {@code additionalProperties: false} added to all object schemas.
+     */
+    public static JsonObject addStrictAdditionalProperties(JsonObject schema) {
+        var builder = Json.createObjectBuilder(schema)
+            .add("additionalProperties", false);
+
+        if (schema.containsKey("properties")) {
+            var props = Json.createObjectBuilder();
+
+            schema.getJsonObject("properties").forEach((key, value) -> {
+                if (value instanceof JsonObject obj && "object".equals(obj.getString("type", null))) {
+                    props.add(key, addStrictAdditionalProperties(obj));
+                }
+                else {
+                    props.add(key, value);
+                }
+            });
+
+            builder.add("properties", props);
+        }
+
+        return builder.build();
+    }
 }

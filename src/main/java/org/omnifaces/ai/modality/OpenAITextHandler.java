@@ -14,6 +14,7 @@ package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
+import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -31,7 +32,6 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -118,40 +118,24 @@ public class OpenAITextHandler extends BaseAITextHandler {
                 throw new UnsupportedOperationException("service.supportsStructuredOutput() returned false, so ...");
             }
 
+            var strictSchema = Json.createObjectBuilder()
+                .add("name", "response_schema")
+                .add("strict", true)
+                .add("schema", addStrictAdditionalProperties(options.getJsonSchema()));
+
             if (supportsResponsesApi) {
                 var format = Json.createObjectBuilder().add("type", "json_schema");
-                options.getJsonSchema().forEach(format::add);
+                strictSchema.build().forEach(format::add);
                 payload.add("text", Json.createObjectBuilder().add("format", format));
             }
             else {
                 payload.add("response_format", Json.createObjectBuilder()
                     .add("type", "json_schema")
-                    .add("json_schema", options.getJsonSchema()));
+                    .add("json_schema", strictSchema));
             }
         }
 
         return payload.build();
-    }
-
-    @Override
-    public JsonObject buildModerationJsonSchema(ModerationOptions options) {
-        var baseSchema = super.buildModerationJsonSchema(options);
-        var scoresSchema = baseSchema.getJsonObject("properties").getJsonObject("scores");
-
-        var strictScoresSchema = Json.createObjectBuilder(scoresSchema)
-            .add("additionalProperties", false);
-
-        var strictSchema = Json.createObjectBuilder()
-            .add("type", "object")
-            .add("properties", Json.createObjectBuilder().add("scores", strictScoresSchema))
-            .add("required", baseSchema.getJsonArray("required"))
-            .add("additionalProperties", false);
-
-        return Json.createObjectBuilder()
-            .add("name", "moderation_result")
-            .add("strict", true)
-            .add("schema", strictSchema)
-            .build();
     }
 
     @Override
