@@ -68,7 +68,7 @@ class AIServiceProducer {
 
         if (!isJsonAvailable()) {
             throw new UnsupportedOperationException("You need a runtime implementation of jakarta.json-api in order for default AI services to work."
-                    + " E.g. org.eclipse.parsson:parsson:1.1.7");
+                    + " E.g. org.eclipse.parsson:parsson:1.1.7 or simply a Jakarta EE-compatible runtime such as WildFly");
         }
 
         var provider = annotation.serviceClass() == AIService.class ? annotation.provider().name() : annotation.serviceClass().getName();
