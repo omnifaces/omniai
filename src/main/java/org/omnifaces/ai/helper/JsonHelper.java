@@ -51,11 +51,7 @@ public final class JsonHelper {
         }
         else if (value instanceof JsonObject object) {
             return object.isEmpty();
-        }
-        else if (value instanceof JsonArray array) {
-            return array.isEmpty();
-        }
-        else if (value instanceof JsonString string) {
+        } else if (value instanceof JsonString string) {
             return isBlank(string.getString());
         }
         else {
@@ -71,10 +67,12 @@ public final class JsonHelper {
      * @throws AIResponseException If the string cannot be parsed as JSON.
      */
     public static JsonObject parseJson(String json) throws AIResponseException {
-        var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some chat APIs stubbornly put JSON in markdown formatting like ```json\n{...}\n``` when asking for JSON-only output.
+        try {
+            var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some chat APIs stubbornly put JSON in markdown formatting like ```json\n{...}\n``` when asking for JSON-only output.
 
-        try (var reader = Json.createReader(new StringReader(sanitizedJson))) {
-            return reader.readObject();
+            try (var reader = Json.createReader(new StringReader(sanitizedJson))) {
+                return reader.readObject();
+            }
         }
         catch (Exception e) {
             throw new AIResponseException("Cannot parse json", json, e);
@@ -135,11 +133,7 @@ public final class JsonHelper {
     }
 
     private static void collectNextLevelValues(JsonValue current, String segment, List<JsonValue> collector) {
-        if (current == null) {
-            return;
-        }
-
-        if (!(current instanceof JsonObject) && !(current instanceof JsonArray)) {
+        if ((current == null) || (!(current instanceof JsonObject) && !(current instanceof JsonArray))) {
             return;
         }
 
