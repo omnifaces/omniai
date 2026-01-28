@@ -26,4 +26,25 @@ import java.io.Serializable;
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler) implements Serializable {}
+public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler) implements Serializable {
+
+    /**
+     * Returns a copy of this strategy with the specified text handler.
+     *
+     * @param textHandler The text handler class.
+     * @return A new strategy instance with the updated text handler.
+     */
+    public AIStrategy withTextHandler(Class<? extends AITextHandler> textHandler) {
+        return new AIStrategy(textHandler, imageHandler);
+    }
+
+    /**
+     * Returns a copy of this strategy with the specified image handler.
+     *
+     * @param imageHandler The image handler class.
+     * @return A new strategy instance with the updated image handler.
+     */
+    public AIStrategy withImageHandler(Class<? extends AIImageHandler> imageHandler) {
+        return new AIStrategy(textHandler, imageHandler);
+    }
+}

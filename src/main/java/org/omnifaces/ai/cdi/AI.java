@@ -47,6 +47,22 @@ import org.omnifaces.ai.model.ChatOptions;
  * &#64;AI(serviceClass = MyCustomAIService.class)
  * private AIService ai;
  * </pre>
+ * Usage example with custom text handler for request tracking:
+ * <pre>
+ * public class TrackedTextHandler extends OpenAITextHandler {
+ *     &#64;Override
+ *     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
+ *         return Json.createObjectBuilder(super.buildChatPayload(service, input, options, streaming))
+ *             .add("user", getCurrentUserId())
+ *             .add("seed", 12345)
+ *             .build();
+ *     }
+ * }
+ *
+ * &#64;Inject
+ * &#64;AI(provider = OPENAI, apiKey = "#{config.openaiApiKey}", textHandler = TrackedTextHandler.class)
+ * private AIService ai;
+ * </pre>
  * <p>
  * All string attributes support EL expressions, e.g. <code>#{bean.property}</code>, <code>#{initParam['com.example.CONTEXT_PARAM_NAME']}</code>, etc.
  *

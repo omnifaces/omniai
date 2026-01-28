@@ -121,7 +121,7 @@ public enum AIProvider {
     META("Meta AI", MetaAIService.class, true, "Llama-4-Scout-17B-16E-Instruct-FP8", "https://api.llama.com/v1", OpenAITextHandler.class, OpenAIImageHandler.class),
 
     /**
-     * Azure OpenAI: Aggregates a broad range of AI models via a unified OpenAI-compatible API at Microsoft Azure.
+     * Azure OpenAI: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code gpt-5-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
      * @see AzureAIService
@@ -143,7 +143,7 @@ public enum AIProvider {
     /**
      * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
-     * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://openrouter.ai/api/v1}.
+     * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://router.huggingface.co/v1}.
      * @see HuggingFaceAIService
      * @see <a href="https://huggingface.co/settings/tokens">Manage Hugging Face API Keys</a>
      * @see <a href="https://huggingface.co/models">Available Hugging Face Models</a>
@@ -243,7 +243,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's default AI model.
-     * Can be overridden via {@link AIConfig#withModel(String)} or {@link AIConfig#PROPERTY_MODEL}.
+     * Can be overridden via {@link AIConfig#withModel(String)} or {@link AIConfig#PROPERTY_MODEL} or {@link AI#model()}.
      * @return the AI provider's default AI model.
      */
     public String getDefaultModel() {
@@ -252,7 +252,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's default API endpoint.
-     * Can be overridden via {@link AIConfig#withEndpoint(String)} or {@link AIConfig#PROPERTY_ENDPOINT}.
+     * Can be overridden via {@link AIConfig#withEndpoint(String)} or {@link AIConfig#PROPERTY_ENDPOINT} or {@link AI#endpoint()}.
      * @return the AI provider's default API endpoint.
      */
     public String getDefaultEndpoint() {
@@ -261,7 +261,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's default AI text handler.
-     * Can be overridden via {@link AIConfig#withStrategy(AIStrategy)}.
+     * Can be overridden via {@link AIConfig#withStrategy(AIStrategy)} or {@link AIStrategy#withTextHandler(Class)} or {@link AI#textHandler()}.
      * @return the AI provider's default AI text handler.
      */
     public Class<? extends AITextHandler> getDefaultTextHandler() {
@@ -270,7 +270,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's default AI image handler.
-     * Can be overridden via {@link AIConfig#withStrategy(AIStrategy)}.
+     * Can be overridden via {@link AIConfig#withStrategy(AIStrategy)} or {@link AIStrategy#withImageHandler(Class)} or {@link AI#imageHandler()}.
      * @return the AI provider's default AI image handler.
      */
     public Class<? extends AIImageHandler> getDefaultImageHandler() {
