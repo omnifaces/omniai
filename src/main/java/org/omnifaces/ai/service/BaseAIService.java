@@ -154,7 +154,7 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) {
         if (!supportsStreaming()) {
-            throw new UnsupportedOperationException("service.supportsStreaming() returned false, so ...");
+            throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
         var neededForStackTrace = new Exception("Async chat streaming failed");

@@ -53,6 +53,8 @@ class AIServiceProducer {
      * @param injectionPoint The injection point.
      * @param beanManager The CDI bean manager.
      * @return The configured AI service instance.
+     * @throws IllegalArgumentException If {@link AIProvider#CUSTOM} is used via {@code @AI} annotation (use {@code serviceClass} instead).
+     * @throws UnsupportedOperationException If a required runtime dependency is not available (jakarta.json-api, jakarta.enterprise.cdi-el-api, or jakarta.el-api).
      */
     @Produces
     @Dependent
@@ -86,6 +88,8 @@ class AIServiceProducer {
      * @param beanManager The CDI bean manager for EL resolution.
      * @param value The value, possibly containing an EL expression.
      * @return The resolved value, or {@code null} if the input is blank.
+     * @throws IllegalArgumentException If the EL expression is malformed (e.g. missing closing brace).
+     * @throws UnsupportedOperationException If a required runtime dependency for EL resolution is not available.
      */
     private static String resolveELIfNecessary(BeanManager beanManager, String value) {
         if (value == null || value.isBlank()) {
@@ -99,7 +103,7 @@ class AIServiceProducer {
         }
 
         if (!stripped.contains("}")) {
-            throw new IllegalStateException("The EL expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'.");
+            throw new IllegalArgumentException("The EL expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'.");
         }
 
         if (!isELAwareBeanManagerAvailable(beanManager)) {

@@ -56,6 +56,8 @@ public interface AITextHandler extends Serializable {
      * @param options The chat options.
      * @param streaming Whether this is for chat streaming endpoint.
      * @return The JSON request payload.
+     * @throws UnsupportedOperationException If streaming is requested but not supported as per {@link AIService#supportsStreaming()},
+     * or if structured output is requested but not supported as per {@link AIService#supportsStructuredOutput()}.
      */
     JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming);
 

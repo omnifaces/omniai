@@ -128,6 +128,7 @@ public abstract class BaseAIImageHandler implements AIImageHandler {
      * Returns all possible paths to the image content in the JSON response parsed by {@link #parseImageContent(String)}.
      * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the image content in the JSON response.
      */
     public List<String> getImageResponseContentPaths() {

@@ -44,6 +44,7 @@ public final class JsonHelper {
      *
      * @param value JSON value to check.
      * @return Whether the given JSON value is empty.
+     * @throws UnsupportedOperationException If the value type is not yet supported.
      */
     public static boolean isEmpty(JsonValue value) {
         if (value == null) {
@@ -51,7 +52,11 @@ public final class JsonHelper {
         }
         else if (value instanceof JsonObject object) {
             return object.isEmpty();
-        } else if (value instanceof JsonString string) {
+        }
+        else if (value instanceof JsonArray array) {
+            return array.isEmpty();
+        }
+        else if (value instanceof JsonString string) {
             return isBlank(string.getString());
         }
         else {

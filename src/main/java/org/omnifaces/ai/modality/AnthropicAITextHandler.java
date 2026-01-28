@@ -86,7 +86,7 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
 
         if (streaming) {
             if (!service.supportsStreaming()) {
-                throw new UnsupportedOperationException("service.supportsStreaming() returned false, so ...");
+                throw new UnsupportedOperationException("Streaming is not supported by " + service.getName());
             }
 
             payload.add("stream", true);
@@ -102,7 +102,7 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
 
         if (options.getJsonSchema() != null) {
             if (!service.supportsStructuredOutput()) {
-                throw new UnsupportedOperationException("service.supportsStructuredOutput() returned false, so ...");
+                throw new UnsupportedOperationException("Structured output is not supported by " + service.getName());
             }
 
             payload.add("output_format", Json.createObjectBuilder()

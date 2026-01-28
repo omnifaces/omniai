@@ -89,7 +89,7 @@ public class GoogleAITextHandler extends BaseAITextHandler {
 
         if (options.getJsonSchema() != null) {
             if (!service.supportsStructuredOutput()) {
-                throw new UnsupportedOperationException("service.supportsStructuredOutput() returned false, so ...");
+                throw new UnsupportedOperationException("Structured output is not supported by " + service.getName());
             }
 
             generationConfig
