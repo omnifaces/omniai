@@ -88,7 +88,7 @@ public class AnthropicAIService extends BaseAIService {
 
     @Override
     public boolean supportsStructuredOutput() {
-        return getModelVersion().gte(CLAUDE_OPUS_4_1) || getModelVersion().gte(CLAUDE_SONNET_4_5);
+        return getModelVersion().gte(CLAUDE_OPUS_4_1, CLAUDE_SONNET_4_5);
     }
 
     @Override

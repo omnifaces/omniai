@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai;
 
+import static java.util.Arrays.stream;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 
 import java.io.Serializable;
@@ -93,63 +94,63 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     }
 
     /**
-     * Checks if this version is less than the version of the given AI model version. Returns {@code false} if the model names do not match.
+     * Checks if this version is less than the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models match and this version is less than the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version is less than any of the given versions (with matching model names).
      */
-    public boolean lt(AIModelVersion other) {
-        return hasMatchingModel(other) && compareVersionTo(other) < 0;
+    public boolean lt(AIModelVersion... others) {
+        return stream(others).anyMatch(other -> hasMatchingModel(other) && compareVersionTo(other) < 0);
     }
 
     /**
-     * Checks if this version is less than or equal to the version of the given AI model version. Returns {@code false} if the model names do not match.
+     * Checks if this version is less than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models match and this version is less than or equal to the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version is less than or equal to any of the given versions (with matching model names).
      */
-    public boolean lte(AIModelVersion other) {
-        return hasMatchingModel(other) && compareVersionTo(other) <= 0;
+    public boolean lte(AIModelVersion... others) {
+        return stream(others).anyMatch(other -> hasMatchingModel(other) && compareVersionTo(other) <= 0);
     }
 
     /**
-     * Checks if this version is greater than the version of the given AI model version. Returns {@code false} if the model names do not match.
+     * Checks if this version is greater than the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models match and this version is greater than the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version is greater than any of the given versions (with matching model names).
      */
-    public boolean gt(AIModelVersion other) {
-        return hasMatchingModel(other) && compareVersionTo(other) > 0;
+    public boolean gt(AIModelVersion... others) {
+        return stream(others).anyMatch(other -> hasMatchingModel(other) && compareVersionTo(other) > 0);
     }
 
     /**
-     * Checks if this version is greater than or equal to the version of the given AI model version. Returns {@code false} if the model names do not match.
+     * Checks if this version is greater than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models match and this version is greater than or equal to the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version is greater than or equal to any of the given versions (with matching model names).
      */
-    public boolean gte(AIModelVersion other) {
-        return hasMatchingModel(other) && compareVersionTo(other) >= 0;
+    public boolean gte(AIModelVersion... others) {
+        return stream(others).anyMatch(other -> hasMatchingModel(other) && compareVersionTo(other) >= 0);
     }
 
     /**
-     * Checks if this version is equal to the version of the given AI model version. Returns {@code false} if the model names do not match.
+     * Checks if this version is equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models match and this version equals the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version equals any of the given versions (with matching model names).
      */
-    public boolean eq(AIModelVersion other) {
-        return hasMatchingModel(other) && compareVersionTo(other) == 0;
+    public boolean eq(AIModelVersion... others) {
+        return stream(others).anyMatch(other -> hasMatchingModel(other) && compareVersionTo(other) == 0);
     }
 
     /**
-     * Checks if this version is not equal to the version of the given AI model version. Returns {@code true} if the model names do not match.
+     * Checks if this version is not equal to any of the given AI model versions. Returns {@code true} if the model names do not match.
      *
-     * @param other The other AI model version to compare against.
-     * @return {@code true} if models do not match or this version does not equal the given version.
+     * @param others The other AI model versions to compare against.
+     * @return {@code true} if this version does not equal any of the given versions.
      */
-    public boolean ne(AIModelVersion other) {
-        return !eq(other);
+    public boolean ne(AIModelVersion... others) {
+        return stream(others).noneMatch(other -> hasMatchingModel(other) && compareVersionTo(other) == 0);
     }
 
     /**

@@ -524,4 +524,134 @@ class AIModelVersionTest {
         var v2 = AIModelVersion.of("gpt-5-mini");
         assertTrue(v1.eq(v2));
     }
+
+    // =================================================================================================================
+    // Test varargs comparison methods
+    // =================================================================================================================
+
+    @Test
+    void lt_varargs_matchesAny() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        var v2 = AIModelVersion.of("gpt", 3, 0);
+        var v3 = AIModelVersion.of("gpt", 5, 0);
+        assertTrue(v1.lt(v2, v3)); // true because v1 < v3
+        assertFalse(v1.lt(v2)); // false because v1 > v2
+    }
+
+    @Test
+    void lt_varargs_noMatch() {
+        var v1 = AIModelVersion.of("gpt", 5, 0);
+        var v2 = AIModelVersion.of("gpt", 3, 0);
+        var v3 = AIModelVersion.of("gpt", 4, 0);
+        assertFalse(v1.lt(v2, v3)); // false because v1 > both
+    }
+
+    @Test
+    void lte_varargs_matchesAny() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        var v2 = AIModelVersion.of("gpt", 3, 0);
+        var v3 = AIModelVersion.of("gpt", 4, 0);
+        assertTrue(v1.lte(v2, v3)); // true because v1 == v3
+    }
+
+    @Test
+    void gt_varargs_matchesAny() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        var v2 = AIModelVersion.of("gpt", 3, 0);
+        var v3 = AIModelVersion.of("gpt", 5, 0);
+        assertTrue(v1.gt(v2, v3)); // true because v1 > v2
+        assertFalse(v1.gt(v3)); // false because v1 < v3
+    }
+
+    @Test
+    void gt_varargs_noMatch() {
+        var v1 = AIModelVersion.of("gpt", 3, 0);
+        var v2 = AIModelVersion.of("gpt", 4, 0);
+        var v3 = AIModelVersion.of("gpt", 5, 0);
+        assertFalse(v1.gt(v2, v3)); // false because v1 < both
+    }
+
+    @Test
+    void gte_varargs_matchesAny() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        var v2 = AIModelVersion.of("gpt", 5, 0);
+        var v3 = AIModelVersion.of("gpt", 4, 0);
+        assertTrue(v1.gte(v2, v3)); // true because v1 == v3
+    }
+
+    @Test
+    void gte_varargs_multipleModels() {
+        var v1 = AIModelVersion.of("claude-sonnet-4-5-20250929");
+        var gpt = AIModelVersion.of("gpt", 5, 0);
+        var claude = AIModelVersion.of("claude", 4, 0);
+        assertTrue(v1.gte(gpt, claude)); // true because v1 matches and >= claude 4.0
+    }
+
+    @Test
+    void eq_varargs_matchesAny() {
+        var v1 = AIModelVersion.of("gpt", 4, 5);
+        var v2 = AIModelVersion.of("gpt", 4, 0);
+        var v3 = AIModelVersion.of("gpt", 4, 5);
+        assertTrue(v1.eq(v2, v3)); // true because v1 == v3
+        assertFalse(v1.eq(v2)); // false because v1 != v2
+    }
+
+    @Test
+    void eq_varargs_noMatch() {
+        var v1 = AIModelVersion.of("gpt", 4, 5);
+        var v2 = AIModelVersion.of("gpt", 4, 0);
+        var v3 = AIModelVersion.of("gpt", 5, 0);
+        assertFalse(v1.eq(v2, v3)); // false because v1 != both
+    }
+
+    @Test
+    void ne_varargs_noneMatch() {
+        var v1 = AIModelVersion.of("gpt", 4, 5);
+        var v2 = AIModelVersion.of("gpt", 4, 0);
+        var v3 = AIModelVersion.of("gpt", 5, 0);
+        assertTrue(v1.ne(v2, v3)); // true because v1 != both
+    }
+
+    @Test
+    void ne_varargs_oneMatches() {
+        var v1 = AIModelVersion.of("gpt", 4, 5);
+        var v2 = AIModelVersion.of("gpt", 4, 0);
+        var v3 = AIModelVersion.of("gpt", 4, 5);
+        assertFalse(v1.ne(v2, v3)); // false because v1 == v3
+    }
+
+    @Test
+    void varargs_withDifferentModels_onlyMatchingModelsConsidered() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        var claude = AIModelVersion.of("claude", 3, 0);
+        var gptOlder = AIModelVersion.of("gpt", 3, 0);
+        var gptNewer = AIModelVersion.of("gpt", 5, 0);
+        assertTrue(v1.gt(claude, gptOlder)); // true because v1 > gptOlder (claude ignored)
+        assertTrue(v1.lt(claude, gptNewer)); // true because v1 < gptNewer (claude ignored)
+        assertFalse(v1.gt(claude)); // false because claude doesn't match
+    }
+
+    @Test
+    void varargs_realWorld_multipleProviderVersionCheck() {
+        var actual = AIModelVersion.of("claude-sonnet-4-5-20250929");
+        var claudeMinimum = AIModelVersion.of("claude", 4, 5);
+        var gptMinimum = AIModelVersion.of("gpt", 5, 0);
+        assertTrue(actual.gte(claudeMinimum, gptMinimum)); // replaces || operator
+    }
+
+    @Test
+    void varargs_emptyArray_returnsFalse() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        assertFalse(v1.lt());
+        assertFalse(v1.lte());
+        assertFalse(v1.gt());
+        assertFalse(v1.gte());
+        assertFalse(v1.eq());
+    }
+
+    @Test
+    void varargs_emptyArray_ne_returnsTrue() {
+        var v1 = AIModelVersion.of("gpt", 4, 0);
+        assertTrue(v1.ne()); // not equal to any of nothing = true
+    }
 }
