@@ -42,7 +42,7 @@ class ELExpressionResolver extends BaseExpressionResolver {
      * @param value The value containing EL expressions to resolve.
      * @return The value with EL expressions resolved.
      */
-    static String resolveEL(BeanManager beanManager, String value) {
+    static String resolveELExpression(BeanManager beanManager, String value) {
         var elProcessor = new ELProcessor();
         elProcessor.getELManager().addELResolver(((ELAwareBeanManager) beanManager).getELResolver());
         return resolve(EL_PATTERN, value, expr -> ofNullable(elProcessor.eval(expr)).map(Object::toString).orElse(""));

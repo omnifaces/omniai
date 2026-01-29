@@ -13,6 +13,11 @@
 package org.omnifaces.ai.cdi;
 
 import static java.util.Collections.emptyMap;
+import static org.omnifaces.ai.cdi.BaseExpressionResolver.looksLikeExpression;
+import static org.omnifaces.ai.cdi.BaseExpressionResolver.looksLikeMicroProfileConfigExpression;
+import static org.omnifaces.ai.cdi.ELExpressionResolver.resolveELExpression;
+import static org.omnifaces.ai.cdi.MicroProfileConfigExpressionResolver.resolveMicroProfileConfigExpression;
+import static org.omnifaces.ai.helper.TextHelper.stripToNull;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +38,7 @@ import org.omnifaces.ai.AITextHandler;
 /**
  * CDI producer for {@link AIService} instances based on the {@link AI} qualifier annotation.
  * <p>
- * This producer resolves EL expressions in the annotation attributes and caches service instances by their resolved configuration.
+ * This producer resolves expressions in the annotation attributes and caches service instances by their resolved {@link AIConfig}.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -72,10 +77,10 @@ class AIServiceProducer {
         }
 
         var provider = annotation.serviceClass() == AIService.class ? annotation.provider().name() : annotation.serviceClass().getName();
-        var apiKey = resolveELIfNecessary(beanManager, annotation.apiKey());
-        var model = resolveELIfNecessary(beanManager, annotation.model());
-        var endpoint = resolveELIfNecessary(beanManager, annotation.endpoint());
-        var prompt = resolveELIfNecessary(beanManager, annotation.prompt());
+        var apiKey = resolveExpressionsIfNecessary(beanManager, annotation.apiKey());
+        var model = resolveExpressionsIfNecessary(beanManager, annotation.model());
+        var endpoint = resolveExpressionsIfNecessary(beanManager, annotation.endpoint());
+        var prompt = resolveExpressionsIfNecessary(beanManager, annotation.prompt());
         var textHandler = annotation.textHandler() == AITextHandler.class ? null : annotation.textHandler();
         var imageHandler = annotation.imageHandler() == AIImageHandler.class ? null : annotation.imageHandler();
         var config = new AIConfig(provider, apiKey, model, endpoint, prompt, new AIStrategy(textHandler, imageHandler), emptyMap());
@@ -84,48 +89,50 @@ class AIServiceProducer {
     }
 
     /**
-     * Resolves EL expressions in the given value.
+     * Resolves expressions in the given value if necessary.
      * @param beanManager The CDI bean manager for EL resolution.
-     * @param value The value, possibly containing an EL expression.
+     * @param value The value, possibly containing an expression.
      * @return The resolved value, or {@code null} if the input is blank.
-     * @throws IllegalArgumentException If the EL expression is malformed (e.g. missing closing brace).
-     * @throws UnsupportedOperationException If a required runtime dependency for EL resolution is not available.
+     * @throws IllegalArgumentException If the expression is malformed (e.g. missing closing brace).
+     * @throws UnsupportedOperationException If a required runtime dependency for expression resolution is not available.
      */
-    private static String resolveELIfNecessary(BeanManager beanManager, String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
+    private static String resolveExpressionsIfNecessary(BeanManager beanManager, String value) {
+        var stripped = stripToNull(value);
 
-        var stripped = value.strip();
-
-        if (!stripped.contains("#{") && !stripped.contains("${")) {
+        if (!looksLikeExpression(stripped)) {
             return stripped;
         }
 
         if (!stripped.contains("}")) {
-            throw new IllegalArgumentException("The EL expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'.");
+            throw new IllegalArgumentException("The expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'.");
         }
 
-        if (stripped.contains("${config:")) {
-            if (!isMicroprofileConfigAvailable()) {
+        var resolved = stripped;
+
+        if (looksLikeMicroProfileConfigExpression(resolved)) {
+            if (!isMicroProfileConfigAvailable()) {
                 throw new UnsupportedOperationException("You need a runtime implementation of microprofile-config-api in order for MP config resolution in @AI attributes to work."
                     + " E.g. io.smallrye.config:smallrye-config:3.15.1 or simply a MicroProfile-compatible runtime such as Quarkus");
             }
 
-            return MicroprofileConfigExpressionResolver.resolveConfig(stripped);
+            resolved = resolveMicroProfileConfigExpression(resolved);
         }
 
-        if (!isELAwareBeanManagerAvailable(beanManager)) {
-            throw new UnsupportedOperationException("You need a runtime implementation of jakarta.enterprise.cdi-el-api in order for EL resolution in @AI attributes to work."
+        if (looksLikeExpression(resolved)) {
+            if (!isELAwareBeanManagerAvailable(beanManager)) {
+                throw new UnsupportedOperationException("You need a runtime implementation of jakarta.enterprise.cdi-el-api in order for EL resolution in @AI attributes to work."
                     + " E.g. org.jboss.weld.servlet:weld-servlet-shaded:6.0.0.Final or org.jboss.weld.se:weld-se-core:6.0.0.Final or simply a Jakarta EE-compatible runtime such as WildFly");
-        }
+            }
 
-        if (!isELProcessorAvailable()) {
-            throw new UnsupportedOperationException("You need a runtime implementation of jakarta.el-api in order for EL resolution in @AI attributes to work."
+            if (!isELProcessorAvailable()) {
+                throw new UnsupportedOperationException("You need a runtime implementation of jakarta.el-api in order for EL resolution in @AI attributes to work."
                     + " E.g. org.glassfish.expressly:expressly:6.0.0 or simply a Jakarta EE-compatible runtime such as WildFly");
+            }
+
+            resolved = resolveELExpression(beanManager, resolved);
         }
 
-        return ELExpressionResolver.resolveEL(beanManager, stripped);
+        return resolved;
     }
 
     private static boolean isJsonAvailable() {
@@ -137,7 +144,7 @@ class AIServiceProducer {
         }
     }
 
-    private static boolean isMicroprofileConfigAvailable() {
+    private static boolean isMicroProfileConfigAvailable() {
         try {
             return Class.forName("org.eclipse.microprofile.config.ConfigProvider").getMethod("getConfig").invoke(null) != null;
         }

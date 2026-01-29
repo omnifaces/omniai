@@ -63,7 +63,8 @@ import org.omnifaces.ai.model.ChatOptions;
  * private AIService ai;
  * </pre>
  * <p>
- * All string attributes support EL expressions, e.g. <code>#{bean.property}</code>, <code>#{initParam['com.example.CONTEXT_PARAM_NAME']}</code>, etc.
+ * All string attributes support EL and/or MicroProfile Config expressions, e.g. <code>#{bean.property}</code>,
+ * <code>#{initParam['com.example.CONTEXT_PARAM_NAME']}</code>, <code>${config:openai.api-key}</code> etc.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -95,7 +96,7 @@ public @interface AI {
     Class<? extends AIService> serviceClass() default AIService.class;
 
     /**
-     * The API key. Supports EL expressions.
+     * The API key. Supports EL and/or MicroProfile Config expressions.
      * Required for most providers.
      *
      * @return The API key or EL expression.
@@ -104,7 +105,7 @@ public @interface AI {
     String apiKey() default "";
 
     /**
-     * The model to use. Supports EL expressions.
+     * The model to use. Supports EL and/or MicroProfile Config expressions.
      * If empty, uses the provider's default model as per {@link AIProvider#getDefaultModel()}.
      *
      * @return The model name or EL expression.
@@ -113,7 +114,7 @@ public @interface AI {
     String model() default "";
 
     /**
-     * The API endpoint URL. Supports EL expressions.
+     * The API endpoint URL. Supports EL and/or MicroProfile Config expressions.
      * If empty, uses the provider's default endpoint as per {@link AIProvider#getDefaultEndpoint()}.
      *
      * @return The endpoint URL or EL expression.
@@ -122,7 +123,7 @@ public @interface AI {
     String endpoint() default "";
 
     /**
-     * The default system prompt to provide high-level instructions to the model. Supports EL expressions.
+     * The default system prompt to provide high-level instructions to the model. Supports EL and/or MicroProfile Config expressions.
      * <p>
      * This is used as the {@link ChatOptions#getSystemPrompt()} when calling {@link AIService#chat(String)} or {@link AIService#chatAsync(String)} without explicit options.
      * When you call {@link AIService#chat(String, ChatOptions)} or {@link AIService#chatAsync(String, ChatOptions)} with explicit options,

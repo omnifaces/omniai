@@ -23,11 +23,11 @@ import org.eclipse.microprofile.config.ConfigProvider;
  * @since 1.0
  * @see AIServiceProducer
  */
-class MicroprofileConfigExpressionResolver extends BaseExpressionResolver {
+class MicroProfileConfigExpressionResolver extends BaseExpressionResolver {
 
     private static final Pattern CONFIG_PATTERN = Pattern.compile("(\\$\\{config:)([^}]+)(})");
 
-    private MicroprofileConfigExpressionResolver() {
+    private MicroProfileConfigExpressionResolver() {
         throw new AssertionError();
     }
 
@@ -37,7 +37,7 @@ class MicroprofileConfigExpressionResolver extends BaseExpressionResolver {
      * @param value The value containing MP config expressions to resolve.
      * @return The value with MP config expressions resolved.
      */
-    static String resolveConfig(String value) {
+    static String resolveMicroProfileConfigExpression(String value) {
         var config = ConfigProvider.getConfig();
         return resolve(CONFIG_PATTERN, value, key -> config.getOptionalValue(key, String.class).orElse(""));
     }

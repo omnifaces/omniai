@@ -24,9 +24,27 @@ import java.util.regex.Pattern;
  * @since 1.0
  * @see AIServiceProducer
  * @see ELExpressionResolver
- * @see MicroprofileConfigExpressionResolver
+ * @see MicroProfileConfigExpressionResolver
  */
 abstract class BaseExpressionResolver {
+
+    /**
+     * Returns {@code true} if the given string looks like an expression, i.e. it contains <code>${</code> or <code>#{</code>.
+     * @param value The string to check.
+     * @return {@code true} if the given string looks like an expression.
+     */
+    static boolean looksLikeExpression(String value) {
+        return value != null && (value.contains("${") || value.contains("#{"));
+    }
+
+    /**
+     * Returns {@code true} if the given string looks like a MicroProfile Config expression, i.e. it contains <code>${config:</code>.
+     * @param value The string to check.
+     * @return {@code true} if the given string looks like an expression.
+     */
+    static boolean looksLikeMicroProfileConfigExpression(String value) {
+        return value != null && value.contains("${config:");
+    }
 
     /**
      * Resolves expressions in the given value using the given regular expression pattern and evaluator function.
