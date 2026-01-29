@@ -324,7 +324,7 @@ private AIService trackedService;
 | Aspect | OmniAI | LangChain4J-CDI | Spring AI |
 |--------|--------|-----------------|-----------|
 | **Injection Style** | `@Inject @AI(...)` | `@Inject` + config | `@Autowired` + beans |
-| **EL Support** | ✅ `#{...}` expressions | ❌ | ❌ (SpEL, different) |
+| **EL Support** | ✅ `#{...}`, `${...}` | ❌ | ❌ (SpEL, different) |
 | **MP Config Support** | ✅ `${config:...}` | ❌ | ❌ (SpEL, different) |
 | **Zero Config** | ❌ | ❌ | ❌ |
 | **Qualifier-based** | ✅ | ❌ | ❌ |
@@ -333,8 +333,9 @@ private AIService trackedService;
 
 - Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
 - Built-in text utilities - Summarization, translation, key point extraction, moderation as first-class features (not "build your own prompt")
-- Native CDI with EL - `@AI(apiKey = "#{config.key}")` with expression resolution
-- 8 providers out of the box - Including Ollama for local/offline
+- Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
+- MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
+- 10 providers out of the box - Including Ollama for local/offline
 - Clean exception hierarchy - Specific exceptions per HTTP status
 
 ### Where OmniAI is Intentionally Simpler
