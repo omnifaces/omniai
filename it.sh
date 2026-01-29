@@ -3,4 +3,4 @@ set -a
 source .env.local
 set +a
 
-mvn clean verify -DskipITs=false -Dmaven.javadoc.skip=true "$@"
+mvn clean verify -DskipUTs=true -DskipITs=false -Dmaven.javadoc.skip=true "$@"

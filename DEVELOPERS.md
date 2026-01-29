@@ -43,4 +43,4 @@ It will pass-through all arguments to underlying `mvn clean verify`:
 ./it.sh -Dit.test=OllamaAIServiceImageHandlerIT
 ```
 
-The `it.sh` script by default skips Javadoc plugin.
+The `it.sh` script by default skips Surefire plugin (for unit tests) as well as Javadoc plugin.
