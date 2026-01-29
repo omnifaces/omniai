@@ -162,7 +162,7 @@ final class AIApiClient {
 
                 if (line.isBlank()) {
                     if (!processDataEvent(dataBuffer, eventProcessor)) {
-                        return;
+                        break;
                     }
 
                     continue;
@@ -188,14 +188,11 @@ final class AIApiClient {
                     dataBuffer.append(line.substring(5).strip());
                 }
                 else if (!processDataEvent(dataBuffer, eventProcessor) || !eventProcessor.test(event)) {
-                    return;
+                    break;
                 }
             }
 
-            if (!processDataEvent(dataBuffer, eventProcessor)) {
-                return;
-            }
-
+            processDataEvent(dataBuffer, eventProcessor);
             future.complete(null);
         }
         catch (Exception e) {
@@ -205,11 +202,12 @@ final class AIApiClient {
 
     private static boolean processDataEvent(StringBuilder dataBuffer, Predicate<Event> eventProcessor) {
         if (!dataBuffer.isEmpty()) {
-            if (!eventProcessor.test(new Event(Type.DATA, dataBuffer.toString()))) {
+            var data = dataBuffer.toString();
+            dataBuffer.setLength(0);
+
+            if (!eventProcessor.test(new Event(Type.DATA, data))) {
                 return false;
             }
-
-            dataBuffer.setLength(0);
         }
 
         return true;

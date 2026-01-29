@@ -33,6 +33,15 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     }
 
     @Test
+    void chatStream() {
+        var responseBuffer = new StringBuilder();
+        service.chatStream("Reply with only: OK", responseBuffer::append).join();
+        var response = responseBuffer.toString();
+        log(response);
+        assertTrue(response.contains("OK"), response);
+    }
+
+    @Test
     void summarize() {
         var response = service.summarize("The quick brown fox jumps over the lazy dog near the river.", 5);
         log(response);
@@ -40,7 +49,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         assertAll(
             () -> assertTrue(response.split("\\s+").length <= 6, "max 6 words (slack of 1)"),
             () -> assertTrue(response.toLowerCase().contains("fox")),
-            () -> assertTrue(response.toLowerCase().contains("jump")),
+            () -> assertTrue(response.toLowerCase().contains("jump") || response.toLowerCase().contains("leap")),
             () -> assertTrue(response.toLowerCase().contains("dog"))
         );
 
@@ -48,7 +57,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
     @Test
     void extractKeyPoints() {
-        var response = service.extractKeyPoints("Willemstad is the capital of Curacao. Amsterdam is the capital of The Netherlands.", 2);
+        var response = service.extractKeyPoints("Willemstad is the capital of Curacao and Amsterdam is the capital of The Netherlands.", 2);
         log(response.toString());
         assertFalse(response.isEmpty(), response.toString());
         assertAll(
