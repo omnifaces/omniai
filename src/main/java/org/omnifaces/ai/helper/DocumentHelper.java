@@ -126,10 +126,25 @@ public final class DocumentHelper {
         return toDataUri(guessMediaType(content), content);
     }
 
+    /**
+     * Converts the given content to a data URI with the specified media type.
+     *
+     * @param mediaType The media type (MIME type) for the data URI.
+     * @param content The content bytes.
+     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
+     */
     static String toDataUri(String mediaType, byte[] content) {
         return "data:" + mediaType + ";base64," + encodeBase64(content);
     }
 
+    /**
+     * Checks if the byte array starts with the given prefix at the specified offset.
+     *
+     * @param content The byte array to check.
+     * @param offset The offset within the content to start checking.
+     * @param prefix The prefix bytes to match.
+     * @return {@code true} if content contains prefix at the given offset, {@code false} otherwise.
+     */
     static boolean startsWith(byte[] content, int offset, byte[] prefix) {
         if (content.length < offset + prefix.length) {
             return false;

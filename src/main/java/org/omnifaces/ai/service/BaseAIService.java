@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -44,6 +45,7 @@ import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Document;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -166,6 +168,26 @@ public abstract class BaseAIService implements AIService {
 
             throw AIException.asyncRequestFailed(exception, neededForStackTrace);
         });
+    }
+
+
+    // Files Implementation (for attaching files to chat) -------------------------------------------------------------
+
+    /**
+     * Returns the path of the files endpoint. E.g. {@code files}.
+     * @return the path of the files endpoint.
+     * @throws UnsupportedOperationException If file upload operation is not supported.
+     */
+    protected abstract String getFilesPath();
+
+    @Override
+    public String upload(Document document) throws AIException {
+        try {
+            return asyncUploadAndParseFileIdResponse(getFilesPath(), document).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
     }
 
 
@@ -304,6 +326,19 @@ public abstract class BaseAIService implements AIService {
      */
     protected CompletableFuture<String> asyncPostAndParseChatResponse(String path, JsonObject payload) throws AIException {
         return API_CLIENT.post(this, path, payload).thenApply(textHandler::parseChatResponse);
+    }
+
+    /**
+     * Upload document to API at given path along with request headers obtained from {@link #getRequestHeaders()}, and parse
+     * file ID from the response with help of {@link AITextHandler#parseFileResponse(String)}.
+     *
+     * @param path API path, relative to {@link #endpoint}.
+     * @param document The document to upload.
+     * @return A CompletableFuture containing the file ID from the upload response.
+     * @throws AIException if anything fails during the process.
+     */
+    protected CompletableFuture<String> asyncUploadAndParseFileIdResponse(String path, Document document) throws AIException {
+        return API_CLIENT.upload(this, path, document).thenApply(textHandler::parseFileResponse);
     }
 
     /**

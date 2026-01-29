@@ -22,6 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Document;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -398,9 +399,23 @@ public interface AIService extends Serializable {
      * @throws IllegalArgumentException if input message is blank.
      * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
      */
-    default CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) {
-        throw new UnsupportedOperationException();
-    }
+    CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken);
+
+
+    // File Attachment Capabilities -----------------------------------------------------------------------------------
+
+    /**
+     * Uploads a document to the AI provider and retrieves a file ID to attach to chat payload.
+     * <p>
+     * This is the core method for sending file attachments to AI providers that require documents to be uploaded
+     * separately before being referenced in chat requests.
+     *
+     * @param document The document to upload.
+     * @return The file ID or URI that can be used to reference the uploaded document in subsequent chat requests.
+     * @throws UnsupportedOperationException if file upload is not supported by the implementation.
+     * @throws AIException if the upload fails.
+     */
+    String upload(Document document) throws AIException;
 
 
     // Text Analysis Capabilities -------------------------------------------------------------------------------------
@@ -808,6 +823,15 @@ public interface AIService extends Serializable {
      * @return Whether this AI service implementation supports chat streaming via SSE.
      */
     default boolean supportsStreaming() {
+        return false;
+    }
+
+    /**
+     * Returns whether this AI service implementation supports file uploads for chat attachments.
+     * The default implementation returns false.
+     * @return Whether this AI service implementation supports file uploads for chat attachments.
+     */
+    default boolean supportsFileUpload() {
         return false;
     }
 

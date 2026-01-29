@@ -71,6 +71,22 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
                     .add("data", image.base64())));
         }
 
+        if (!input.getDocuments().isEmpty()) {
+            if (!service.supportsFileUpload()) {
+                throw new UnsupportedOperationException("File upload is not supported by " + service.getName());
+            }
+
+            for (var document : input.getDocuments()) {
+                var fileId = service.upload(document);
+
+                content.add(Json.createObjectBuilder()
+                    .add("type", "document")
+                    .add("source", Json.createObjectBuilder()
+                        .add("type", "file")
+                        .add("file_id", fileId)));
+            }
+        }
+
         content.add(Json.createObjectBuilder()
             .add("type", "text")
             .add("text", input.getMessage()));

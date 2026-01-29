@@ -22,6 +22,7 @@ import java.util.List;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 
@@ -205,5 +206,25 @@ public final class JsonHelper {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Creates a new {@link JsonObjectBuilder} from the given object with one field replaced.
+     * <p>
+     * All entries from the original object are copied, with the specified field's value replaced by the new value.
+     *
+     * @param object The source JSON object.
+     * @param field The field name to replace.
+     * @param newValue The new value for the field.
+     * @return A {@link JsonObjectBuilder} containing all entries with the specified field replaced.
+     */
+    public static JsonObjectBuilder replaceField(JsonObject object, String field, JsonValue newValue) {
+        var builder = Json.createObjectBuilder();
+
+        for (var entry : object.entrySet()) {
+            builder.add(entry.getKey(), entry.getKey().equals(field) ? newValue : entry.getValue());
+        }
+
+        return builder;
     }
 }

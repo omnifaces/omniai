@@ -26,11 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.modality.OpenAITextHandler;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Document;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -672,6 +674,8 @@ class AIConfigTest {
         @Override public String getChatPrompt() { return null; }
         @Override public boolean supportsModality(AIModality modality) { return false; }
         @Override public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException { return null; }
+        @Override public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) { return null; }
+        @Override public String upload(Document document) throws AIException { return null; }
         @Override public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException { return null; }
         @Override public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException { return null; }
         @Override public CompletableFuture<String> detectLanguageAsync(String text) throws AIException { return null; }

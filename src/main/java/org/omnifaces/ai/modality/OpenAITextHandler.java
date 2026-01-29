@@ -86,6 +86,20 @@ public class OpenAITextHandler extends BaseAITextHandler {
             content.add(img);
         }
 
+        if (!input.getDocuments().isEmpty()) {
+            if (!service.supportsFileUpload()) {
+                throw new UnsupportedOperationException("File upload is not supported by " + service.getName());
+            }
+
+            for (var document : input.getDocuments()) {
+                var fileId = service.upload(document);
+
+                content.add(Json.createObjectBuilder()
+                        .add("type", "input_file")
+                        .add("file_id", fileId));
+            }
+        }
+
         content.add(Json.createObjectBuilder()
             .add("type", supportsResponsesApi ? "input_text" : "text")
             .add("text", input.getMessage()));

@@ -69,6 +69,7 @@ public class OpenAIService extends BaseAIService {
     private static final long serialVersionUID = 1L;
 
     private static final AIModelVersion GPT_4 = AIModelVersion.of("gpt", 4);
+    private static final AIModelVersion GPT_4_1 = AIModelVersion.of("gpt", 4, 1);
     private static final AIModelVersion GPT_5 = AIModelVersion.of("gpt", 5);
     private static final AIModelVersion DALL_E = AIModelVersion.of("dall-e");
 
@@ -124,6 +125,11 @@ public class OpenAIService extends BaseAIService {
     }
 
     @Override
+    public boolean supportsFileUpload() {
+        return getModelVersion().gte(GPT_4_1);
+    }
+
+    @Override
     public boolean supportsStructuredOutput() {
         return getModelVersion().gte(GPT_4);
     }
@@ -142,6 +148,11 @@ public class OpenAIService extends BaseAIService {
     @Override
     protected String getChatPath(boolean streaming) {
         return supportsOpenAIResponsesApi() ? "responses" : "chat/completions";
+    }
+
+    @Override
+    protected String getFilesPath() {
+        return "files";
     }
 
     /**

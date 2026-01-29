@@ -15,6 +15,7 @@ package org.omnifaces.ai.service;
 import static java.net.http.HttpClient.newBuilder;
 import static java.net.http.HttpResponse.BodyHandlers.ofLines;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
 import static java.util.concurrent.CompletableFuture.failedFuture;
@@ -26,9 +27,12 @@ import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
 import static org.omnifaces.ai.exception.AIHttpException.fromStatusCode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -46,6 +50,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.exception.AIBadRequestException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIHttpException;
+import org.omnifaces.ai.model.ChatInput.Document;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
 
@@ -63,6 +68,7 @@ final class AIApiClient {
 
     private static final String APPLICATION_JSON = "application/json";
     private static final String EVENT_STREAM = "text/event-stream";
+    private static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
     /** The User-Agent header: {@value} */
     public static final String USER_AGENT = "OmniAI 1.0 (https://github.com/omnifaces/omniai)";
@@ -101,7 +107,7 @@ final class AIApiClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<String> post(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
-        return sendWithRetryAsync(newRequest(service, path, payload, APPLICATION_JSON), 0);
+        return sendWithRetryAsync(newJsonRequest(service, path, payload, APPLICATION_JSON), 0);
     }
 
     /**
@@ -116,16 +122,39 @@ final class AIApiClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<Void> stream(BaseAIService service, String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIHttpException {
-        return streamWithRetryAsync(newRequest(service, path, payload, EVENT_STREAM), eventProcessor, 0);
+        return streamWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), eventProcessor, 0);
     }
 
-    private HttpRequest newRequest(BaseAIService service, String path, JsonObject payload, String accept) {
-        var requestBuilder = HttpRequest.newBuilder(service.resolveURI(path)).timeout(requestTimeout).POST(BodyPublishers.ofString(payload.toString()));
-        requestBuilder.header("User-Agent", USER_AGENT);
-        requestBuilder.header("Content-Type", APPLICATION_JSON);
-        requestBuilder.header("Accept", accept);
-        service.getRequestHeaders().forEach(requestBuilder::header);
-        return requestBuilder.build();
+    /**
+     * Sends a UPLOAD (multipart/form-data) request for the specified {@link BaseAIService}.
+     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     *
+     * @param service The {@link BaseAIService} to extract URI and headers from.
+     * @param path the API path
+     * @param document The document to upload
+     * @return The response body as a string
+     * @throws AIHttpException if the request fails
+     */
+    public CompletableFuture<String> upload(BaseAIService service, String path, Document document) throws AIHttpException {
+        return sendWithRetryAsync(newUploadRequest(service, path, document, APPLICATION_JSON), 0);
+    }
+
+    private HttpRequest newJsonRequest(BaseAIService service, String path, JsonObject payload, String accept) {
+        return newRequest(service, path, APPLICATION_JSON, accept, BodyPublishers.ofString(payload.toString()));
+    }
+
+    private HttpRequest newUploadRequest(BaseAIService service, String path, Document document, String accept) {
+        var upload = MultipartBodyPublisher.of(document.fileName(), document.content());
+        return newRequest(service, path, MULTIPART_FORM_DATA + "; boundary=" + upload.boundary, accept, upload.body);
+    }
+
+    private HttpRequest newRequest(BaseAIService service, String path, String contentType, String accept, BodyPublisher body) {
+        var builder = HttpRequest.newBuilder(service.resolveURI(path)).timeout(requestTimeout).POST(body);
+        builder.header("User-Agent", USER_AGENT);
+        builder.header("Content-Type", contentType);
+        builder.header("Accept", accept);
+        service.getRequestHeaders().forEach(builder::header);
+        return builder.build();
     }
 
     private CompletableFuture<String> sendWithRetryAsync(HttpRequest request, int attempt) {
@@ -277,4 +306,42 @@ final class AIApiClient {
             .orElse(false);
     }
 
+    private static class MultipartBodyPublisher {
+        private final BodyPublisher body;
+        private final String boundary;
+
+        private MultipartBodyPublisher(String filename, byte[] data) {
+            this.boundary = "----OmniAIBoundary" + System.currentTimeMillis();
+
+            try {
+                var boundary = "----OmniAIBoundary" + System.currentTimeMillis();
+                var byteStream = new ByteArrayOutputStream();
+                writePart(byteStream, "purpose", "assistants");
+                writeFilePart(byteStream, "file", filename, "application/pdf", data);
+                byteStream.write(("--" + boundary + "--\r\n").getBytes(UTF_8));
+                body = HttpRequest.BodyPublishers.ofByteArray(byteStream.toByteArray());
+            }
+            catch (IOException e) {
+                throw new AIException("Cannot prepare multipart/form-data request for " + filename, e);
+            }
+        }
+
+        public static MultipartBodyPublisher of(String filename, byte[] data) {
+            return new MultipartBodyPublisher(filename, data);
+        }
+
+        private void writePart(OutputStream os, String name, String value) throws IOException {
+            os.write(("--" + boundary + "\r\n").getBytes(UTF_8));
+            os.write(("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n").getBytes(UTF_8));
+            os.write((value + "\r\n").getBytes(UTF_8));
+        }
+
+        private void writeFilePart(OutputStream os, String name, String filename, String contentType, byte[] data) throws IOException {
+            os.write(("--" + boundary + "\r\n").getBytes(UTF_8));
+            os.write(("Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + filename + "\"\r\n").getBytes(UTF_8));
+            os.write(("Content-Type: " + contentType + "\r\n\r\n").getBytes(UTF_8));
+            os.write(data);
+            os.write("\r\n".getBytes(UTF_8));
+        }
+    }
 }

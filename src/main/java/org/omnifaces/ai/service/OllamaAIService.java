@@ -84,8 +84,8 @@ public class OllamaAIService extends BaseAIService {
     }
 
     @Override
-    public boolean supportsStreaming() {
-        return false;
+    protected String getFilesPath() {
+        return "files";
     }
 
     @Override

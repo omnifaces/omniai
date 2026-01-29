@@ -64,6 +64,21 @@ public class GoogleAITextHandler extends BaseAITextHandler {
                     .add("data", image.base64())));
         }
 
+        if (!input.getDocuments().isEmpty()) {
+            if (!service.supportsFileUpload()) {
+                throw new UnsupportedOperationException("File upload is not supported by " + service.getName());
+            }
+
+            for (var document : input.getDocuments()) {
+                var fileId = service.upload(document);
+
+                parts.add(Json.createObjectBuilder()
+                    .add("file_data", Json.createObjectBuilder()
+                        .add("mime_type", document.mediaType())
+                        .add("file_uri", fileId)));
+            }
+        }
+
         parts.add(Json.createObjectBuilder()
             .add("text", input.getMessage()));
 
@@ -101,6 +116,11 @@ public class GoogleAITextHandler extends BaseAITextHandler {
     @Override
     public List<String> getChatResponseContentPaths() {
         return List.of("candidates[0].content.parts[0].text");
+    }
+
+    @Override
+    public List<String> getFileResponseIdPaths() {
+        return List.of("file.uri");
     }
 
     @Override

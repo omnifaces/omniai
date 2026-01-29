@@ -79,6 +79,11 @@ public class OpenRouterAIService extends OpenAIService {
     }
 
     @Override
+    public boolean supportsFileUpload() {
+        return true;
+    }
+
+    @Override
     public boolean supportsStructuredOutput() {
         return true;
     }

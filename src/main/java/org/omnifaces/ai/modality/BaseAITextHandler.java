@@ -179,7 +179,7 @@ public abstract class BaseAITextHandler implements AITextHandler {
 
     @Override
     public String parseChatResponse(String responseBody) throws AIResponseException {
-        var responseJson = parseResponseBodyAndCheckErrorMessages(responseBody, getChatResponseErrorMessagePaths());
+        var responseJson = parseResponseBodyAndCheckErrorMessages(responseBody, getTextResponseErrorMessagePaths());
         var messageContentPaths = getChatResponseContentPaths();
 
         if (messageContentPaths.isEmpty()) {
@@ -197,13 +197,33 @@ public abstract class BaseAITextHandler implements AITextHandler {
         throw new AIResponseException("No message content found at paths " + messageContentPaths, responseBody);
     }
 
+    @Override
+    public String parseFileResponse(String responseBody) throws AIResponseException {
+        var responseJson = parseResponseBodyAndCheckErrorMessages(responseBody, getTextResponseErrorMessagePaths());
+        var fileIdPaths = getFileResponseIdPaths();
+
+        if (fileIdPaths.isEmpty()) {
+            throw new IllegalStateException("getFileResponseIdPaths() may not return an empty list");
+        }
+
+        for (var fileIdPath : fileIdPaths) {
+            var fileId = extractByPath(responseJson, fileIdPath);
+
+            if (!isBlank(fileId)) {
+                return fileId;
+            }
+        }
+
+        throw new AIResponseException("No file ID found at paths " + fileIdPaths, responseBody);
+    }
+
     /**
-     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(String)}.
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(String)} or {@link #parseFileResponse(String)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * The default implementation returns {@code error.message} and {@code error}.
      * @return all possible paths to the error message in the JSON response.
      */
-    public List<String> getChatResponseErrorMessagePaths() {
+    public List<String> getTextResponseErrorMessagePaths() {
         return List.of("error.message", "error");
     }
 
@@ -214,6 +234,17 @@ public abstract class BaseAITextHandler implements AITextHandler {
      * @return all possible paths to the message content in the JSON response.
      */
     public abstract List<String> getChatResponseContentPaths();
+
+    /**
+     * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(String)}.
+     * May not be empty.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * The default implementation returns {@code id}.
+     * @return all possible paths to the message content in the JSON response.
+     */
+    public List<String> getFileResponseIdPaths() {
+        return List.of("id");
+    }
 
     @Override
     public ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {

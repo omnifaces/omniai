@@ -53,7 +53,6 @@ public interface AITextHandler extends Serializable {
 
     /**
      * Builds the JSON request payload for all chat operations.
-     *
      * @param service The visiting AI service.
      * @param input The chat input.
      * @param options The chat options.
@@ -141,6 +140,17 @@ public interface AITextHandler extends Serializable {
      * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected message content.
      */
     String parseChatResponse(String responseBody) throws AIResponseException;
+
+    /**
+     * Parses file ID from the API response body of file upload operation.
+     * The default implementation throws UnsupportedOperationException.
+     * @param responseBody The API response body, usually a JSON object with the file ID.
+     * @return The extracted file ID from the API response body.
+     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected file ID.
+     */
+    default String parseFileResponse(String responseBody) throws AIResponseException {
+        throw new UnsupportedOperationException("Please implement parseFileResponse(String responseBody) method in class " + getClass().getSimpleName());
+    }
 
     /**
      * Builds the system prompt for {@link AIService#moderateContent(String, ModerationOptions)} and {@link AIService#moderateContentAsync(String, ModerationOptions)}.

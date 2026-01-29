@@ -24,6 +24,7 @@ import org.omnifaces.ai.modality.OllamaAIImageHandler;
 import org.omnifaces.ai.modality.OllamaAITextHandler;
 import org.omnifaces.ai.modality.OpenAIImageHandler;
 import org.omnifaces.ai.modality.OpenAITextHandler;
+import org.omnifaces.ai.modality.OpenRouterAITextHandler;
 import org.omnifaces.ai.modality.XAIImageHandler;
 import org.omnifaces.ai.service.AnthropicAIService;
 import org.omnifaces.ai.service.AzureAIService;
@@ -139,7 +140,7 @@ public enum AIProvider {
      * @see <a href="https://openrouter.ai/settings/keys/">Manage OpenRouter API Keys</a>
      * @see <a href="https://openrouter.ai/models">Available OpenRouter Models</a>
      */
-    OPENROUTER("OpenRouter", OpenRouterAIService.class, true, "deepseek/deepseek-v3.2", "https://openrouter.ai/api/v1", OpenAITextHandler.class, OpenAIImageHandler.class),
+    OPENROUTER("OpenRouter", OpenRouterAIService.class, true, "deepseek/deepseek-v3.2", "https://openrouter.ai/api/v1", OpenRouterAITextHandler.class, OpenAIImageHandler.class),
 
     /**
      * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.

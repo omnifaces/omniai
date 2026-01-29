@@ -77,8 +77,13 @@ public class XAIService extends OpenAIService {
     }
 
     @Override
+    public boolean supportsFileUpload() {
+        return true; // Not version-bound, support is API-bound.
+    }
+
+    @Override
     public boolean supportsStructuredOutput() {
-        return true; // Not version-bound, all xAI models support structured output since beginning.
+        return true; // Not version-bound, support is API-bound.
     }
 
     @Override

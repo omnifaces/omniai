@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.service;
 
+import static java.lang.String.format;
+
 import java.net.URI;
 
 import org.omnifaces.ai.AIConfig;
@@ -84,7 +86,12 @@ public class GoogleAIService extends BaseAIService {
      */
     @Override
     public boolean supportsStreaming() {
-        return true; // Not version-bound, all Google AI models support streaming since beginning.
+        return true; // Not version-bound, support is API-bound.
+    }
+
+    @Override
+    public boolean supportsFileUpload() {
+        return true; // Not version-bound, support is API-bound.
     }
 
     @Override
@@ -94,9 +101,14 @@ public class GoogleAIService extends BaseAIService {
 
     @Override
     protected URI resolveURI(String path) {
-        var parts = path.split("\\?", 2);
-        var query = parts.length > 1 ? ("&" + parts[1]) : "";
-        return super.resolveURI(String.format("models/%s:%s?key=%s%s", model, parts[0], apiKey, query));
+        if (path.equals(getFilesPath())) {
+            return super.resolveURI("../upload/v1beta/"+ format(getFilesPath() + "?key=%s", apiKey));
+        }
+        else {
+            var parts = path.split("\\?", 2);
+            var query = parts.length > 1 ? ("&" + parts[1]) : "";
+            return super.resolveURI(format("models/%s:%s?key=%s%s", model, parts[0], apiKey, query));
+        }
     }
 
     /**
@@ -105,5 +117,10 @@ public class GoogleAIService extends BaseAIService {
     @Override
     protected String getChatPath(boolean streaming) {
         return streaming ? "streamGenerateContent?alt=sse" : "generateContent";
+    }
+
+    @Override
+    protected String getFilesPath() {
+        return "files";
     }
 }

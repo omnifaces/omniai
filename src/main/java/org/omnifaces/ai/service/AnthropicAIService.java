@@ -57,6 +57,7 @@ public class AnthropicAIService extends BaseAIService {
     private static final long serialVersionUID = 1L;
 
     private static final String ANTHROPIC_VERSION = "2023-06-01";
+    private static final String ANTHROPIC_BETA_FILES_API = "files-api-2025-04-14";
     private static final String ANTHROPIC_BETA_STRUCTURED_OUTPUTS = "structured-outputs-2025-11-13";
 
     private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
@@ -87,6 +88,11 @@ public class AnthropicAIService extends BaseAIService {
     }
 
     @Override
+    public boolean supportsFileUpload() {
+        return getModelVersion().gte(CLAUDE_3);
+    }
+
+    @Override
     public boolean supportsStructuredOutput() {
         return getModelVersion().gte(CLAUDE_OPUS_4_1, CLAUDE_SONNET_4_5);
     }
@@ -94,6 +100,12 @@ public class AnthropicAIService extends BaseAIService {
     @Override
     protected Map<String, String> getRequestHeaders() {
         var headers = Map.of("x-api-key", apiKey, "anthropic-version", ANTHROPIC_VERSION);
+
+        if (supportsFileUpload()) {
+            var map = new HashMap<>(headers);
+            map.put("anthropic-beta", ANTHROPIC_BETA_FILES_API);
+            headers = Map.copyOf(map);
+        }
 
         if (supportsStructuredOutput()) {
             var map = new HashMap<>(headers);
@@ -107,5 +119,10 @@ public class AnthropicAIService extends BaseAIService {
     @Override
     protected String getChatPath(boolean streaming) {
         return "messages";
+    }
+
+    @Override
+    protected String getFilesPath() {
+        return "files";
     }
 }

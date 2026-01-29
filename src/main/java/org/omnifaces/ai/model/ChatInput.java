@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.omnifaces.ai.helper.DocumentHelper.encodeBase64;
 import static org.omnifaces.ai.helper.DocumentHelper.guessMediaType;
@@ -41,10 +42,11 @@ public class ChatInput implements Serializable {
 
     /**
      * Represents an attached image.
-     * @param mediaType The image media type (e.g., "image/png").
      * @param content The image content bytes.
+     * @param mediaType The image media type (e.g., "image/png").
+     * @param fileName The image file name.
      */
-    public final record Image(String mediaType, byte[] content) implements Serializable {
+    public final record Image(byte[] content, String mediaType, String fileName) implements Serializable {
 
         /**
          * Returns the image content as a Base64 encoded string.
@@ -67,8 +69,9 @@ public class ChatInput implements Serializable {
      * Represents an attached document.
      * @param mediaType The document media type (e.g., "application/pdf").
      * @param content The document content bytes.
+     * @param fileName The document file name.
      */
-    public final record Document(String mediaType, byte[] content) implements Serializable {
+    public final record Document(byte[] content, String mediaType, String fileName) implements Serializable {
 
         /**
          * Returns the document content as a Base64 encoded string.
@@ -108,6 +111,12 @@ public class ChatInput implements Serializable {
         this.documents = unmodifiableList(builder.documents);
     }
 
+    private ChatInput(String message, List<Image> images) {
+        this.message = message;
+        this.images = unmodifiableList(images);
+        this.documents = emptyList();
+    }
+
     /**
      * Gets the user message text.
      * @return The message string.
@@ -130,6 +139,17 @@ public class ChatInput implements Serializable {
      */
     public List<Document> getDocuments() {
         return documents;
+    }
+
+    /**
+     * Returns a copy of this input without any documents.
+     * <p>
+     * This is useful for providers that handle documents separately from the main chat payload.
+     *
+     * @return A new {@code ChatInput} containing only the message and images.
+     */
+    public ChatInput withoutDocuments() {
+        return new ChatInput(message, images);
     }
 
     /**
@@ -181,13 +201,17 @@ public class ChatInput implements Serializable {
          * @return This builder instance for chaining.
          */
         public Builder attach(byte[]... files) {
-            for (var file : files) {
-                if (isSupportedImage(file)) {
-                    var sanitized = sanitizeImage(file);
-                    images.add(new Image(toImageMediaType(sanitized), sanitized));
+            for (var content : files) {
+                if (isSupportedImage(content)) {
+                    var sanitized = sanitizeImage(content);
+                    var mediaType = toImageMediaType(sanitized);
+                    var fileName = "image" + (images.size() + 1) + "." + mediaType.split("/", 2)[0];
+                    images.add(new Image(sanitized, mediaType, fileName));
                 }
                 else {
-                    documents.add(new Document(guessMediaType(file), file));
+                    var mediaType = guessMediaType(content);
+                    var fileName = "document" + (documents.size() + 1) + "." + toExtension(mediaType);
+                    documents.add(new Document(content, mediaType, fileName));
                 }
             }
 
