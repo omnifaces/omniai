@@ -16,6 +16,7 @@ import static java.util.Collections.unmodifiableList;
 import static org.omnifaces.ai.helper.DocumentHelper.encodeBase64;
 import static org.omnifaces.ai.helper.DocumentHelper.guessMediaType;
 import static org.omnifaces.ai.helper.DocumentHelper.toDataUri;
+import static org.omnifaces.ai.helper.DocumentHelper.toExtension;
 import static org.omnifaces.ai.helper.ImageHelper.isSupportedImage;
 import static org.omnifaces.ai.helper.ImageHelper.sanitizeImage;
 import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
@@ -40,7 +41,6 @@ public class ChatInput implements Serializable {
 
     /**
      * Represents an attached image.
-     *
      * @param mediaType The image media type (e.g., "image/png").
      * @param content The image content bytes.
      */
@@ -48,7 +48,6 @@ public class ChatInput implements Serializable {
 
         /**
          * Returns the image content as a Base64 encoded string.
-         *
          * @return The Base64 encoded image content.
          */
         public String base64() {
@@ -57,7 +56,6 @@ public class ChatInput implements Serializable {
 
         /**
          * Returns the image as a data URI.
-         *
          * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
          */
         public String dataUri() {
@@ -67,7 +65,6 @@ public class ChatInput implements Serializable {
 
     /**
      * Represents an attached document.
-     *
      * @param mediaType The document media type (e.g., "application/pdf").
      * @param content The document content bytes.
      */
@@ -75,7 +72,6 @@ public class ChatInput implements Serializable {
 
         /**
          * Returns the document content as a Base64 encoded string.
-         *
          * @return The Base64 encoded document content.
          */
         public String base64() {
@@ -84,11 +80,18 @@ public class ChatInput implements Serializable {
 
         /**
          * Returns the document as a data URI.
-         *
          * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
          */
         public String dataUri() {
             return toDataUri(content);
+        }
+
+        /**
+         * Returns the extension based on the document's media type.
+         * @return The extension based on the document's media type.
+         */
+        public String extension() {
+            return toExtension(mediaType());
         }
     }
 
@@ -107,7 +110,6 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the user message text.
-     *
      * @return The message string.
      */
     public String getMessage() {
@@ -116,7 +118,6 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the list of images associated with this input.
-     *
      * @return An unmodifiable list of images, or an empty list if no images are attached.
      */
     public List<Image> getImages() {
@@ -125,7 +126,6 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the list of documents associated with this input.
-     *
      * @return An unmodifiable list of documents, or an empty list if no documents are attached.
      */
     public List<Document> getDocuments() {
@@ -161,7 +161,6 @@ public class ChatInput implements Serializable {
 
         /**
          * Sets the user message text.
-         *
          * @param message The message string.
          * @return This builder instance for chaining.
          */
@@ -178,7 +177,6 @@ public class ChatInput implements Serializable {
          *   <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP) are added as images and sanitized for AI compatibility.</li>
          *   <li>All other files are added as documents with their media type auto-detected.</li>
          * </ul>
-         *
          * @param files The file content bytes to attach.
          * @return This builder instance for chaining.
          */
@@ -198,7 +196,6 @@ public class ChatInput implements Serializable {
 
         /**
          * Finalizes the configuration and creates a {@link ChatInput} instance.
-         *
          * @return A fully configured {@code ChatInput} object.
          * @throws IllegalArgumentException if message is blank.
          */

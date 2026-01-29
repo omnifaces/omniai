@@ -14,6 +14,7 @@ package org.omnifaces.ai.helper;
 
 import static java.nio.charset.CodingErrorAction.REPORT;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
@@ -30,21 +31,29 @@ import java.util.zip.ZipInputStream;
  */
 public final class DocumentHelper {
 
-    // Media types.
-    private static final String PDF_MEDIA_TYPE = "application/pdf";
-    private static final String DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    private static final String XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    private static final String PPTX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-    private static final String ZIP_MEDIA_TYPE = "application/zip";
-    private static final String CSV_MEDIA_TYPE = "text/csv";
-    private static final String JSON_MEDIA_TYPE = "application/json";
-    private static final String HTML_MEDIA_TYPE = "text/html";
-    private static final String XML_MEDIA_TYPE = "application/xml";
-    private static final String MARKDOWN_MEDIA_TYPE = "text/markdown";
-    private static final String TEXT_MEDIA_TYPE = "text/plain";
-    private static final String BINARY_MEDIA_TYPE = "application/octet-stream";
+    private enum MediaType {
+        PDF("application/pdf", "pdf"),
+        DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+        XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+        PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"),
+        ZIP("application/zip", "zip"),
+        CSV("text/csv", "csv"),
+        JSON("application/json", "json"),
+        HTML("text/html", "html"),
+        XML("application/xml", "xml"),
+        MARKDOWN("text/markdown", "md"),
+        TEXT("text/plain", "txt"),
+        BINARY("application/octet-stream", "bin");
 
-    // Magic bytes.
+        private final String value;
+        private final String extension;
+
+        MediaType(String value, String extension) {
+            this.value = value;
+            this.extension = extension;
+        }
+    }
+
     private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46}; // %PDF
     private static final byte[] ZIP_MAGIC = {0x50, 0x4B, 0x03, 0x04}; // PK..
 
@@ -62,11 +71,11 @@ public final class DocumentHelper {
      */
     public static String guessMediaType(byte[] content) {
         if (content == null || content.length == 0) {
-            return BINARY_MEDIA_TYPE;
+            return MediaType.BINARY.value;
         }
 
         if (startsWith(content, 0, PDF_MAGIC)) {
-            return PDF_MEDIA_TYPE;
+            return MediaType.PDF.value;
         }
 
         if (startsWith(content, 0, ZIP_MAGIC)) {
@@ -77,7 +86,24 @@ public final class DocumentHelper {
             return guessTextMediaType(content);
         }
 
-        return BINARY_MEDIA_TYPE;
+        return MediaType.BINARY.value;
+    }
+
+    /**
+     * Returns a file extension for the given media type.
+     * <p>
+     * The returned extension does not include a leading dot.
+     * If the media type is {@code null} or not recognized, {@code "bin"} is returned.
+     *
+     * @param mediaType The media type (MIME type), e.g. {@code "application/pdf"}.
+     * @return The corresponding file extension (without dot), e.g. {@code "pdf"}, or {@code "bin"} if unknown.
+     */
+    public static String toExtension(String mediaType) {
+        return stream(MediaType.values())
+                .filter(type -> type.value.equalsIgnoreCase(mediaType))
+                .findFirst()
+                .map(type -> type.extension)
+                .orElse(MediaType.BINARY.extension);
     }
 
     /**
@@ -131,25 +157,25 @@ public final class DocumentHelper {
                 var name = entry.getName();
 
                 if (name.startsWith("word/")) {
-                    return DOCX_MEDIA_TYPE;
+                    return MediaType.DOCX.value;
                 }
 
                 if (name.startsWith("xl/")) {
-                    return XLSX_MEDIA_TYPE;
+                    return MediaType.XLSX.value;
                 }
 
                 if (name.startsWith("ppt/")) {
-                    return PPTX_MEDIA_TYPE;
+                    return MediaType.PPTX.value;
                 }
             }
 
-            return ZIP_MEDIA_TYPE;
+            return MediaType.ZIP.value;
         }
         catch (Exception ignore) {
             // Not a valid ZIP or error reading - fall through.
         }
 
-        return BINARY_MEDIA_TYPE;
+        return MediaType.BINARY.value;
     }
 
     /**
@@ -189,26 +215,26 @@ public final class DocumentHelper {
         var text = new String(content, UTF_8).strip();
 
         if (looksLikeJson(text)) {
-            return JSON_MEDIA_TYPE;
+            return MediaType.JSON.value;
         }
 
         if (looksLikeXml(text)) {
             if (looksLikeHtml(text)) {
-                return HTML_MEDIA_TYPE;
+                return MediaType.HTML.value;
             }
 
-            return XML_MEDIA_TYPE;
+            return MediaType.XML.value;
         }
 
         if (looksLikeCsv(text)) {
-            return CSV_MEDIA_TYPE;
+            return MediaType.CSV.value;
         }
 
         if (looksLikeMarkdown(text)) {
-            return MARKDOWN_MEDIA_TYPE;
+            return MediaType.MARKDOWN.value;
         }
 
-        return TEXT_MEDIA_TYPE;
+        return MediaType.TEXT.value;
     }
 
     /**

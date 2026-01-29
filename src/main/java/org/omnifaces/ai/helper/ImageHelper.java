@@ -20,9 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -36,28 +34,47 @@ import org.omnifaces.ai.exception.AIException;
  */
 public final class ImageHelper {
 
-    // Media types.
-    private static final String JPEG_MEDIA_TYPE = "image/jpeg";
-    private static final String PNG_MEDIA_TYPE = "image/png";
-    private static final String GIF_MEDIA_TYPE = "image/gif";
-    private static final String BMP_MEDIA_TYPE = "image/bmp";
-    private static final String RIFF_MEDIA_TYPE = "image/riff";
-    private static final String WEBP_MEDIA_TYPE = "image/webp";
+    private enum MediaType {
+        JPEG("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, false, false),
+        PNG("image/png", new byte[]{(byte)0x89, 0x50, 0x4E, 0x47}, 0, null, true, false),
+        GIF("image/gif", new byte[]{0x47, 0x49, 0x46, 0x38}, 0, null, true, true),
+        BMP("image/bmp", new byte[]{0x42, 0x4D}, 0, null, false, true),
+        RIFF("image/riff", new byte[]{0x52, 0x49, 0x46, 0x46}, 8, null, false, false),
+        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, false, false);
 
-    private static final Map<String, byte[]> MEDIA_TYPES = Map.of(
-        JPEG_MEDIA_TYPE, new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
-        PNG_MEDIA_TYPE, new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47},
-        GIF_MEDIA_TYPE, new byte[] {0x47, 0x49, 0x46, 0x38},
-        BMP_MEDIA_TYPE, new byte[] {0x42, 0x4D},
-        RIFF_MEDIA_TYPE, new byte[] {0x52, 0x49, 0x46, 0x46}
-    );
+        private final String value;
+        private final byte[] magic;
+        private final int subMagicOffset;
+        private final byte[] subMagic;
+        private final boolean supportsAlphaChannel;
+        private final boolean needsPngConversion;
 
-    private static final Map<String, byte[]> RIFF_MEDIA_TYPES = Map.of(
-        WEBP_MEDIA_TYPE, new byte[] {0x57, 0x45, 0x42, 0x50}
-    );
+        MediaType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportsAlphaChannel, boolean needsPngConversion) {
+            this.value = value;
+            this.magic = magic;
+            this.subMagicOffset = subMagicOffset;
+            this.subMagic = subMagic;
+            this.supportsAlphaChannel = supportsAlphaChannel;
+            this.needsPngConversion = needsPngConversion;
+        }
 
-    private static final Set<String> MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL = Set.of(PNG_MEDIA_TYPE, GIF_MEDIA_TYPE);
-    private static final Set<String> MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG = Set.of(GIF_MEDIA_TYPE, BMP_MEDIA_TYPE);
+        public static Optional<MediaType> detect(byte[] content) {
+            for (var type : values()) {
+                if (type.magic != null && startsWith(content, 0, type.magic)) {
+                    if (type.subMagicOffset > 0) {
+                        for (var subType : values()) {
+                            if (subType.subMagic != null && startsWith(content, type.subMagicOffset, subType.subMagic)) {
+                                return Optional.of(subType);
+                            }
+                            return Optional.empty(); // Unknown RIFF subtype (AVI, WAV, etc) - not a valid image.
+                        }
+                    }
+                    return Optional.of(type);
+                }
+            }
+            return Optional.empty();
+        }
+    }
 
     private ImageHelper() {
         throw new AssertionError();
@@ -81,7 +98,11 @@ public final class ImageHelper {
      * @throws AIException when the image format is not supported.
      */
     public static String toImageMediaType(byte[] image) {
-        return guessImageMediaType(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
+        return getImageMediaType(image).value;
+    }
+
+    private static MediaType getImageMediaType(byte[] image) {
+        return MediaType.detect(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
     }
 
     /**
@@ -91,23 +112,7 @@ public final class ImageHelper {
      * @return An {@link Optional} containing the media type if recognized as an image, or empty if not.
      */
     public static Optional<String> guessImageMediaType(byte[] content) {
-        for (var mediaType : MEDIA_TYPES.entrySet()) {
-            if (startsWith(content, 0, mediaType.getValue())) {
-                if (RIFF_MEDIA_TYPE.equals(mediaType.getKey())) {
-                    for (var riffMediaType : RIFF_MEDIA_TYPES.entrySet()) {
-                        if (startsWith(content, 8, riffMediaType.getValue())) {
-                            return Optional.of(riffMediaType.getKey());
-                        }
-                    }
-
-                    return Optional.empty(); // Unknown RIFF subtype (e.g., WAV, AVI)
-                }
-
-                return Optional.of(mediaType.getKey());
-            }
-        }
-
-        return Optional.empty();
+        return MediaType.detect(content).map(type -> type.value);
     }
 
     /**
@@ -131,13 +136,13 @@ public final class ImageHelper {
      * @throws AIException when image format is not supported.
      */
     public static byte[] sanitizeImage(byte[] image) {
-        var mediaType = toImageMediaType(image);
+        var mediaType = getImageMediaType(image);
         var sanitized = image;
 
-        if (MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mediaType)) {
+        if (mediaType.supportsAlphaChannel) {
             sanitized = removeAnyAlphaChannel(sanitized);
         }
-        else if (MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mediaType)) {
+        else if (mediaType.needsPngConversion) {
             sanitized = convertToPng(sanitized);
         }
 
