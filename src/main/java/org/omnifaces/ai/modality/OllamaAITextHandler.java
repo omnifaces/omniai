@@ -12,7 +12,6 @@
  */
 package org.omnifaces.ai.modality;
 
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
 import java.util.List;
@@ -52,7 +51,7 @@ public class OllamaAITextHandler extends BaseAITextHandler {
             var images = Json.createArrayBuilder();
 
             for (var image : input.getImages()) {
-                images.add(toImageBase64(image));
+                images.add(image.base64());
             }
 
             message.add("images", images);

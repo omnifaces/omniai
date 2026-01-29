@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.helper;
 
+import java.util.Base64;
+
 /**
  * Utility class for text operations.
  *
@@ -61,5 +63,15 @@ public final class TextHelper {
             throw new IllegalArgumentException(varName + " cannot be blank");
         }
         return text;
+    }
+
+    /**
+     * Converts the given bytes to a Base64 string.
+     *
+     * @param bytes The bytes to be encoded.
+     * @return The Base64 encoded string.
+     */
+    public static String encodeBase64(byte[] bytes) {
+        return Base64.getEncoder().encodeToString(bytes);
     }
 }

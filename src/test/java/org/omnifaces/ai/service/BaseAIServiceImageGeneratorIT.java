@@ -14,7 +14,6 @@ package org.omnifaces.ai.service;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
@@ -35,7 +34,7 @@ abstract class BaseAIServiceImageGeneratorIT extends AIServiceIT {
     void generateImage() throws Exception {
         var response = service.generateImage("Willemstad, Curacao");
         assertTrue(response.length > 0, "Image response should not be empty");
-        var mediaType = guessMediaTypeSuppressException(response);
+        var mediaType = guessImageMediaType(response).orElse("image/png");
         var targetDir = Path.of(System.getProperty("user.dir"), "target", "image-generator-test-results");
         targetDir.toFile().mkdirs();
         var tempFilePath = Files.createTempFile(targetDir, getClass().getSimpleName() + "-", "." + mediaType.split("/", 2)[1]);
@@ -46,14 +45,5 @@ abstract class BaseAIServiceImageGeneratorIT extends AIServiceIT {
         var size = image.getWidth() + "x" + image.getHeight();
         assertTrue(image.getWidth() >= 512 && image.getHeight() >= 512, "Image size should be at least 512x512: " + size);
         assertTrue(image.getWidth() * image.getHeight() <= 2048 * 2048 * 2, "Image resolution is not supposed to exceed 8k: " + size);
-    }
-
-    String guessMediaTypeSuppressException(byte[] image) {
-        try {
-            return guessImageMediaType(toImageBase64(image));
-        }
-        catch (Exception ignore) {
-            return "image/png";
-        }
     }
 }

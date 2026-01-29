@@ -13,8 +13,6 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.FINE;
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -60,12 +58,10 @@ public class GoogleAITextHandler extends BaseAITextHandler {
         var parts = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            var base64 = toImageBase64(image);
-
             parts.add(Json.createObjectBuilder()
                 .add("inline_data", Json.createObjectBuilder()
-                    .add("mime_type", guessImageMediaType(base64))
-                    .add("data", base64)));
+                    .add("mime_type", image.mediaType())
+                    .add("data", image.base64())));
         }
 
         parts.add(Json.createObjectBuilder()

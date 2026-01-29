@@ -13,7 +13,6 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.FINE;
-import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.JsonHelper.extractByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
@@ -78,10 +77,10 @@ public class OpenAITextHandler extends BaseAITextHandler {
             var img = Json.createObjectBuilder().add("type", supportsResponsesApi ? "input_image" : "image_url");
 
             if (supportsResponsesApi) {
-                img.add("image_url", toImageDataUri(image));
+                img.add("image_url", image.dataUri());
             }
             else {
-                img.add("image_url", Json.createObjectBuilder().add("url", toImageDataUri(image)));
+                img.add("image_url", Json.createObjectBuilder().add("url", image.dataUri()));
             }
 
             content.add(img);

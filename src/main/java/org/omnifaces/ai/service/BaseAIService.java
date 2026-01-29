@@ -243,7 +243,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        var input = ChatInput.newBuilder().message(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : prompt).images(image).build();
+        var input = ChatInput.newBuilder().message(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : prompt).attach(image).build();
         return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, DETERMINISTIC, false));
     }
 

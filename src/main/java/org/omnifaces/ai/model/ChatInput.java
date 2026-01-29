@@ -12,13 +12,19 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.unmodifiableList;
+import static org.omnifaces.ai.helper.ImageHelper.isSupportedImage;
+import static org.omnifaces.ai.helper.ImageHelper.sanitizeImage;
+import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
+import static org.omnifaces.ai.helper.ImageHelper.toImageMediaType;
+import static org.omnifaces.ai.helper.TextHelper.encodeBase64;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+
+import org.omnifaces.ai.exception.AIException;
 
 /**
  * Input for chat-based AI interactions.
@@ -32,14 +38,38 @@ public class ChatInput implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Represents an attached image.
+     * @param mediaType The image media type.
+     * @param content The image content.
+     */
+    public final record Image(String mediaType, byte[] content) implements Serializable {
+
+        /**
+         *
+         * @return
+         */
+        public String base64() {
+            return encodeBase64(content);
+        }
+
+        /**
+         *
+         * @return
+         */
+        public String dataUri() {
+            return toImageDataUri(content);
+        }
+    }
+
     /** The user message. */
     private final String message;
     /** The images. */
-    private final List<byte[]> images;
+    private final List<Image> images;
 
     private ChatInput(Builder builder) {
         this.message = builder.message;
-        this.images = Collections.unmodifiableList(new ArrayList<>(builder.images));
+        this.images = unmodifiableList(builder.images);
     }
 
     /**
@@ -53,12 +83,10 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the list of images associated with this input.
-     * <p>
-     * Each image is represented as a byte array containing the image data.
      *
-     * @return An unmodifiable list of image byte arrays, or an empty list if no images are attached.
+     * @return An unmodifiable list of images, or an empty list if no images are attached.
      */
-    public List<byte[]> getImages() {
+    public List<Image> getImages() {
         return images;
     }
 
@@ -84,7 +112,7 @@ public class ChatInput implements Serializable {
      */
     public static class Builder {
         private String message;
-        private List<byte[]> images = new ArrayList<>();
+        private List<Image> images = new ArrayList<>();
 
         private Builder() {}
 
@@ -100,15 +128,25 @@ public class ChatInput implements Serializable {
         }
 
         /**
-         * Sets the images for this input, replacing any previously added images.
+         * Attaches the files for this input.
          * <p>
-         * Each image should be provided as a byte array containing the image data.
+         * Each file should be provided as a byte array containing the data.
          *
-         * @param images The image byte arrays to include.
+         * @param files The files to attach.
          * @return This builder instance for chaining.
+         * @throws AIException if the file's mime type is not supported.
          */
-        public Builder images(byte[]... images) {
-            this.images = new ArrayList<>(Arrays.asList(images));
+        public Builder attach(byte[]... files) {
+            for (var file : files) {
+                if (isSupportedImage(file)) {
+                    var sanitized = sanitizeImage(file);
+                    images.add(new Image(toImageMediaType(sanitized), sanitized));
+                }
+                else {
+                    throw new AIException("Unsupported file mime type.");
+                }
+            }
+
             return this;
         }
 

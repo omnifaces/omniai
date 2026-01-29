@@ -14,8 +14,6 @@ package org.omnifaces.ai.modality;
 
 import static java.util.Optional.ofNullable;
 import static java.util.logging.Level.FINE;
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
-import static org.omnifaces.ai.helper.ImageHelper.toImageBase64;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -65,14 +63,12 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            var base64 = toImageBase64(image);
-
             content.add(Json.createObjectBuilder()
                 .add("type", "image")
                 .add("source", Json.createObjectBuilder()
                     .add("type", "base64")
-                    .add("media_type", guessImageMediaType(base64))
-                    .add("data", base64)));
+                    .add("media_type", image.mediaType())
+                    .add("data", image.base64())));
         }
 
         content.add(Json.createObjectBuilder()

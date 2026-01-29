@@ -12,13 +12,15 @@
  */
 package org.omnifaces.ai.helper;
 
+import static org.omnifaces.ai.helper.TextHelper.encodeBase64;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -33,18 +35,23 @@ import org.omnifaces.ai.exception.AIException;
  */
 public final class ImageHelper {
 
-    private static final String WEBP_MEDIA_TYPE = "image/webp";
     private static final String JPEG_MEDIA_TYPE = "image/jpeg";
     private static final String PNG_MEDIA_TYPE = "image/png";
     private static final String GIF_MEDIA_TYPE = "image/gif";
     private static final String BMP_MEDIA_TYPE = "image/bmp";
+    private static final String RIFF_MEDIA_TYPE = "image/riff";
+    private static final String WEBP_MEDIA_TYPE = "image/webp";
 
-    private static final Map<String, String> MEDIA_TYPES_BY_BASE64_HEADER = Map.of(
-        "UklGR", WEBP_MEDIA_TYPE,
-        "/9j/", JPEG_MEDIA_TYPE,
-        "iVBORw", PNG_MEDIA_TYPE,
-        "R0lGOD", GIF_MEDIA_TYPE,
-        "Qk0", BMP_MEDIA_TYPE
+    private static final Map<String, byte[]> MEDIA_TYPES = Map.of(
+        JPEG_MEDIA_TYPE, new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+        PNG_MEDIA_TYPE, new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47},
+        GIF_MEDIA_TYPE, new byte[] {0x47, 0x49, 0x46, 0x38},
+        BMP_MEDIA_TYPE, new byte[] {0x42, 0x4D},
+        RIFF_MEDIA_TYPE, new byte[] {0x52, 0x49, 0x46, 0x46}
+    );
+
+    private static final Map<String, byte[]> RIFF_MEDIA_TYPES = Map.of(
+        WEBP_MEDIA_TYPE, new byte[] {0x57, 0x45, 0x42, 0x50}
     );
 
     private static final Set<String> MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL = Set.of(PNG_MEDIA_TYPE, GIF_MEDIA_TYPE);
@@ -55,62 +62,98 @@ public final class ImageHelper {
     }
 
     /**
-     * Converts the given image bytes to a Base64 string.
-     * This will automatically remove any alpha channel from images supporting these.
-     * This will automatically convert unsupported image types to PNG as far as possible.
+     * Checks whether the given bytes represent a supported image format.
      *
      * @param image The image bytes.
-     * @return The Base64 encoded string.
-     * @throws AIException when image format is not supported or cannot be converted.
+     * @return {@code true} if the image format is supported, {@code false} otherwise.
      */
-    public static String toImageBase64(byte[] image) {
-        var base64 = encodeBase64(image);
-        var mediaType = guessImageMediaType(base64);
-
-        if (MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mediaType)) {
-            base64 = encodeBase64(removeAnyAlphaChannel(image));
-        }
-        else if (MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mediaType)) {
-            base64 = encodeBase64(convertToPng(image));
-        }
-
-        return base64;
-    }
-
-    private static String encodeBase64(byte[] bytes) {
-        return Base64.getEncoder().encodeToString(bytes);
+    public static boolean isSupportedImage(byte[] image) {
+        return guessImageMediaType(image).isPresent();
     }
 
     /**
-     * Guesses the media type of an image based on its Base64 encoded header.
+     * Returns the media type of the given image based on its magic bytes.
      *
-     * @param base64 The Base64 encoded image string.
-     * @return The guessed media type.
-     * @throws AIException when the image is not recognized.
+     * @param image The image bytes.
+     * @return The media type string (e.g., "image/png").
+     * @throws AIException when the image format is not supported.
      */
-    public static String guessImageMediaType(String base64) {
-        for (var contentTypeByBase64Header : MEDIA_TYPES_BY_BASE64_HEADER.entrySet()) {
-            if (base64.startsWith(contentTypeByBase64Header.getKey())) {
-                return contentTypeByBase64Header.getValue();
+    public static String toImageMediaType(byte[] image) {
+        return guessImageMediaType(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
+    }
+
+    /**
+     * Guesses the media type of an image based on its magic bytes.
+     *
+     * @param content The image bytes.
+     * @return An {@link Optional} containing the media type if recognized, or empty if not.
+     */
+    public static Optional<String> guessImageMediaType(byte[] content) {
+        for (var mediaType : MEDIA_TYPES.entrySet()) {
+            if (startsWith(content, 0, mediaType.getValue())) {
+                if (RIFF_MEDIA_TYPE.equals(mediaType.getKey())) {
+                    for (var riffMediaType : RIFF_MEDIA_TYPES.entrySet()) {
+                        if (startsWith(content, 8, riffMediaType.getValue())) {
+                            return Optional.of(riffMediaType.getKey());
+                        }
+                    }
+
+                    return Optional.empty(); // Unknown RIFF subtype (e.g., WAV, AVI)
+                }
+
+                return Optional.of(mediaType.getKey());
             }
         }
 
-        throw new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG.");
+        return Optional.empty();
+    }
+
+    private static boolean startsWith(byte[] content, int offset, byte[] prefix) {
+        if (content.length < offset + prefix.length) {
+            return false;
+        }
+
+        for (int i = 0; i < prefix.length; i++) {
+            if (content[offset + i] != prefix[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
      * Converts the given image bytes to a data URI.
+     *
+     * @param image The image bytes.
+     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
+     * @throws AIException when image format is not supported.
+     */
+    public static String toImageDataUri(byte[] image) {
+        return "data:" + toImageMediaType(image) + ";base64," + encodeBase64(image);
+    }
+
+    /**
+     * Sanitizes the given image.
      * This will automatically remove any alpha channel from images supporting these.
      * This will automatically convert unsupported image types to PNG as far as possible.
      *
      * @param image The image bytes.
-     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
-     * @throws AIException when image format is not supported or cannot be converted.
+     * @return The sanitized image.
+     * @throws AIException when image format is not supported.
      */
-    public static String toImageDataUri(byte[] image) {
-        var base64 = toImageBase64(image);
-        var mediaType = guessImageMediaType(base64);
-        return "data:" + mediaType + ";base64," + base64;
+    public static byte[] sanitizeImage(byte[] image) {
+        var mediaType = toImageMediaType(image);
+        var sanitized = image;
+
+        if (MEDIA_TYPES_SUPPORTING_ALPHA_CHANNEL.contains(mediaType)) {
+            sanitized = removeAnyAlphaChannel(sanitized);
+        }
+        else if (MEDIA_TYPES_NEEDING_CONVERSION_TO_PNG.contains(mediaType)) {
+            sanitized = convertToPng(sanitized);
+        }
+
+        return sanitized;
     }
 
     /**
