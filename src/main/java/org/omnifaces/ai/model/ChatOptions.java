@@ -39,7 +39,7 @@ public class ChatOptions implements Serializable {
     public static final double DETERMINISTIC_TEMPERATURE = 0.0;
 
     /** Default Top-P: {@value}. */
-    public static final double DEFAULT_TOP_P = 1.0;
+    public static final double DEFAULT_TOP_P = 0.9;
 
     /** Default chat options with temperature of {@value #DEFAULT_TEMPERATURE}. */
     public static final ChatOptions DEFAULT = ChatOptions.newBuilder().build();
@@ -145,6 +145,14 @@ public class ChatOptions implements Serializable {
      * Top-P controls how many word choices the model considers.
      * A value of 1.0 considers all possible words, while 0.1 only considers the most likely words (top 10%).
      * Lower values give more focused responses, higher values allow more variety.
+     * <ul>
+     * <li><strong>Low Temp + Low Top-P:</strong> Corporate email simulator (The Deterministic Robot)</li>
+     * <li><strong>Low Temp + High Top-P:</strong> Boring but stable (The Safe Bet)</li>
+     * <li><strong>Medium Temp + Low Top-P:</strong> Focused / Professional (The Focused Expert)</li>
+     * <li><strong>Medium Temp + High Top-P:</strong> Natural / Casual (The Conversationalist)</li>
+     * <li><strong>High Temp + Low Top-P:</strong> Creative but coherent (The Controlled Artist)</li>
+     * <li><strong>High Temp + High Top-P:</strong> Word salads / Hallucination station</li>
+     * </ul>
      *
      * @return The Top-P probability mass threshold (0.0 to 1.0).
      */
@@ -158,7 +166,6 @@ public class ChatOptions implements Serializable {
      * ChatOptions options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a helpful software architect.")
      *     .jsonSchema(myJsonSchema)
-     *     .temperature(0.7)
      *     .maxTokens(500)
      *     .build();
      * </pre>
@@ -278,6 +285,14 @@ public class ChatOptions implements Serializable {
          * A value of 1.0 considers all possible words, while 0.1 only considers the most likely words (top 10%).
          * Lower values give more focused responses, higher values allow more variety.
          * It is generally recommended to alter either this or {@code temperature}, but not both.
+         * <ul>
+         * <li><strong>Low Temp + Low Top-P:</strong> Corporate email simulator (The Deterministic Robot)</li>
+         * <li><strong>Low Temp + High Top-P:</strong> Boring but stable (The Safe Bet)</li>
+         * <li><strong>Medium Temp + Low Top-P:</strong> Focused / Professional (The Focused Expert)</li>
+         * <li><strong>Medium Temp + High Top-P:</strong> Natural / Casual (The Conversationalist)</li>
+         * <li><strong>High Temp + Low Top-P:</strong> Creative but coherent (The Controlled Artist)</li>
+         * <li><strong>High Temp + High Top-P:</strong> Word salads / Hallucination station</li>
+         * </ul>
          *
          * @param topP The Top-P value between 0.0 and 1.0.
          * @return This builder instance for chaining.

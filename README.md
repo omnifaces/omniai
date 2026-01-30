@@ -141,7 +141,7 @@ CompletableFuture<String> future = service.chatAsync("Hello!");
 String response = service.chat("Explain microservices",
     ChatOptions.newBuilder()
         .systemPrompt("You are a helpful software architect.")
-        .temperature(0.7)
+        .temperature(0.5)
         .maxTokens(500)
         .build());
 
