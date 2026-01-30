@@ -411,8 +411,8 @@ If Jakarta Agentic matures, OmniAI could potentially be a lightweight implementa
 ### Is OmniAI smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniAI JAR: ~115 KB vs LangChain4J: 2+ MB (with dependencies) — roughly 20x smaller
-- 69 source files, ~9,200 lines of code (~3,800 actual code, rest is javadocs/comments)
+- OmniAI JAR: ~145 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
+- 69 source files, ~9,500 lines of code (~4,000 actual code, rest is javadocs/comments)
 - Zero runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly
 - Only optional provided dependencies: Jakarta JSON-P, CDI, and EL APIs (which Jakarta EE servers already have)
 
