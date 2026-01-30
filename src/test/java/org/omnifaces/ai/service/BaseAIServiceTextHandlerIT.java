@@ -127,6 +127,13 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     }
 
     @Test
+    void proofread() {
+        var response = service.proofread("<p style='color:bleu'>Teh cat #{bean.vreb} on teh chiar.</p><script>{'key':'vaule'}</script>");
+        log(response);
+        assertEquals("<p style='color:bleu'>The cat #{bean.vreb} on the chair.</p><script>{'key':'vaule'}</script>", response);
+    }
+
+    @Test
     void moderateContentSafe() {
         var response = service.moderateContent("The quick brown fox jumps over the lazy dog near the river.");
         log(response.toString());

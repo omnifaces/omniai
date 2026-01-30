@@ -680,6 +680,7 @@ class AIConfigTest {
         @Override public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException { return null; }
         @Override public CompletableFuture<String> detectLanguageAsync(String text) throws AIException { return null; }
         @Override public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException { return null; }
+        @Override public CompletableFuture<String> proofreadAsync(String text) { return null; }
         @Override public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException { return null; }
         @Override public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException { return null; }
         @Override public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException { return null; }
