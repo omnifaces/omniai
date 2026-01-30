@@ -129,10 +129,8 @@ public final class DocumentMimeTypeDetector {
             return DocumentMimeType.ZIP;
         }
         catch (Exception ignore) {
-            // Not a valid ZIP or error reading - fall through.
+            return DocumentMimeType.BINARY;
         }
-
-        return DocumentMimeType.BINARY;
     }
 
     /**

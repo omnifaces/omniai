@@ -42,7 +42,7 @@ public final class ImageMimeTypeDetector {
         PNG("image/png", 0, new byte[]{(byte)0x89, 'P', 'N', 'G'}, 0, null, true, true, false),
         GIF("image/gif", 0, new byte[]{'G', 'I', 'F', '8'}, 0, null, true, true, true),
         BMP("image/bmp", 0, new byte[]{'B', 'M'}, 0, null, true, false, true),
-        WEBP("image/webp", 0, RIFF_MAGIC, 4, new byte[]{'W', 'E', 'B', 'P'}, true, true, false),
+        WEBP("image/webp", 0, RIFF_MAGIC, 8, new byte[]{'W', 'E', 'B', 'P'}, true, true, false),
         ICO("image/x-icon", 0, new byte[]{0x00, 0x00, 0x01, 0x00}, 0, null, false, false, false),
         SVG("image/svg+xml", 0, new byte[]{'<', 's', 'v', 'g'}, 0, null, true, true, false), // Also handled as special case.
         HEIC("image/heic", 4, FTYP_MAGIC, 8, new byte[]{'h', 'e', 'i', 'c'}, false, true, false),
@@ -64,7 +64,12 @@ public final class ImageMimeTypeDetector {
 
         ImageMimeType(String value, int magicOffset, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportedAsImageAttachment, boolean supportsAlphaChannel, boolean needsPngConversion) {
             this.value = value;
-            this.extension = value.split("/", 2)[1];
+            var subtype = value.substring(value.indexOf('/') + 1);
+            this.extension = switch (subtype) {
+                case "x-icon" -> "ico";
+                case "svg+xml" -> "svg";
+                default -> subtype;
+            };
             this.magicOffset = magicOffset;
             this.magic = magic;
             this.subMagicOffset = subMagicOffset;
