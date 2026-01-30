@@ -12,7 +12,7 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 ## Requirements
 
 - Java 17+
-- Jakarta EE 11 (JSON-P required, CDI optional, EL optional)
+- Jakarta EE 11 (JSON-P required, CDI optional, EL optional, MP Config optional)
 
 ## Installation
 
@@ -20,11 +20,11 @@ OmniAI provides a single, consistent API to interact with multiple AI providers.
 <dependency>
     <groupId>org.omnifaces</groupId>
     <artifactId>omniai</artifactId>
-    <version>1.0-M2</version>
+    <version>1.0-M3</version>
 </dependency>
 ```
 
-On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optionally CDI dependencies:
+On non-Jakarta EE containers / non-MicroProfile runtimes such as Tomcat, you'll need to add JSON-P and optionally CDI dependencies:
 
 ```xml
 <!-- JSON-P implementation (required) -->
@@ -40,11 +40,18 @@ On non-Jakarta EE containers such as Tomcat, you'll need to add JSON-P and optio
     <artifactId>weld-servlet-shaded</artifactId>
     <version>6.0.4.Final</version>
 </dependency>
+
+<!-- MicroProfile Config implementation (optional, for ${config:...} resolution in @AI attributes) -->
+<dependency>
+    <groupId>smallrye.config</groupId>
+    <artifactId>smallrye-config</artifactId>
+    <version>3.15.1</version>
+</dependency>
 ```
 
 You can also use it on Java SE, you'll still need the JSON-P implementation, but you cannot use the CDI annotation.
 
-## Supported Providers (in 1.0-M2)
+## Supported Providers
 
 | Provider | Default Model | API Key Required | Available Models |
 |----------|---------------|------------------|------------------|
@@ -126,7 +133,7 @@ public String getConsensusAnswer(String question) {
 
 This pattern is useful for reducing bias, cross-validating answers, or getting a balanced summary from multiple AI perspectives.
 
-## Features (in 1.0-M2)
+## Features
 
 ### Chat
 
@@ -156,7 +163,38 @@ service.chatStream(message, options, token -> {
     // handle completion
     System.out.println("\n\n");
 });
+
+// With file attachments
+byte[] document = Files.readAllBytes(Path.of("report.pdf"));
+String response = service.chat("Summarize this document", document);
+
+// With multiple attachments
+byte[] image = Files.readAllBytes(Path.of("chart.png"));
+String response = service.chat("Compare these files", document, image);
 ```
+
+### Structured Outputs
+
+Get responses as JSON conforming to a schema:
+
+```java
+// Define your response structure as a record (or bean)
+record ProductReview(String sentiment, int rating, List<String> pros, List<String> cons) {}
+
+// Generate schema automatically from the record
+JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
+
+// Get structured response
+String responseJson = service.chat("Analyze this review: " + reviewText,
+    ChatOptions.newBuilder()
+        .jsonSchema(schema)
+        .build());
+
+// Parse the JSON response
+JsonObject review = JsonHelper.parseJson(responseJson);
+```
+
+The `JsonSchemaHelper` generates JSON schemas from Java records and beans. It supports primitive types, strings, enums, collections, arrays, nested types, and `Optional` fields (which are excluded from `"required"`).
 
 ### Text Analysis
 
@@ -168,17 +206,20 @@ String summary = service.summarize(longText, 100); // max 100 words
 List<String> points = service.extractKeyPoints(text, 5); // max 5 points
 ```
 
-### Translation
+### Translation and Proofreading
 
 ```java
+// Detect language
+String lang = service.detectLanguage(text); // Returns ISO 639-1 code
+
 // Translate with auto-detection
 String translated = service.translate(text, null, "es");
 
 // Translate from specific language
 String translated = service.translate(text, "en", "fr");
 
-// Detect language
-String lang = service.detectLanguage(text); // Returns ISO 639-1 code
+// Proofread text (fix grammar and spelling, preserve meaning and style)
+String corrected = service.proofread(text);
 ```
 
 ### Content Moderation
@@ -222,7 +263,7 @@ byte[] image = service.generateImage("A modern office",
         .build());
 ```
 
-All methods have async variants returning `CompletableFuture` (e.g., `summarizeAsync`, `translateAsync`, `generateImageAsync`, etc.).
+All methods have async variants returning `CompletableFuture` (e.g., `chatAsync`, `summarizeAsync`, `translateAsync`, `proofreadAsync`, `generateImageAsync`, etc.).
 
 ## Custom Providers
 
@@ -284,12 +325,14 @@ private AIService trackedService;
 | **Dependencies** | JSON-P only (CDI/EL optional) | Multiple modules | Spring framework | TBD (in development) |
 | **Learning Curve** | Low | Medium-High | Medium (if Spring-familiar) | TBD |
 
-### Feature Comparison (in 1.0-M2)
+### Feature Comparison
 
 | Feature | OmniAI | LangChain4J | Spring AI | Jakarta Agentic |
 |---------|--------|-------------|-----------|-----------------|
 | **Chat/Completion** | ✅ | ✅ | ✅ | ✅ (planned) |
 | **Streaming** | ✅ | ✅ | ✅ | TBD |
+| **Structured Outputs** | ✅ | ✅ | ✅ | TBD |
+| **File Attachments** | ✅ | ✅ | ✅ | TBD |
 | **Function Calling** | ❌ | ✅ | ✅ | TBD |
 | **RAG Support** | ❌ | ✅ (extensive) | ✅ | TBD |
 | **Vector Stores** | ❌ | ✅ (many) | ✅ (many) | TBD |
@@ -298,12 +341,13 @@ private AIService trackedService;
 | **Image Generation** | ✅ | ✅ | ✅ | TBD |
 | **Content Moderation** | ✅ (native + fallback) | ❌ | ❌ | TBD |
 | **Translation** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
+| **Proofreading** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Summarization** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Memory/History** | ❌ | ✅ | ✅ | TBD |
 | **Agents** | ❌ | ✅ | ✅ | ✅ (core focus) |
 | **Prompt Templates** | ❌ | ✅ | ✅ | TBD |
 
-### Provider Support (in 1.0-M2)
+### Provider Support
 
 | Provider | OmniAI | LangChain4J | Spring AI |
 |----------|--------|-------------|-----------|
@@ -332,7 +376,9 @@ private AIService trackedService;
 ### Where OmniAI Shines
 
 - Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
-- Built-in text utilities - Summarization, translation, key point extraction, moderation as first-class features (not "build your own prompt")
+- Built-in text utilities - Summarization, translation, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
+- Structured outputs - Get typed Java objects from AI responses using JSON schemas
+- File attachments - Send documents, images, and other files alongside chat messages
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
 - 10 providers out of the box - Including Ollama for local/offline
@@ -365,7 +411,7 @@ If Jakarta Agentic matures, OmniAI could potentially be a lightweight implementa
 ### Is OmniAI smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniAI 1.0-M2 JAR: 110 KB vs LangChain4J: 2+ MB (with dependencies) — roughly 20x smaller
+- OmniAI JAR: ~120 KB vs LangChain4J: 2+ MB (with dependencies) — roughly 15-20x smaller
 - 54 source files, ~7,300 lines of code (~2,900 actual code, rest is javadocs/comments)
 - Zero runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly
 - Only optional provided dependencies: Jakarta JSON-P, CDI, and EL APIs (which Jakarta EE servers already have)
@@ -416,7 +462,7 @@ The design strongly suggests yes:
 
 As said, OmniAI is "a sharp chef's knife — does a few things very well" rather than being a full framework.
 
-Bottom line: If you need a lightweight utility for AI chat/text operations in Jakarta EE without framework overhead, OmniAI is dramatically smaller and should be faster with less GC pressure. If you need streaming, RAG, or agent pipelines, LangChain4J's / Spring AI's larger footprint comes with those capabilities.
+Bottom line: If you need a lightweight utility for AI chat/text operations in Jakarta EE without framework overhead, OmniAI is dramatically smaller and should be faster with less GC pressure. If you need RAG or agent pipelines, LangChain4J's / Spring AI's larger footprint comes with those capabilities.
 
 ## License
 
