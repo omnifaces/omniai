@@ -191,7 +191,7 @@ String responseJson = service.chat("Analyze this review: " + reviewText,
         .build());
 
 // Parse the JSON response
-JsonObject review = JsonHelper.parseJson(responseJson);
+ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
 ```
 
 The `JsonSchemaHelper` generates JSON schemas from Java records and beans. It supports primitive types, strings, enums, collections, arrays, nested types, and `Optional` fields (which are excluded from `"required"`).
@@ -411,7 +411,7 @@ If Jakarta Agentic matures, OmniAI could potentially be a lightweight implementa
 ### Is OmniAI smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniAI JAR: ~145 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
+- OmniAI JAR: ~150 KB vs LangChain4J: 5~10 MB (*per* AI provider!) — at least 35x smaller
 - 69 source files, ~9,500 lines of code (~4,000 actual code, rest is javadocs/comments)
 - Zero runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly
 - Only optional provided dependencies: Jakarta JSON-P, CDI, and EL APIs (which Jakarta EE servers already have)
