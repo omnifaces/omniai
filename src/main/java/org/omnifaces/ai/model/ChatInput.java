@@ -18,7 +18,7 @@ import static org.omnifaces.ai.helper.DocumentHelper.encodeBase64;
 import static org.omnifaces.ai.helper.DocumentHelper.guessMediaType;
 import static org.omnifaces.ai.helper.DocumentHelper.toDataUri;
 import static org.omnifaces.ai.helper.DocumentHelper.toExtension;
-import static org.omnifaces.ai.helper.ImageHelper.isSupportedImage;
+import static org.omnifaces.ai.helper.ImageHelper.isSupportedAsImageAttachment;
 import static org.omnifaces.ai.helper.ImageHelper.sanitizeImage;
 import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
 import static org.omnifaces.ai.helper.ImageHelper.toImageMediaType;
@@ -202,7 +202,7 @@ public class ChatInput implements Serializable {
          */
         public Builder attach(byte[]... files) {
             for (var content : files) {
-                if (isSupportedImage(content)) {
+                if (isSupportedAsImageAttachment(content)) {
                     var sanitized = sanitizeImage(content);
                     var mediaType = toImageMediaType(sanitized);
                     var fileName = "image" + (images.size() + 1) + "." + mediaType.split("/", 2)[0];

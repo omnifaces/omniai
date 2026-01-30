@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -82,8 +83,10 @@ public final class DocumentHelper {
             return guessZipMediaType(content);
         }
 
-        if (isLikelyText(content)) {
-            return guessTextMediaType(content);
+        var likelyText = findLikelyText(content);
+
+        if (likelyText.isPresent()) {
+            return guessTextMediaType(likelyText.get());
         }
 
         return MediaType.BINARY.value;
@@ -197,11 +200,11 @@ public final class DocumentHelper {
      * Checks if content is likely text (not binary).
      * Validates UTF-8 encoding and rejects control characters.
      */
-    private static boolean isLikelyText(byte[] content) {
+    private static Optional<String> findLikelyText(byte[] content) {
         var decoder = UTF_8.newDecoder().onMalformedInput(REPORT).onUnmappableCharacter(REPORT);
 
         try {
-            var text = decoder.decode(ByteBuffer.wrap(content, 0, Math.min(content.length, 1024))).toString();
+            var text = decoder.decode(ByteBuffer.wrap(content, 0, Math.min(content.length, 8192))).toString();
 
             for (int i = 0; i < text.length(); i++) {
                 int codePoint = text.codePointAt(i);
@@ -211,14 +214,14 @@ public final class DocumentHelper {
                 }
 
                 if (Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint)) {
-                    return false; // Reject control characters except whitespace.
+                    return Optional.empty(); // Reject control characters except whitespace.
                 }
             }
 
-            return true;
+            return Optional.of(text);
         }
         catch (CharacterCodingException ignore) {
-            return false; // Invalid UTF-8 - likely binary.
+            return Optional.empty(); // Invalid UTF-8 - likely binary.
         }
     }
 
@@ -226,9 +229,7 @@ public final class DocumentHelper {
      * Guesses the media type for text-based content.
      * Falls back to {@code text/plain}.
      */
-    private static String guessTextMediaType(byte[] content) {
-        var text = new String(content, UTF_8).strip();
-
+    private static String guessTextMediaType(String text) {
         if (looksLikeJson(text)) {
             return MediaType.JSON.value;
         }
@@ -256,21 +257,21 @@ public final class DocumentHelper {
      * Check if starts with { or [ and ends with } or ].
      */
     private static boolean looksLikeJson(String text) {
-        return (text.startsWith("{") && text.endsWith("}")) || (text.startsWith("[") && text.endsWith("]"));
+        return (text.startsWith("{") && text.contains("}")) || (text.startsWith("[") && text.contains("]"));
     }
 
     /**
      * Check if starts with < and ends with >.
      */
     private static boolean looksLikeXml(String text) {
-        return text.startsWith("<") && text.endsWith(">");
+        return text.startsWith("<") && text.contains(">");
     }
 
     /**
      * Check if xml contains doctype or html/head/body tags.
      */
     private static boolean looksLikeHtml(String xml) {
-        var lower = xml.substring(0, Math.min(xml.length(), 1024)).toLowerCase();
+        var lower = xml.toLowerCase();
         return lower.contains("<!doctype html") || lower.contains("<html") || lower.contains("<head") || lower.contains("<body");
     }
 

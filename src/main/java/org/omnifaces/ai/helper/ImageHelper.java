@@ -35,25 +35,31 @@ import org.omnifaces.ai.exception.AIException;
 public final class ImageHelper {
 
     private enum MediaType {
-        JPEG("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, false, false),
-        PNG("image/png", new byte[]{(byte)0x89, 0x50, 0x4E, 0x47}, 0, null, true, false),
-        GIF("image/gif", new byte[]{0x47, 0x49, 0x46, 0x38}, 0, null, true, true),
-        BMP("image/bmp", new byte[]{0x42, 0x4D}, 0, null, false, true),
-        RIFF("image/riff", new byte[]{0x52, 0x49, 0x46, 0x46}, 8, null, false, false),
-        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, false, false);
+        JPEG("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, true, false, false),
+        PNG("image/png", new byte[]{(byte)0x89, 0x50, 0x4E, 0x47}, 0, null, true, true, false),
+        GIF("image/gif", new byte[]{0x47, 0x49, 0x46, 0x38}, 0, null, true, true, true),
+        BMP("image/bmp", new byte[]{0x42, 0x4D}, 0, null, true, false, true),
+        RIFF("image/riff", new byte[]{0x52, 0x49, 0x46, 0x46}, 8, null, false, false, false),
+        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, true, false, false),
+        HEIF("image/heif", new byte[]{0x00, 0x00, 0x00}, 4, null, false, false, false),
+        HEIC("image/heic", HEIF.magic, 0, new byte[]{0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63}, false, false, false),
+        TIFF_LE("image/tiff", new byte[]{0x49, 0x49, 0x2A, 0x00}, 0, null, false, false, false),
+        TIFF_BE("image/tiff", new byte[]{0x4D, 0x4D, 0x00, 0x2A}, 0, null, false, false, false);
 
         private final String value;
         private final byte[] magic;
         private final int subMagicOffset;
         private final byte[] subMagic;
+        private final boolean supportedAsImageAttachment;
         private final boolean supportsAlphaChannel;
         private final boolean needsPngConversion;
 
-        MediaType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportsAlphaChannel, boolean needsPngConversion) {
+        MediaType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supported, boolean supportsAlphaChannel, boolean needsPngConversion) {
             this.value = value;
             this.magic = magic;
             this.subMagicOffset = subMagicOffset;
             this.subMagic = subMagic;
+            this.supportedAsImageAttachment = supported;
             this.supportsAlphaChannel = supportsAlphaChannel;
             this.needsPngConversion = needsPngConversion;
         }
@@ -66,8 +72,8 @@ public final class ImageHelper {
                             if (subType.subMagic != null && startsWith(content, type.subMagicOffset, subType.subMagic)) {
                                 return Optional.of(subType);
                             }
-                            return Optional.empty(); // Unknown RIFF subtype (AVI, WAV, etc) - not a valid image.
                         }
+                        return Optional.empty();
                     }
                     return Optional.of(type);
                 }
@@ -81,13 +87,13 @@ public final class ImageHelper {
     }
 
     /**
-     * Checks whether the given bytes represent a supported image format.
+     * Checks whether the given bytes represent a image format which is supported as image attachment.
      *
      * @param image The image bytes.
-     * @return {@code true} if the image format is supported, {@code false} otherwise.
+     * @return {@code true} if the image format is supported as image attachment, {@code false} otherwise.
      */
-    public static boolean isSupportedImage(byte[] image) {
-        return guessImageMediaType(image).isPresent();
+    public static boolean isSupportedAsImageAttachment(byte[] image) {
+        return MediaType.detect(image).map(type -> type.supportedAsImageAttachment).orElse(false);
     }
 
     /**
