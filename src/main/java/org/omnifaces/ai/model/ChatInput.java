@@ -14,24 +14,23 @@ package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static org.omnifaces.ai.helper.DocumentHelper.encodeBase64;
-import static org.omnifaces.ai.helper.DocumentHelper.guessMediaType;
-import static org.omnifaces.ai.helper.DocumentHelper.toDataUri;
-import static org.omnifaces.ai.helper.DocumentHelper.toExtension;
+import static org.omnifaces.ai.helper.AudioVideoHelper.guessAudioVideoMediaType;
+import static org.omnifaces.ai.helper.DocumentHelper.guessDocumentMimeType;
+import static org.omnifaces.ai.helper.ImageHelper.getImageMimeType;
 import static org.omnifaces.ai.helper.ImageHelper.isSupportedAsImageAttachment;
 import static org.omnifaces.ai.helper.ImageHelper.sanitizeImage;
-import static org.omnifaces.ai.helper.ImageHelper.toImageDataUri;
-import static org.omnifaces.ai.helper.ImageHelper.toImageMediaType;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.omnifaces.ai.helper.MimeType;
+
 /**
  * Input for chat-based AI interactions.
  * <p>
- * This class encapsulates the user input for AI chat operations, including the text message and optional file attachments (images and documents).
+ * This class encapsulates the user input for AI chat operations, including the text message and optional image and/or file attachments.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -41,80 +40,47 @@ public class ChatInput implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Represents an attached image.
-     * @param content The image content bytes.
-     * @param mediaType The image media type (e.g., "image/png").
-     * @param fileName The image file name.
+     * Represents an attached file.
+     * @param content The content bytes.
+     * @param mimeType The mime type.
+     * @param fileName The file name.
      */
-    public final record Image(byte[] content, String mediaType, String fileName) implements Serializable {
+    public final record Attachment(byte[] content, MimeType mimeType, String fileName) implements Serializable {
 
         /**
-         * Returns the image content as a Base64 encoded string.
-         * @return The Base64 encoded image content.
+         * Returns the content as a Base64 encoded string.
+         * @return The Base64 encoded content.
          */
         public String base64() {
-            return encodeBase64(content);
+            return mimeType.toBase64(content);
         }
 
         /**
-         * Returns the image as a data URI.
+         * Returns the content as a data URI.
          * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
          */
         public String dataUri() {
-            return toImageDataUri(content);
-        }
-    }
-
-    /**
-     * Represents an attached document.
-     * @param mediaType The document media type (e.g., "application/pdf").
-     * @param content The document content bytes.
-     * @param fileName The document file name.
-     */
-    public final record Document(byte[] content, String mediaType, String fileName) implements Serializable {
-
-        /**
-         * Returns the document content as a Base64 encoded string.
-         * @return The Base64 encoded document content.
-         */
-        public String base64() {
-            return encodeBase64(content);
-        }
-
-        /**
-         * Returns the document as a data URI.
-         * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
-         */
-        public String dataUri() {
-            return toDataUri(content);
-        }
-
-        /**
-         * Returns the extension based on the document's media type.
-         * @return The extension based on the document's media type.
-         */
-        public String extension() {
-            return toExtension(mediaType());
+            return mimeType.toDataUri(content);
         }
     }
 
     /** The user message. */
     private final String message;
-    /** The images. */
-    private final List<Image> images;
-    /** The documents. */
-    private final List<Document> documents;
+    /** The image attachments. */
+    private final List<Attachment> images;
+    /** The file attachments. */
+    private final List<Attachment> files;
 
     private ChatInput(Builder builder) {
         this.message = builder.message;
         this.images = unmodifiableList(builder.images);
-        this.documents = unmodifiableList(builder.documents);
+        this.files = unmodifiableList(builder.files);
     }
 
-    private ChatInput(String message, List<Image> images) {
+    private ChatInput(String message, List<Attachment> images) {
         this.message = message;
         this.images = unmodifiableList(images);
-        this.documents = emptyList();
+        this.files = emptyList();
     }
 
     /**
@@ -129,26 +95,26 @@ public class ChatInput implements Serializable {
      * Gets the list of images associated with this input.
      * @return An unmodifiable list of images, or an empty list if no images are attached.
      */
-    public List<Image> getImages() {
+    public List<Attachment> getImages() {
         return images;
     }
 
     /**
-     * Gets the list of documents associated with this input.
-     * @return An unmodifiable list of documents, or an empty list if no documents are attached.
+     * Gets the list of files associated with this input.
+     * @return An unmodifiable list of files, or an empty list if no files are attached.
      */
-    public List<Document> getDocuments() {
-        return documents;
+    public List<Attachment> getFiles() {
+        return files;
     }
 
     /**
-     * Returns a copy of this input without any documents.
+     * Returns a copy of this input without any files.
      * <p>
-     * This is useful for providers that handle documents separately from the main chat payload.
+     * This is useful for providers that handle files separately from the main chat payload.
      *
      * @return A new {@code ChatInput} containing only the message and images.
      */
-    public ChatInput withoutDocuments() {
+    public ChatInput withoutFiles() {
         return new ChatInput(message, images);
     }
 
@@ -174,8 +140,8 @@ public class ChatInput implements Serializable {
      */
     public static class Builder {
         private String message;
-        private List<Image> images = new ArrayList<>();
-        private List<Document> documents = new ArrayList<>();
+        private List<Attachment> images = new ArrayList<>();
+        private List<Attachment> files = new ArrayList<>();
 
         private Builder() {}
 
@@ -195,7 +161,7 @@ public class ChatInput implements Serializable {
          * Files are automatically classified based on their content:
          * <ul>
          *   <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP) are added as images and sanitized for AI compatibility.</li>
-         *   <li>All other files are added as documents with their media type auto-detected.</li>
+         *   <li>All other files are added as files with their mime type auto-detected.</li>
          * </ul>
          * @param files The file content bytes to attach.
          * @return This builder instance for chaining.
@@ -204,14 +170,22 @@ public class ChatInput implements Serializable {
             for (var content : files) {
                 if (isSupportedAsImageAttachment(content)) {
                     var sanitized = sanitizeImage(content);
-                    var mediaType = toImageMediaType(sanitized);
-                    var fileName = "image" + (images.size() + 1) + "." + mediaType.split("/", 2)[0];
-                    images.add(new Image(sanitized, mediaType, fileName));
+                    var imageMimeType = getImageMimeType(sanitized);
+                    var fileName = "image" + (images.size() + 1) + "." + imageMimeType.extension();
+                    images.add(new Attachment(sanitized, imageMimeType, fileName));
                 }
                 else {
-                    var mediaType = guessMediaType(content);
-                    var fileName = "document" + (documents.size() + 1) + "." + toExtension(mediaType);
-                    documents.add(new Document(content, mediaType, fileName));
+                    var audioVideoMimeType = guessAudioVideoMediaType(content);
+
+                    if (audioVideoMimeType.isPresent()) {
+                        var fileName = "media" + (this.files.size() + 1) + "." + audioVideoMimeType.get().extension();
+                        this.files.add(new Attachment(content, audioVideoMimeType.get(), fileName));
+                    }
+                    else {
+                        var documentMimeType = guessDocumentMimeType(content);
+                        var fileName = "document" + (this.files.size() + 1) + "." + documentMimeType.extension();
+                        this.files.add(new Attachment(content, documentMimeType, fileName));
+                    }
                 }
             }
 

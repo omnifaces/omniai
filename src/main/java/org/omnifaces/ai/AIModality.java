@@ -16,7 +16,7 @@ package org.omnifaces.ai;
  * Represents a supported input/output modality of an AI service.
  * <p>
  * Each constant indicates whether a given {@link AIService} can process a specific type of media as input
- * (analysis/understanding) and/or generate that media type as output.
+ * (analysis/understanding) and/or generate that mime type as output.
  * <p>
  * The enum deliberately separates <em>analysis</em> (consuming/understanding media) from <em>generation</em> (producing
  * new media) because many models support one direction but not the other — for example, strong vision understanding

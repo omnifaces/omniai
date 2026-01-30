@@ -22,7 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatInput;
-import org.omnifaces.ai.model.ChatInput.Document;
+import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -405,17 +405,17 @@ public interface AIService extends Serializable {
     // File Attachment Capabilities -----------------------------------------------------------------------------------
 
     /**
-     * Uploads a document to the AI provider and retrieves a file ID to attach to chat payload.
+     * Uploads a file attachment to the AI provider and retrieves a file ID to attach to chat payload.
      * <p>
-     * This is the core method for sending file attachments to AI providers that require documents to be uploaded
+     * This is the core method for sending file attachments to AI providers that require file attachments to be uploaded
      * separately before being referenced in chat requests.
      *
-     * @param document The document to upload.
-     * @return The file ID or URI that can be used to reference the uploaded document in subsequent chat requests.
+     * @param attachment The file attachment to upload.
+     * @return The file ID or URI that can be used to reference the uploaded file attachment in subsequent chat requests.
      * @throws UnsupportedOperationException if file upload is not supported by the implementation.
      * @throws AIException if the upload fails.
      */
-    String upload(Document document) throws AIException;
+    String upload(Attachment attachment) throws AIException;
 
 
     // Text Analysis Capabilities -------------------------------------------------------------------------------------

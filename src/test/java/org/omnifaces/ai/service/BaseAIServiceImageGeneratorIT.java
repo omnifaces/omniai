@@ -13,7 +13,7 @@
 package org.omnifaces.ai.service;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMediaType;
+import static org.omnifaces.ai.helper.ImageHelper.guessImageMimeType;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
+import org.omnifaces.ai.helper.MimeType;
 
 /**
  * Base class for IT on image-generator-related methods of AI service.
@@ -34,10 +35,10 @@ abstract class BaseAIServiceImageGeneratorIT extends AIServiceIT {
     void generateImage() throws Exception {
         var response = service.generateImage("Willemstad, Curacao");
         assertTrue(response.length > 0, "Image response should not be empty");
-        var mediaType = guessImageMediaType(response).orElse("image/png");
+        var mimeType = guessImageMimeType(response).map(MimeType::value).orElse("image/png");
         var targetDir = Path.of(System.getProperty("user.dir"), "target", "image-generator-test-results");
         targetDir.toFile().mkdirs();
-        var tempFilePath = Files.createTempFile(targetDir, getClass().getSimpleName() + "-", "." + mediaType.split("/", 2)[1]);
+        var tempFilePath = Files.createTempFile(targetDir, getClass().getSimpleName() + "-", "." + mimeType.split("/", 2)[1]);
         Files.write(tempFilePath, response);
         log("saved in " + tempFilePath.toString());
 

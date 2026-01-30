@@ -13,7 +13,6 @@
 package org.omnifaces.ai.helper;
 
 import static org.omnifaces.ai.helper.DocumentHelper.startsWith;
-import static org.omnifaces.ai.helper.DocumentHelper.toDataUri;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -27,26 +26,28 @@ import javax.imageio.ImageIO;
 import org.omnifaces.ai.exception.AIException;
 
 /**
- * Utility class for image operations.
+ * Provides image MIME type detection based on magic bytes, image sanitization for AI model compatibility
+ * (removing alpha channels, converting legacy formats to PNG), and data URI generation.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
 public final class ImageHelper {
 
-    private enum MediaType {
+    private enum ImageMimeType implements MimeType {
         JPEG("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, true, false, false),
         PNG("image/png", new byte[]{(byte)0x89, 0x50, 0x4E, 0x47}, 0, null, true, true, false),
         GIF("image/gif", new byte[]{0x47, 0x49, 0x46, 0x38}, 0, null, true, true, true),
         BMP("image/bmp", new byte[]{0x42, 0x4D}, 0, null, true, false, true),
         RIFF("image/riff", new byte[]{0x52, 0x49, 0x46, 0x46}, 8, null, false, false, false),
-        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, true, false, false),
+        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, true, true, false),
         HEIF("image/heif", new byte[]{0x00, 0x00, 0x00}, 4, null, false, false, false),
-        HEIC("image/heic", HEIF.magic, 0, new byte[]{0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63}, false, false, false),
+        HEIC("image/heic", HEIF.magic, 0, new byte[]{0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63}, false, true, false),
         TIFF_LE("image/tiff", new byte[]{0x49, 0x49, 0x2A, 0x00}, 0, null, false, false, false),
         TIFF_BE("image/tiff", new byte[]{0x4D, 0x4D, 0x00, 0x2A}, 0, null, false, false, false);
 
         private final String value;
+        private final String extension;
         private final byte[] magic;
         private final int subMagicOffset;
         private final byte[] subMagic;
@@ -54,31 +55,25 @@ public final class ImageHelper {
         private final boolean supportsAlphaChannel;
         private final boolean needsPngConversion;
 
-        MediaType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supported, boolean supportsAlphaChannel, boolean needsPngConversion) {
+        ImageMimeType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportedAsImageAttachment, boolean supportsAlphaChannel, boolean needsPngConversion) {
             this.value = value;
+            this.extension = value.split("/", 2)[1];
             this.magic = magic;
             this.subMagicOffset = subMagicOffset;
             this.subMagic = subMagic;
-            this.supportedAsImageAttachment = supported;
+            this.supportedAsImageAttachment = supportedAsImageAttachment;
             this.supportsAlphaChannel = supportsAlphaChannel;
             this.needsPngConversion = needsPngConversion;
         }
 
-        public static Optional<MediaType> detect(byte[] content) {
-            for (var type : values()) {
-                if (type.magic != null && startsWith(content, 0, type.magic)) {
-                    if (type.subMagicOffset > 0) {
-                        for (var subType : values()) {
-                            if (subType.subMagic != null && startsWith(content, type.subMagicOffset, subType.subMagic)) {
-                                return Optional.of(subType);
-                            }
-                        }
-                        return Optional.empty();
-                    }
-                    return Optional.of(type);
-                }
-            }
-            return Optional.empty();
+        @Override
+        public String value() {
+            return value;
+        }
+
+        @Override
+        public String extension() {
+            return extension;
         }
     }
 
@@ -93,43 +88,41 @@ public final class ImageHelper {
      * @return {@code true} if the image format is supported as image attachment, {@code false} otherwise.
      */
     public static boolean isSupportedAsImageAttachment(byte[] image) {
-        return MediaType.detect(image).map(type -> type.supportedAsImageAttachment).orElse(false);
+        return guessImageMimeType(image).map(type -> ((ImageMimeType) type).supportedAsImageAttachment).orElse(false);
     }
 
     /**
-     * Returns the media type of the given image based on its magic bytes.
+     * Returns the mime type of the given image based on its magic bytes.
      *
      * @param image The image bytes.
-     * @return The media type string (e.g., "image/png").
+     * @return The mime type string (e.g., "image/png").
      * @throws AIException when the image format is not supported.
      */
-    public static String toImageMediaType(byte[] image) {
-        return getImageMediaType(image).value;
-    }
-
-    private static MediaType getImageMediaType(byte[] image) {
-        return MediaType.detect(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
+    public static MimeType getImageMimeType(byte[] image) {
+        return guessImageMimeType(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
     }
 
     /**
-     * Guesses the media type of an image based on its magic bytes.
+     * Guesses the mime type of an image based on its magic bytes.
      *
      * @param content The content bytes to check.
-     * @return An {@link Optional} containing the media type if recognized as an image, or empty if not.
+     * @return An {@link Optional} containing the mime type if recognized as an image, or empty if not.
      */
-    public static Optional<String> guessImageMediaType(byte[] content) {
-        return MediaType.detect(content).map(type -> type.value);
-    }
-
-    /**
-     * Converts the given image bytes to a data URI.
-     *
-     * @param image The image bytes.
-     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
-     * @throws AIException when image format is not supported.
-     */
-    public static String toImageDataUri(byte[] image) {
-        return toDataUri(toImageMediaType(image), image);
+    public static Optional<MimeType> guessImageMimeType(byte[] content) {
+        for (var type : ImageMimeType.values()) {
+            if (type.magic != null && startsWith(content, 0, type.magic)) {
+                if (type.subMagicOffset > 0) {
+                    for (var subType : ImageMimeType.values()) {
+                        if (subType.subMagic != null && startsWith(content, type.subMagicOffset, subType.subMagic)) {
+                            return Optional.of(subType);
+                        }
+                    }
+                    return Optional.empty();
+                }
+                return Optional.of(type);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -142,13 +135,13 @@ public final class ImageHelper {
      * @throws AIException when image format is not supported.
      */
     public static byte[] sanitizeImage(byte[] image) {
-        var mediaType = getImageMediaType(image);
+        var mimeType = (ImageMimeType) getImageMimeType(image);
         var sanitized = image;
 
-        if (mediaType.supportsAlphaChannel) {
+        if (mimeType.supportsAlphaChannel) {
             sanitized = removeAnyAlphaChannel(sanitized);
         }
-        else if (mediaType.needsPngConversion) {
+        else if (mimeType.needsPngConversion) {
             sanitized = convertToPng(sanitized);
         }
 
@@ -170,7 +163,7 @@ public final class ImageHelper {
             return saveAsPng(rgbOnly);
         }
         catch (Exception e) {
-            throw new AIException("Cannot remove alpha channel from image", e);
+            throw new AIException("Cannot remove alpha channel from image, please try a different image, preferably WEBP, JPEG or PNG.", e);
         }
     }
 
@@ -182,7 +175,7 @@ public final class ImageHelper {
             return saveAsPng(ImageIO.read(new ByteArrayInputStream(image)));
         }
         catch (Exception e) {
-            throw new AIException("Cannot convert image to PNG", e);
+            throw new AIException("Cannot convert image to PNG, please try a different image, preferably WEBP, JPEG or PNG.", e);
         }
     }
 

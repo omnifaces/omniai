@@ -67,15 +67,15 @@ public class AnthropicAITextHandler extends BaseAITextHandler {
                 .add("type", "image")
                 .add("source", Json.createObjectBuilder()
                     .add("type", "base64")
-                    .add("media_type", image.mediaType())
+                    .add("media_type", image.mimeType().value())
                     .add("data", image.base64())));
         }
 
-        if (!input.getDocuments().isEmpty()) {
+        if (!input.getFiles().isEmpty()) {
             checkSupportsFileUpload(service);
 
-            for (var document : input.getDocuments()) {
-                var fileId = service.upload(document);
+            for (var file : input.getFiles()) {
+                var fileId = service.upload(file);
 
                 content.add(Json.createObjectBuilder()
                     .add("type", "document")

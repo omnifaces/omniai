@@ -86,11 +86,11 @@ public class OpenAITextHandler extends BaseAITextHandler {
             content.add(img);
         }
 
-        if (!input.getDocuments().isEmpty()) {
+        if (!input.getFiles().isEmpty()) {
             checkSupportsFileUpload(service);
 
-            for (var document : input.getDocuments()) {
-                var fileId = service.upload(document);
+            for (var file : input.getFiles()) {
+                var fileId = service.upload(file);
 
                 content.add(Json.createObjectBuilder()
                         .add("type", "input_file")

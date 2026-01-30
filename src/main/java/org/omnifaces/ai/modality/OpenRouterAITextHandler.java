@@ -23,7 +23,7 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.ChatInput;
-import org.omnifaces.ai.model.ChatInput.Document;
+import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.service.OpenRouterAIService;
 
@@ -40,16 +40,16 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
 
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
-        var documents = input.getDocuments();
-        var payload = super.buildChatPayload(service, input.withoutDocuments(), options, streaming);
+        var files = input.getFiles();
+        var payload = super.buildChatPayload(service, input.withoutFiles(), options, streaming);
 
-        if (documents.isEmpty()) {
+        if (files.isEmpty()) {
             return payload;
         }
 
         var messages = payload.getJsonArray("messages");
         var lastMessage = messages.getJsonObject(messages.size() - 1);
-        var newContent = buildContentWithDocuments(service, documents, lastMessage.getJsonArray("content"));
+        var newContent = buildContentWithPdfAttachmentsIfAny(service, files, lastMessage.getJsonArray("content"));
         var newLastMessage = replaceField(lastMessage, "content", newContent.build());
         var newMessages = Json.createArrayBuilder();
 
@@ -60,19 +60,19 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
         return replaceField(payload, "messages", newMessages.add(newLastMessage).build()).build();
     }
 
-    private static JsonArrayBuilder buildContentWithDocuments(AIService service, List<Document> documents, JsonArray originalContent) {
+    private static JsonArrayBuilder buildContentWithPdfAttachmentsIfAny(AIService service, List<Attachment> files, JsonArray originalContent) {
         var content = Json.createArrayBuilder();
 
-        for (var document : documents) {
-            if (!document.mediaType().endsWith("pdf")) {
+        for (var file : files) {
+            if (!"pdf".equals(file.mimeType().extension())) {
                 throw new UnsupportedOperationException("Only PDF is supported in file upload by " + service.getName());
             }
 
             content.add(Json.createObjectBuilder()
                 .add("type", "file")
                 .add("file", Json.createObjectBuilder()
-                    .add("filename", document.fileName())
-                    .add("file_data", document.dataUri())));
+                    .add("filename", file.fileName())
+                    .add("file_data", file.dataUri())));
         }
 
         originalContent.forEach(content::add);

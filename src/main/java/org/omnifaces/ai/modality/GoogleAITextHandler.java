@@ -57,19 +57,19 @@ public class GoogleAITextHandler extends BaseAITextHandler {
         for (var image : input.getImages()) {
             parts.add(Json.createObjectBuilder()
                 .add("inline_data", Json.createObjectBuilder()
-                    .add("mime_type", image.mediaType())
+                    .add("mime_type", image.mimeType().value())
                     .add("data", image.base64())));
         }
 
-        if (!input.getDocuments().isEmpty()) {
+        if (!input.getFiles().isEmpty()) {
             checkSupportsFileUpload(service);
 
-            for (var document : input.getDocuments()) {
-                var fileId = service.upload(document);
+            for (var file : input.getFiles()) {
+                var fileId = service.upload(file);
 
                 parts.add(Json.createObjectBuilder()
                     .add("file_data", Json.createObjectBuilder()
-                        .add("mime_type", document.mediaType())
+                        .add("mime_type", file.mimeType().value())
                         .add("file_uri", fileId)));
             }
         }

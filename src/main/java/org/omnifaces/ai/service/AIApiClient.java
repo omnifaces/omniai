@@ -50,7 +50,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.exception.AIBadRequestException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIHttpException;
-import org.omnifaces.ai.model.ChatInput.Document;
+import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
 
@@ -131,20 +131,20 @@ final class AIApiClient {
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
-     * @param document The document to upload
+     * @param attachment The file attachment to upload
      * @return The response body as a string
      * @throws AIHttpException if the request fails
      */
-    public CompletableFuture<String> upload(BaseAIService service, String path, Document document) throws AIHttpException {
-        return sendWithRetryAsync(newUploadRequest(service, path, document, APPLICATION_JSON), 0);
+    public CompletableFuture<String> upload(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
+        return sendWithRetryAsync(newUploadRequest(service, path, attachment, APPLICATION_JSON), 0);
     }
 
     private HttpRequest newJsonRequest(BaseAIService service, String path, JsonObject payload, String accept) {
         return newRequest(service, path, APPLICATION_JSON, accept, BodyPublishers.ofString(payload.toString()));
     }
 
-    private HttpRequest newUploadRequest(BaseAIService service, String path, Document document, String accept) {
-        var multipart = MultipartBodyPublisher.of(document);
+    private HttpRequest newUploadRequest(BaseAIService service, String path, Attachment attachment, String accept) {
+        var multipart = MultipartBodyPublisher.of(attachment);
         return newRequest(service, path, MULTIPART_FORM_DATA + "; boundary=" + multipart.boundary, accept, multipart.body);
     }
 
@@ -310,22 +310,22 @@ final class AIApiClient {
         private final BodyPublisher body;
         private final String boundary;
 
-        private MultipartBodyPublisher(Document document) {
+        private MultipartBodyPublisher(Attachment attachment) {
             this.boundary = "----OmniAIBoundary" + System.currentTimeMillis();
 
             try (var os = new ByteArrayOutputStream()) {
                 writeTextPart(os, "purpose", "assistants");
-                writeFilePart(os, "file", document.fileName(), document.mediaType(), document.content());
+                writeFilePart(os, "file", attachment.fileName(), attachment.mimeType().value(), attachment.content());
                 writeLine(os, "--" + boundary + "--");
                 body = HttpRequest.BodyPublishers.ofByteArray(os.toByteArray());
             }
             catch (IOException e) {
-                throw new AIException("Cannot prepare multipart/form-data request for " + document.fileName(), e);
+                throw new AIException("Cannot prepare multipart/form-data request for " + attachment.fileName(), e);
             }
         }
 
-        public static MultipartBodyPublisher of(Document document) {
-            return new MultipartBodyPublisher(document);
+        public static MultipartBodyPublisher of(Attachment attachment) {
+            return new MultipartBodyPublisher(attachment);
         }
 
         private void writeTextPart(OutputStream os, String name, String value) throws IOException {

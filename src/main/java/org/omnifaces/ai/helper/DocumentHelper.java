@@ -14,25 +14,25 @@ package org.omnifaces.ai.helper;
 
 import static java.nio.charset.CodingErrorAction.REPORT;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.stream;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.util.Base64;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Utility class for document operations.
+ * Provides document MIME type detection based on magic bytes and content analysis
+ * (PDF, Office formats, and text-based formats like JSON, XML, CSV, Markdown),
+ * Base64 encoding, and data URI generation.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
 public final class DocumentHelper {
 
-    private enum MediaType {
+    private enum DocumentMimeType implements MimeType {
         PDF("application/pdf", "pdf"),
         DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
         XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
@@ -49,9 +49,19 @@ public final class DocumentHelper {
         private final String value;
         private final String extension;
 
-        MediaType(String value, String extension) {
+        DocumentMimeType(String value, String extension) {
             this.value = value;
             this.extension = extension;
+        }
+
+        @Override
+        public String value() {
+            return value;
+        }
+
+        @Override
+        public String extension() {
+            return extension;
         }
     }
 
@@ -63,81 +73,33 @@ public final class DocumentHelper {
     }
 
     /**
-     * Guesses the media type of a document based on its magic bytes and content.
+     * Guesses the mime type of a document based on its magic bytes and content.
      * <p>
      * Supported formats: PDF, DOCX, XLSX, PPTX, CSV, JSON, HTML, XML, Markdown, and plain text.
      *
      * @param content The content bytes to check.
-     * @return The guessed media type, or {@code text/plain} for text content, or {@code application/octet-stream} for unknown binary content.
+     * @return The guessed mime type, or {@code text/plain} for text content, or {@code application/octet-stream} for unknown binary content.
      */
-    public static String guessMediaType(byte[] content) {
+    public static MimeType guessDocumentMimeType(byte[] content) {
         if (content == null || content.length == 0) {
-            return MediaType.BINARY.value;
+            return DocumentMimeType.BINARY;
         }
 
         if (startsWith(content, 0, PDF_MAGIC)) {
-            return MediaType.PDF.value;
+            return DocumentMimeType.PDF;
         }
 
         if (startsWith(content, 0, ZIP_MAGIC)) {
-            return guessZipMediaType(content);
+            return guessZipMimeType(content);
         }
 
         var likelyText = findLikelyText(content);
 
         if (likelyText.isPresent()) {
-            return guessTextMediaType(likelyText.get());
+            return guessTextMimeType(likelyText.get());
         }
 
-        return MediaType.BINARY.value;
-    }
-
-    /**
-     * Returns a file extension for the given media type.
-     * <p>
-     * The returned extension does not include a leading dot.
-     * If the media type is {@code null} or not recognized, {@code "bin"} is returned.
-     *
-     * @param mediaType The media type (MIME type), e.g. {@code "application/pdf"}.
-     * @return The corresponding file extension (without dot), e.g. {@code "pdf"}, or {@code "bin"} if unknown.
-     */
-    public static String toExtension(String mediaType) {
-        return stream(MediaType.values())
-                .filter(type -> type.value.equalsIgnoreCase(mediaType))
-                .findFirst()
-                .map(type -> type.extension)
-                .orElse(MediaType.BINARY.extension);
-    }
-
-    /**
-     * Converts the given content to a Base64 string.
-     *
-     * @param content The content to be encoded.
-     * @return The Base64 encoded string.
-     */
-    public static String encodeBase64(byte[] content) {
-        return Base64.getEncoder().encodeToString(content);
-    }
-
-    /**
-     * Converts the given content to a data URI.
-     *
-     * @param content The content bytes.
-     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
-     */
-    public static String toDataUri(byte[] content) {
-        return toDataUri(guessMediaType(content), content);
-    }
-
-    /**
-     * Converts the given content to a data URI with the specified media type.
-     *
-     * @param mediaType The media type (MIME type) for the data URI.
-     * @param content The content bytes.
-     * @return The data URI string in the format {@code data:<media-type>;base64,<data>}.
-     */
-    static String toDataUri(String mediaType, byte[] content) {
-        return "data:" + mediaType + ";base64," + encodeBase64(content);
+        return DocumentMimeType.BINARY;
     }
 
     /**
@@ -163,11 +125,11 @@ public final class DocumentHelper {
     }
 
     /**
-     * Guesses the media type for ZIP-based formats (docx, xlsx, pptx).
+     * Guesses the mime type for ZIP-based formats (docx, xlsx, pptx).
      * We peek inside the ZIP to find characteristic files.
      * Falls back to {@code application/zip}.
      */
-    private static String guessZipMediaType(byte[] content) {
+    private static MimeType guessZipMimeType(byte[] content) {
         try (var zis = new ZipInputStream(new ByteArrayInputStream(content))) {
             ZipEntry entry;
 
@@ -175,25 +137,25 @@ public final class DocumentHelper {
                 var name = entry.getName();
 
                 if (name.startsWith("word/")) {
-                    return MediaType.DOCX.value;
+                    return DocumentMimeType.DOCX;
                 }
 
                 if (name.startsWith("xl/")) {
-                    return MediaType.XLSX.value;
+                    return DocumentMimeType.XLSX;
                 }
 
                 if (name.startsWith("ppt/")) {
-                    return MediaType.PPTX.value;
+                    return DocumentMimeType.PPTX;
                 }
             }
 
-            return MediaType.ZIP.value;
+            return DocumentMimeType.ZIP;
         }
         catch (Exception ignore) {
             // Not a valid ZIP or error reading - fall through.
         }
 
-        return MediaType.BINARY.value;
+        return DocumentMimeType.BINARY;
     }
 
     /**
@@ -226,31 +188,31 @@ public final class DocumentHelper {
     }
 
     /**
-     * Guesses the media type for text-based content.
+     * Guesses the mime type for text-based content.
      * Falls back to {@code text/plain}.
      */
-    private static String guessTextMediaType(String text) {
+    private static MimeType guessTextMimeType(String text) {
         if (looksLikeJson(text)) {
-            return MediaType.JSON.value;
+            return DocumentMimeType.JSON;
         }
 
         if (looksLikeXml(text)) {
             if (looksLikeHtml(text)) {
-                return MediaType.HTML.value;
+                return DocumentMimeType.HTML;
             }
 
-            return MediaType.XML.value;
+            return DocumentMimeType.XML;
         }
 
         if (looksLikeCsv(text)) {
-            return MediaType.CSV.value;
+            return DocumentMimeType.CSV;
         }
 
         if (looksLikeMarkdown(text)) {
-            return MediaType.MARKDOWN.value;
+            return DocumentMimeType.MARKDOWN;
         }
 
-        return MediaType.TEXT.value;
+        return DocumentMimeType.TEXT;
     }
 
     /**
