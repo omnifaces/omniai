@@ -20,7 +20,6 @@ import static java.util.function.Predicate.not;
 import static org.omnifaces.ai.AIConfig.PROPERTY_API_KEY;
 import static org.omnifaces.ai.AIConfig.PROPERTY_ENDPOINT;
 import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
-import static org.omnifaces.ai.AITextHandler.MODERATION_RESPONSE_SCHEMA;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
@@ -31,6 +30,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -45,6 +45,7 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
@@ -268,11 +269,31 @@ public abstract class BaseAIService implements AIService {
 
         var chatOptions = ChatOptions.newBuilder()
             .systemPrompt(textHandler.buildModerationPrompt(options))
-            .jsonSchema(MODERATION_RESPONSE_SCHEMA)
+            .jsonSchema(AITextHandler.MODERATION_RESPONSE_SCHEMA)
             .temperature(DETERMINISTIC_TEMPERATURE)
             .build();
 
-        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> textHandler.parseModerationResult(response, options));
+        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> parseModerationResult(response, options));
+    }
+
+    private static ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
+        var moderationResponse = JsonSchemaHelper.fromJson(responseBody, AITextHandler.ModerationResponse.class);
+        var scores = new TreeMap<String, Double>();
+        var flagged = false;
+
+        if (!moderationResponse.scores().isEmpty()) {
+            for (var category : options.getCategories()) {
+                Double score = moderationResponse.scores().get(category);
+                if (score != null) {
+                    scores.put(category, score);
+                    if (score > options.getThreshold()) {
+                        flagged = true;
+                    }
+                }
+            }
+        }
+
+        return new ModerationResult(flagged, scores);
     }
 
 

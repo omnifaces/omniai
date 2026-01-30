@@ -18,7 +18,6 @@ import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
 import java.util.List;
-import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -28,7 +27,6 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.model.ModerationOptions;
-import org.omnifaces.ai.model.ModerationResult;
 
 /**
  * Base class for AI text handler implementations that provides sensible, general-purpose prompt templates, and
@@ -243,28 +241,6 @@ public abstract class BaseAITextHandler implements AITextHandler {
      */
     public List<String> getFileResponseIdPaths() {
         return List.of("id");
-    }
-
-    @Override
-    public ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
-        var responseJson = parseJson(responseBody);
-        var scores = new TreeMap<String, Double>();
-        var flagged = false;
-
-        if (responseJson.containsKey("scores")) {
-            var categoryScores = responseJson.getJsonObject("scores");
-            for (String category : options.getCategories()) {
-                if (categoryScores.containsKey(category)) {
-                    double score = categoryScores.getJsonNumber(category).doubleValue();
-                    scores.put(category, score);
-                    if (score > options.getThreshold()) {
-                        flagged = true;
-                    }
-                }
-            }
-        }
-
-        return new ModerationResult(flagged, scores);
     }
 
 

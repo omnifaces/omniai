@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.helper;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -180,6 +181,98 @@ class JsonSchemaHelperTest {
         var scoresSchema = schema.getJsonObject("properties").getJsonObject("scores");
         assertEquals("object", scoresSchema.getString("type"));
         assertEquals("number", scoresSchema.getJsonObject("additionalProperties").getString("type"));
+    }
+
+    // =================================================================================================================
+    // Test fromJson - records
+    // =================================================================================================================
+
+    @Test
+    void fromJson_simpleRecord() {
+        var json = "{\"name\":\"John\",\"age\":30}";
+        var result = JsonSchemaHelper.fromJson(json, SimpleRecord.class);
+
+        assertEquals("John", result.name());
+        assertEquals(30, result.age());
+    }
+
+    @Test
+    void fromJson_withEnum() {
+        var json = "{\"status\":\"APPROVED\"}";
+        var result = JsonSchemaHelper.fromJson(json, WithEnum.class);
+
+        assertEquals(Status.APPROVED, result.status());
+    }
+
+    @Test
+    void fromJson_withList() {
+        var json = "{\"items\":[\"a\",\"b\",\"c\"]}";
+        var result = JsonSchemaHelper.fromJson(json, WithList.class);
+
+        assertEquals(List.of("a", "b", "c"), result.items());
+    }
+
+    @Test
+    void fromJson_withArray() {
+        var json = "{\"numbers\":[1,2,3]}";
+        var result = JsonSchemaHelper.fromJson(json, WithArray.class);
+
+        assertArrayEquals(new int[]{1, 2, 3}, result.numbers());
+    }
+
+    @Test
+    void fromJson_nested() {
+        var json = "{\"inner\":{\"value\":\"test\"}}";
+        var result = JsonSchemaHelper.fromJson(json, Outer.class);
+
+        assertEquals("test", result.inner().value());
+    }
+
+    @Test
+    void fromJson_withOptional_present() {
+        var json = "{\"required\":\"yes\",\"optional\":\"maybe\"}";
+        var result = JsonSchemaHelper.fromJson(json, WithOptional.class);
+
+        assertEquals("yes", result.required());
+        assertEquals(Optional.of("maybe"), result.optional());
+    }
+
+    @Test
+    void fromJson_withOptional_absent() {
+        var json = "{\"required\":\"yes\"}";
+        var result = JsonSchemaHelper.fromJson(json, WithOptional.class);
+
+        assertEquals("yes", result.required());
+        assertEquals(Optional.empty(), result.optional());
+    }
+
+    @Test
+    void fromJson_withOptional_null() {
+        var json = "{\"required\":\"yes\",\"optional\":null}";
+        var result = JsonSchemaHelper.fromJson(json, WithOptional.class);
+
+        assertEquals("yes", result.required());
+        assertEquals(Optional.empty(), result.optional());
+    }
+
+    @Test
+    void fromJson_productReview() {
+        var json = "{\"sentiment\":\"positive\",\"rating\":5,\"pros\":[\"great quality\",\"fast shipping\"],\"cons\":[\"expensive\"]}";
+        var result = JsonSchemaHelper.fromJson(json, ProductReview.class);
+
+        assertEquals("positive", result.sentiment());
+        assertEquals(5, result.rating());
+        assertEquals(List.of("great quality", "fast shipping"), result.pros());
+        assertEquals(List.of("expensive"), result.cons());
+    }
+
+    @Test
+    void fromJson_withMap() {
+        var json = "{\"scores\":{\"hate\":0.1,\"violence\":0.05}}";
+        var result = JsonSchemaHelper.fromJson(json, WithMap.class);
+
+        assertEquals(0.1, result.scores().get("hate"), 0.001);
+        assertEquals(0.05, result.scores().get("violence"), 0.001);
     }
 
     // =================================================================================================================

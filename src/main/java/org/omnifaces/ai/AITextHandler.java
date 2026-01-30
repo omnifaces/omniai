@@ -25,7 +25,6 @@ import org.omnifaces.ai.modality.BaseAITextHandler;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ModerationOptions;
-import org.omnifaces.ai.model.ModerationResult;
 import org.omnifaces.ai.model.Sse.Event;
 
 /**
@@ -191,14 +190,4 @@ public interface AITextHandler extends Serializable {
      * </pre>
      */
     JsonObject MODERATION_RESPONSE_SCHEMA = JsonSchemaHelper.buildJsonSchema(ModerationResponse.class);
-
-    /**
-     * Parses the moderation result from response returned by {@link AIService#moderateContent(String, ModerationOptions)} and {@link AIService#moderateContentAsync(String, ModerationOptions)}.
-     *
-     * @param responseBody The response from the AI model containing moderation scores.
-     * @param options The moderation options containing categories and threshold.
-     * @return The parsed moderation result.
-     * @throws AIResponseException If the response cannot be parsed.
-     */
-    ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException;
 }
