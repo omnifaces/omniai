@@ -27,7 +27,7 @@ public final class AudioVideoMimeTypeDetector {
     private static final byte[] MKV_MAGIC = {0x1A, 'E', (byte)0xDF, (byte)0xA3};
     /** The RIFF magic (to be shared with {@link ImageMimeTypeDetector}). */
     static final byte[] RIFF_MAGIC = {'R', 'I', 'F', 'F'};
-    /** The FVYP magic (to be shared with {@link ImageMimeTypeDetector}). */
+    /** The FTYP magic (to be shared with {@link ImageMimeTypeDetector}). */
     static final byte[] FTYP_MAGIC = {'f', 't', 'y', 'p'};
 
     private enum AudioVideoMimeType implements MimeType {
