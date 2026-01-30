@@ -10,9 +10,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.omnifaces.ai.helper;
+package org.omnifaces.ai.mime;
 
-import static org.omnifaces.ai.helper.DocumentHelper.startsWith;
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.FTYP_MAGIC;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.RIFF_MAGIC;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.startsWith;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -32,22 +35,26 @@ import org.omnifaces.ai.exception.AIException;
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final class ImageHelper {
+public final class ImageMimeTypeDetector {
 
     private enum ImageMimeType implements MimeType {
-        JPEG("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, true, false, false),
-        PNG("image/png", new byte[]{(byte)0x89, 0x50, 0x4E, 0x47}, 0, null, true, true, false),
-        GIF("image/gif", new byte[]{0x47, 0x49, 0x46, 0x38}, 0, null, true, true, true),
-        BMP("image/bmp", new byte[]{0x42, 0x4D}, 0, null, true, false, true),
-        RIFF("image/riff", new byte[]{0x52, 0x49, 0x46, 0x46}, 8, null, false, false, false),
-        WEBP("image/webp", RIFF.magic, 0, new byte[]{0x57, 0x45, 0x42, 0x50}, true, true, false),
-        HEIF("image/heif", new byte[]{0x00, 0x00, 0x00}, 4, null, false, false, false),
-        HEIC("image/heic", HEIF.magic, 0, new byte[]{0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63}, false, true, false),
-        TIFF_LE("image/tiff", new byte[]{0x49, 0x49, 0x2A, 0x00}, 0, null, false, false, false),
-        TIFF_BE("image/tiff", new byte[]{0x4D, 0x4D, 0x00, 0x2A}, 0, null, false, false, false);
+        JPEG("image/jpeg", 0, new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF}, 0, null, true, false, false),
+        PNG("image/png", 0, new byte[]{(byte)0x89, 'P', 'N', 'G'}, 0, null, true, true, false),
+        GIF("image/gif", 0, new byte[]{'G', 'I', 'F', '8'}, 0, null, true, true, true),
+        BMP("image/bmp", 0, new byte[]{'B', 'M'}, 0, null, true, false, true),
+        WEBP("image/webp", 0, RIFF_MAGIC, 4, new byte[]{'W', 'E', 'B', 'P'}, true, true, false),
+        ICO("image/x-icon", 0, new byte[]{0x00, 0x00, 0x01, 0x00}, 0, null, false, false, false),
+        SVG("image/svg+xml", 0, new byte[]{'<', 's', 'v', 'g'}, 0, null, true, true, false), // Also handled as special case.
+        HEIC("image/heic", 4, FTYP_MAGIC, 8, new byte[]{'h', 'e', 'i', 'c'}, false, true, false),
+        MIF1("image/heif", 4, FTYP_MAGIC, 8, new byte[]{'m', 'i', 'f', '1'}, false, true, false),
+        JXL("image/jxl", 0, new byte[]{(byte)0xFF, 0x0A}, 0, null, false, true, true),
+        JXL_CODESTREAM("image/jxl", 0, new byte[]{'J', 'X', 'L', ' '}, 0, null, false, true, true),
+        TIFF_LE("image/tiff", 0, new byte[]{'I', 'I', '*', 0}, 0, null, false, false, false),
+        TIFF_BE("image/tiff", 0, new byte[]{'M', 'M', 0, '*'}, 0, null, false, false, false);
 
         private final String value;
         private final String extension;
+        private final int magicOffset;
         private final byte[] magic;
         private final int subMagicOffset;
         private final byte[] subMagic;
@@ -55,9 +62,10 @@ public final class ImageHelper {
         private final boolean supportsAlphaChannel;
         private final boolean needsPngConversion;
 
-        ImageMimeType(String value, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportedAsImageAttachment, boolean supportsAlphaChannel, boolean needsPngConversion) {
+        ImageMimeType(String value, int magicOffset, byte[] magic, int subMagicOffset, byte[] subMagic, boolean supportedAsImageAttachment, boolean supportsAlphaChannel, boolean needsPngConversion) {
             this.value = value;
             this.extension = value.split("/", 2)[1];
+            this.magicOffset = magicOffset;
             this.magic = magic;
             this.subMagicOffset = subMagicOffset;
             this.subMagic = subMagic;
@@ -75,58 +83,71 @@ public final class ImageHelper {
         public String extension() {
             return extension;
         }
+
+        boolean matches(byte[] content) {
+            if (!startsWith(content, magicOffset, magic)) {
+                return false;
+            }
+
+            if (subMagic != null) {
+                return startsWith(content, subMagicOffset, subMagic);
+            }
+
+            return true;
+        }
     }
 
-    private ImageHelper() {
+    private static final String ERROR_UNSUPPORTED_IMAGE = "%s. Please try a different image, preferably WEBP, JPEG or PNG without transparency.";
+
+    private ImageMimeTypeDetector() {
         throw new AssertionError();
     }
 
     /**
-     * Checks whether the given bytes represent a image format which is supported as image attachment.
-     *
-     * @param image The image bytes.
-     * @return {@code true} if the image format is supported as image attachment, {@code false} otherwise.
-     */
-    public static boolean isSupportedAsImageAttachment(byte[] image) {
-        return guessImageMimeType(image).map(type -> ((ImageMimeType) type).supportedAsImageAttachment).orElse(false);
-    }
-
-    /**
-     * Returns the mime type of the given image based on its magic bytes.
-     *
-     * @param image The image bytes.
-     * @return The mime type string (e.g., "image/png").
-     * @throws AIException when the image format is not supported.
-     */
-    public static MimeType getImageMimeType(byte[] image) {
-        return guessImageMimeType(image).orElseThrow(() -> new AIException("Unsupported image, try a different image, preferably WEBP, JPEG or PNG."));
-    }
-
-    /**
      * Guesses the mime type of an image based on its magic bytes.
+     * <p>
+     * Recognized types: JPEG, PNG, GIF, BMP, WEBP, ICO, SVG, HEIC, MIF1, JXL, TIFF.
      *
      * @param content The content bytes to check.
      * @return An {@link Optional} containing the mime type if recognized as an image, or empty if not.
      */
     public static Optional<MimeType> guessImageMimeType(byte[] content) {
+        if (content == null || content.length < 4) {
+            return Optional.empty();
+        }
+
         for (var type : ImageMimeType.values()) {
-            if (type.magic != null && startsWith(content, 0, type.magic)) {
-                if (type.subMagicOffset > 0) {
-                    for (var subType : ImageMimeType.values()) {
-                        if (subType.subMagic != null && startsWith(content, type.subMagicOffset, subType.subMagic)) {
-                            return Optional.of(subType);
-                        }
-                    }
-                    return Optional.empty();
-                }
+            if (type.matches(content)) {
                 return Optional.of(type);
             }
         }
+
+        if (isLikelySvg(content)) {
+            return Optional.of(ImageMimeType.SVG);
+        }
+
         return Optional.empty();
     }
 
+    private static boolean isLikelySvg(byte[] content) {
+        var head = new String(content, 0, Math.min(1024, content.length), US_ASCII).toLowerCase();
+        return head.startsWith("<?xml") && (head.contains("<svg") || head.contains("http://www.w3.org/2000/svg"));
+    }
+
     /**
-     * Sanitizes the given image.
+     * Checks whether the given mime type is supported as image attachment.
+     * <p>
+     * Supported types: JPEG, PNG, GIF, BMP, WEBP, SVG (you'll still need to use {@link #sanitizeImageAttachment(byte[])} afterwards).
+     *
+     * @param mimeType The mime type.
+     * @return {@code true} if the given mime type is supported as image attachment, {@code false} otherwise.
+     */
+    public static boolean isSupportedAsImageAttachment(MimeType mimeType) {
+        return mimeType instanceof ImageMimeType image && image.supportedAsImageAttachment;
+    }
+
+    /**
+     * Sanitizes the given image as attachment.
      * This will automatically remove any alpha channel from images supporting these.
      * This will automatically convert unsupported image types to PNG as far as possible.
      *
@@ -134,8 +155,9 @@ public final class ImageHelper {
      * @return The sanitized image.
      * @throws AIException when image format is not supported.
      */
-    public static byte[] sanitizeImage(byte[] image) {
-        var mimeType = (ImageMimeType) getImageMimeType(image);
+    public static byte[] sanitizeImageAttachment(byte[] image) {
+        var mimeType = (ImageMimeType) guessImageMimeType(image).filter(ImageMimeTypeDetector::isSupportedAsImageAttachment)
+                .orElseThrow(() -> new AIException(ERROR_UNSUPPORTED_IMAGE.formatted("Unsupported image")));
         var sanitized = image;
 
         if (mimeType.supportsAlphaChannel) {
@@ -163,7 +185,7 @@ public final class ImageHelper {
             return saveAsPng(rgbOnly);
         }
         catch (Exception e) {
-            throw new AIException("Cannot remove alpha channel from image, please try a different image, preferably WEBP, JPEG or PNG.", e);
+            throw new AIException(ERROR_UNSUPPORTED_IMAGE.formatted("Cannot remove alpha channel from image"), e);
         }
     }
 
@@ -175,7 +197,7 @@ public final class ImageHelper {
             return saveAsPng(ImageIO.read(new ByteArrayInputStream(image)));
         }
         catch (Exception e) {
-            throw new AIException("Cannot convert image to PNG, please try a different image, preferably WEBP, JPEG or PNG.", e);
+            throw new AIException(ERROR_UNSUPPORTED_IMAGE.formatted("Cannot convert image to PNG"), e);
         }
     }
 

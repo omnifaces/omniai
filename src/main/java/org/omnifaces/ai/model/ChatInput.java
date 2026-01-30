@@ -14,18 +14,18 @@ package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static org.omnifaces.ai.helper.AudioVideoHelper.guessAudioVideoMediaType;
-import static org.omnifaces.ai.helper.DocumentHelper.guessDocumentMimeType;
-import static org.omnifaces.ai.helper.ImageHelper.getImageMimeType;
-import static org.omnifaces.ai.helper.ImageHelper.isSupportedAsImageAttachment;
-import static org.omnifaces.ai.helper.ImageHelper.sanitizeImage;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.guessAudioVideoMediaType;
+import static org.omnifaces.ai.mime.DocumentMimeTypeDetector.guessDocumentMimeType;
+import static org.omnifaces.ai.mime.ImageMimeTypeDetector.guessImageMimeType;
+import static org.omnifaces.ai.mime.ImageMimeTypeDetector.isSupportedAsImageAttachment;
+import static org.omnifaces.ai.mime.ImageMimeTypeDetector.sanitizeImageAttachment;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.omnifaces.ai.helper.MimeType;
+import org.omnifaces.ai.mime.MimeType;
 
 /**
  * Input for chat-based AI interactions.
@@ -168,25 +168,15 @@ public class ChatInput implements Serializable {
          */
         public Builder attach(byte[]... files) {
             for (var content : files) {
-                if (isSupportedAsImageAttachment(content)) {
-                    var sanitized = sanitizeImage(content);
-                    var imageMimeType = getImageMimeType(sanitized);
-                    var fileName = "image" + (images.size() + 1) + "." + imageMimeType.extension();
-                    images.add(new Attachment(sanitized, imageMimeType, fileName));
-                }
-                else {
-                    var audioVideoMimeType = guessAudioVideoMediaType(content);
-
-                    if (audioVideoMimeType.isPresent()) {
-                        var fileName = "media" + (this.files.size() + 1) + "." + audioVideoMimeType.get().extension();
-                        this.files.add(new Attachment(content, audioVideoMimeType.get(), fileName));
-                    }
-                    else {
-                        var documentMimeType = guessDocumentMimeType(content);
-                        var fileName = "document" + (this.files.size() + 1) + "." + documentMimeType.extension();
-                        this.files.add(new Attachment(content, documentMimeType, fileName));
-                    }
-                }
+                var mimeType = guessImageMimeType(content)
+                        .or(() -> guessAudioVideoMediaType(content))
+                        .orElseGet(() -> guessDocumentMimeType(content));
+                var isImage = isSupportedAsImageAttachment(mimeType);
+                var processedContent = isImage ? sanitizeImageAttachment(content) : content;
+                var prefix = isImage ? "image" : "file";
+                var list = isImage ? this.images : this.files;
+                var fileName = String.format("%s%d.%s", prefix, list.size() + 1, mimeType.extension());
+                list.add(new Attachment(processedContent, mimeType, fileName));
             }
 
             return this;

@@ -10,10 +10,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.omnifaces.ai.helper;
+package org.omnifaces.ai.mime;
 
 import static java.nio.charset.CodingErrorAction.REPORT;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.startsWith;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
@@ -23,14 +24,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Provides document MIME type detection based on magic bytes and content analysis
- * (PDF, Office formats, and text-based formats like JSON, XML, CSV, Markdown),
- * Base64 encoding, and data URI generation.
+ * Provides document MIME type detection based on magic bytes and content analysis.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final class DocumentHelper {
+public final class DocumentMimeTypeDetector {
 
     private enum DocumentMimeType implements MimeType {
         PDF("application/pdf", "pdf"),
@@ -65,20 +64,20 @@ public final class DocumentHelper {
         }
     }
 
-    private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46}; // %PDF
-    private static final byte[] ZIP_MAGIC = {0x50, 0x4B, 0x03, 0x04}; // PK..
+    private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
+    private static final byte[] ZIP_MAGIC = {'P', 'K', 0x03, 0x04};
 
-    private DocumentHelper() {
+    private DocumentMimeTypeDetector() {
         throw new AssertionError();
     }
 
     /**
      * Guesses the mime type of a document based on its magic bytes and content.
      * <p>
-     * Supported formats: PDF, DOCX, XLSX, PPTX, CSV, JSON, HTML, XML, Markdown, and plain text.
+     * Recognized types: PDF, DOCX, XLSX, PPTX, CSV, JSON, HTML, XML, MD, with fallback to either TXT or BIN.
      *
      * @param content The content bytes to check.
-     * @return The guessed mime type, or {@code text/plain} for text content, or {@code application/octet-stream} for unknown binary content.
+     * @return The guessed mime type, never {@code null}.
      */
     public static MimeType guessDocumentMimeType(byte[] content) {
         if (content == null || content.length == 0) {
@@ -100,28 +99,6 @@ public final class DocumentHelper {
         }
 
         return DocumentMimeType.BINARY;
-    }
-
-    /**
-     * Checks if the byte array starts with the given prefix at the specified offset.
-     *
-     * @param content The byte array to check.
-     * @param offset The offset within the content to start checking.
-     * @param prefix The prefix bytes to match.
-     * @return {@code true} if content contains prefix at the given offset, {@code false} otherwise.
-     */
-    static boolean startsWith(byte[] content, int offset, byte[] prefix) {
-        if (content.length < offset + prefix.length) {
-            return false;
-        }
-
-        for (int i = 0; i < prefix.length; i++) {
-            if (content[offset + i] != prefix[i]) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -216,14 +193,14 @@ public final class DocumentHelper {
     }
 
     /**
-     * Check if starts with { or [ and ends with } or ].
+     * Check if starts with { or [ and contains } or ].
      */
     private static boolean looksLikeJson(String text) {
         return (text.startsWith("{") && text.contains("}")) || (text.startsWith("[") && text.contains("]"));
     }
 
     /**
-     * Check if starts with < and ends with >.
+     * Check if starts with < and contains >.
      */
     private static boolean looksLikeXml(String text) {
         return text.startsWith("<") && text.contains(">");
@@ -281,6 +258,6 @@ public final class DocumentHelper {
      * Check for common markdown patterns: headers, links, code blocks.
      */
     private static boolean looksLikeMarkdown(String text) {
-        return text.startsWith("# ") || text.startsWith("## ") || text.contains("\n# ") || text.contains("\n## ") || text.contains("](") || text.contains("```");
+        return text.startsWith("# ") || text.startsWith("## ") || text.startsWith("### ") || text.contains("\n# ") || text.contains("\n## ") || text.contains("\n### ") || text.contains("](") || text.contains("```");
     }
 }

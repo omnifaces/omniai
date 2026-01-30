@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.omnifaces.ai.helper;
+package org.omnifaces.ai.mime;
 
 import java.util.Base64;
 
@@ -24,21 +24,18 @@ public interface MimeType {
 
     /**
      * Returns the MIME type string.
-     *
      * @return The MIME type string (e.g., "application/pdf").
      */
     String value();
 
     /**
      * Returns the file extension.
-     *
      * @return The file extension without a leading dot (e.g., "pdf").
      */
     String extension();
 
     /**
      * Converts the given content to a Base64 string.
-     *
      * @param content The content to be encoded.
      * @return The Base64 encoded string.
      */
@@ -48,7 +45,6 @@ public interface MimeType {
 
     /**
      * Converts the given content to a data URI.
-     *
      * @param content The content bytes.
      * @return The data URI string in the format {@code data:<mime-type>;base64,<data>}.
      */

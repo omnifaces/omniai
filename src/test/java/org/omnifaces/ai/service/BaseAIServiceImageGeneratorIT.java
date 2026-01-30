@@ -13,7 +13,7 @@
 package org.omnifaces.ai.service;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.omnifaces.ai.helper.ImageHelper.guessImageMimeType;
+import static org.omnifaces.ai.mime.ImageMimeTypeDetector.guessImageMimeType;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
-import org.omnifaces.ai.helper.MimeType;
+import org.omnifaces.ai.mime.MimeType;
 
 /**
  * Base class for IT on image-generator-related methods of AI service.
