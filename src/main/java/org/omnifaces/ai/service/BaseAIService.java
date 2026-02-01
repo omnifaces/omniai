@@ -72,7 +72,7 @@ public abstract class BaseAIService implements AIService {
     private static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(60);
 
     /** The shared HTTP client for API requests. */
-    static final AIApiClient API_CLIENT = AIApiClient.newInstance(DEFAULT_CONNECT_TIMEOUT, DEFAULT_REQUEST_TIMEOUT);
+    static final AIHttpClient HTTP_CLIENT = AIHttpClient.newInstance(DEFAULT_CONNECT_TIMEOUT, DEFAULT_REQUEST_TIMEOUT);
 
     /** The AI provider for this service. */
     protected final AIProvider provider;
@@ -384,7 +384,7 @@ public abstract class BaseAIService implements AIService {
      * @throws AIException if anything fails during the process.
      */
     protected CompletableFuture<String> asyncPostAndParseChatResponse(String path, JsonObject payload) throws AIException {
-        return API_CLIENT.post(this, path, payload).thenApply(textHandler::parseChatResponse);
+        return HTTP_CLIENT.post(this, path, payload).thenApply(textHandler::parseChatResponse);
     }
 
     /**
@@ -397,7 +397,7 @@ public abstract class BaseAIService implements AIService {
      * @throws AIException if anything fails during the process.
      */
     protected CompletableFuture<String> asyncUploadAndParseFileIdResponse(String path, Attachment attachment) throws AIException {
-        return API_CLIENT.upload(this, path, attachment).thenApply(textHandler::parseFileResponse);
+        return HTTP_CLIENT.upload(this, path, attachment).thenApply(textHandler::parseFileResponse);
     }
 
     /**
@@ -409,7 +409,7 @@ public abstract class BaseAIService implements AIService {
      * @throws AIException if anything fails during the process.
      */
     protected CompletableFuture<byte[]> asyncPostAndParseImageContent(String path, JsonObject payload) throws AIException {
-        return API_CLIENT.post(this, path, payload).thenApply(imageHandler::parseImageContent);
+        return HTTP_CLIENT.post(this, path, payload).thenApply(imageHandler::parseImageContent);
     }
 
     /**
@@ -422,6 +422,6 @@ public abstract class BaseAIService implements AIService {
      * @throws AIException if anything fails during the process.
      */
     protected CompletableFuture<Void> asyncPostAndProcessStreamEvents(String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIException {
-        return API_CLIENT.stream(this, path, payload, eventProcessor);
+        return HTTP_CLIENT.stream(this, path, payload, eventProcessor);
     }
 }

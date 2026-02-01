@@ -55,16 +55,16 @@ import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
 
 /**
- * API client utility for {@link BaseAIService} implementations.
+ * HTTP client utility for {@link BaseAIService} implementations.
  * <p>
  * This utility wraps {@link java.net.http.HttpClient} to provide a simple API interface for all {@link BaseAIService} implementations.
  *
  * @author Bauke Scholtz
  * @since 1.0
  */
-final class AIApiClient {
+final class AIHttpClient {
 
-    private static final Logger logger = Logger.getLogger(AIApiClient.class.getPackageName());
+    private static final Logger logger = Logger.getLogger(AIHttpClient.class.getPackageName());
 
     private static final String APPLICATION_JSON = "application/json";
     private static final String EVENT_STREAM = "text/event-stream";
@@ -80,20 +80,20 @@ final class AIApiClient {
     private final HttpClient client;
     private final Duration requestTimeout;
 
-    private AIApiClient(HttpClient client, Duration requestTimeout) {
+    private AIHttpClient(HttpClient client, Duration requestTimeout) {
         this.client = client;
         this.requestTimeout = requestTimeout;
     }
 
     /**
-     * Creates a new API client instance with custom timeouts.
+     * Creates a new HTTP client instance with custom timeouts.
      *
      * @param connectTimeout The connection timeout
      * @param requestTimeout The request timeout
-     * @return A new API client instance
+     * @return A new HTTP client instance
      */
-    public static AIApiClient newInstance(Duration connectTimeout, Duration requestTimeout) {
-        return new AIApiClient(newBuilder().connectTimeout(connectTimeout).build(), requestTimeout);
+    public static AIHttpClient newInstance(Duration connectTimeout, Duration requestTimeout) {
+        return new AIHttpClient(newBuilder().connectTimeout(connectTimeout).build(), requestTimeout);
     }
 
     /**

@@ -167,7 +167,7 @@ public class OpenAIService extends BaseAIService {
     public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
         if (supportsOpenAIModerationCapability(options.getCategories())) {
             var payload = Json.createObjectBuilder().add("input", content).build();
-            return API_CLIENT.post(this, "moderations", payload).thenApply(response -> parseOpenAIModerationResult(response, options));
+            return HTTP_CLIENT.post(this, "moderations", payload).thenApply(response -> parseOpenAIModerationResult(response, options));
         }
         else {
             return super.moderateContentAsync(content, options);
