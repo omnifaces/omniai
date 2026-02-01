@@ -13,14 +13,12 @@
 package org.omnifaces.ai;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.exception.AIResponseException;
-import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.modality.BaseAITextHandler;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
@@ -167,25 +165,4 @@ public interface AITextHandler extends Serializable {
      * @return The system prompt.
      */
     String buildModerationPrompt(ModerationOptions options);
-
-    /**
-     * Internal record representing the expected JSON structure for moderation responses.
-     * Used by {@link #MODERATION_RESPONSE_SCHEMA}.
-     */
-    record ModerationResponse(Map<String, Double> scores) {}
-
-    /**
-     * Pre-built JSON schema for moderation responses.
-     * <p>
-     * Expects a JSON object with a "scores" property containing category names mapped to numeric scores (0.0 to 1.0).
-     * <pre>
-     * {
-     *   "scores": {
-     *     "hate": 0.1,
-     *     "violence": 0.05
-     *   }
-     * }
-     * </pre>
-     */
-    JsonObject MODERATION_RESPONSE_SCHEMA = JsonSchemaHelper.buildJsonSchema(ModerationResponse.class);
 }

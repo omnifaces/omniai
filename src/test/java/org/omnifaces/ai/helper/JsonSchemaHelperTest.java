@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.omnifaces.ai.AITextHandler;
 
 class JsonSchemaHelperTest {
 
@@ -169,16 +168,6 @@ class JsonSchemaHelperTest {
         var schema = JsonSchemaHelper.buildJsonSchema(WithMap.class);
         var scoresSchema = schema.getJsonObject("properties").getJsonObject("scores");
 
-        assertEquals("object", scoresSchema.getString("type"));
-        assertEquals("number", scoresSchema.getJsonObject("additionalProperties").getString("type"));
-    }
-
-    @Test
-    void moderationResponseSchema() {
-        var schema = AITextHandler.MODERATION_RESPONSE_SCHEMA;
-
-        assertEquals("object", schema.getString("type"));
-        var scoresSchema = schema.getJsonObject("properties").getJsonObject("scores");
         assertEquals("object", scoresSchema.getString("type"));
         assertEquals("number", scoresSchema.getJsonObject("additionalProperties").getString("type"));
     }

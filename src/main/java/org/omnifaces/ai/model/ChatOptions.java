@@ -48,7 +48,7 @@ public class ChatOptions implements Serializable {
     public static final double DETERMINISTIC_TEMPERATURE = 0.0;
 
     /** Default Top-P: {@value}. */
-    public static final double DEFAULT_TOP_P = 0.9;
+    public static final double DEFAULT_TOP_P = 1.0;
 
     /** Default chat options with temperature of {@value #DEFAULT_TEMPERATURE}. */
     public static final ChatOptions DEFAULT = ChatOptions.newBuilder().build();

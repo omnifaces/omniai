@@ -46,8 +46,9 @@ public class ChatInput implements Serializable {
      * @param content The content bytes.
      * @param mimeType The mime type.
      * @param fileName The file name.
+     * @param purpose The attachment purpose. This will eventually be included as "purpose" field in the upload request.
      */
-    public final record Attachment(byte[] content, MimeType mimeType, String fileName) implements Serializable {
+    public final record Attachment(byte[] content, MimeType mimeType, String fileName, String purpose) implements Serializable {
 
         /**
          * Converts this attachment to a Base64 encoded string.
@@ -63,6 +64,16 @@ public class ChatInput implements Serializable {
          */
         public String toDataUri() {
             return "data:" + mimeType.value() + ";base64," + toBase64();
+        }
+
+        /**
+         * Returns a copy of this attachment with the specified purpose.
+         *
+         * @param purpose The attachment purpose.
+         * @return A new attachment instance with the updated purpose.
+         */
+        public Attachment withPurpose(String purpose) {
+            return new Attachment(content, mimeType, fileName, purpose);
         }
     }
 
@@ -178,7 +189,7 @@ public class ChatInput implements Serializable {
                 var prefix = isImage ? "image" : "file";
                 var list = isImage ? this.images : this.files;
                 var fileName = String.format("%s%d.%s", prefix, list.size() + 1, mimeType.extension());
-                list.add(new Attachment(processedContent, mimeType, fileName));
+                list.add(new Attachment(processedContent, mimeType, fileName, null));
             }
 
             return this;

@@ -185,7 +185,7 @@ class ChatInputTest {
                 .build();
 
         assertThrows(UnsupportedOperationException.class,
-                () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png")));
+                () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png", null)));
     }
 
     @Test
@@ -196,7 +196,7 @@ class ChatInputTest {
                 .build();
 
         assertThrows(UnsupportedOperationException.class,
-                () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf")));
+                () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf", null)));
     }
 
     // =================================================================================================================
@@ -227,7 +227,7 @@ class ChatInputTest {
     @Test
     void attachment_content() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png");
+        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
 
         assertArrayEquals(content, attachment.content());
         assertEquals(TEST_PNG, attachment.mimeType());
@@ -237,7 +237,7 @@ class ChatInputTest {
     @Test
     void attachment_base64() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png");
+        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
 
         var base64 = attachment.toBase64();
         var decoded = Base64.getDecoder().decode(base64);
@@ -247,7 +247,7 @@ class ChatInputTest {
     @Test
     void attachment_dataUri() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png");
+        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
 
         var dataUri = attachment.toDataUri();
         assertTrue(dataUri.startsWith("data:image/png;base64,"));
@@ -291,7 +291,7 @@ class ChatInputTest {
 
     @Test
     void attachment_emptyContent() {
-        var attachment = new Attachment(new byte[0], TEST_PNG, "empty.png");
+        var attachment = new Attachment(new byte[0], TEST_PNG, "empty.png", null);
 
         assertEquals(0, attachment.content().length);
         assertNotNull(attachment.toBase64());

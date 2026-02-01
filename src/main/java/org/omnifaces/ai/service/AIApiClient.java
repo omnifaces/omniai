@@ -314,7 +314,9 @@ final class AIApiClient {
             this.boundary = "----OmniHaiBoundary" + System.currentTimeMillis();
 
             try (var os = new ByteArrayOutputStream()) {
-                writeTextPart(os, "purpose", "assistants");
+                if (attachment.purpose() != null) {
+                    writeTextPart(os, "purpose", attachment.purpose());
+                }
                 writeFilePart(os, "file", attachment.fileName(), attachment.mimeType().value(), attachment.content());
                 writeLine(os, "--" + boundary + "--");
                 body = HttpRequest.BodyPublishers.ofByteArray(os.toByteArray());

@@ -20,6 +20,7 @@ import static java.util.function.Predicate.not;
 import static org.omnifaces.ai.AIConfig.PROPERTY_API_KEY;
 import static org.omnifaces.ai.AIConfig.PROPERTY_ENDPOINT;
 import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
+import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
@@ -36,6 +37,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIConfig;
@@ -45,7 +47,6 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
-import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
@@ -269,22 +270,44 @@ public abstract class BaseAIService implements AIService {
 
         var chatOptions = ChatOptions.newBuilder()
             .systemPrompt(textHandler.buildModerationPrompt(options))
-            .jsonSchema(AITextHandler.MODERATION_RESPONSE_SCHEMA)
+            .jsonSchema(buildModerationJsonSchema(options))
             .temperature(DETERMINISTIC_TEMPERATURE)
             .build();
 
         return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> parseModerationResult(response, options));
     }
 
+    private static JsonObject buildModerationJsonSchema(ModerationOptions options) {
+        var categoryProperties = Json.createObjectBuilder();
+        var requiredCategories = Json.createArrayBuilder();
+
+        for (var category : options.getCategories()) {
+            categoryProperties.add(category, Json.createObjectBuilder().add("type", "number"));
+            requiredCategories.add(category);
+        }
+
+        var scoresSchema = Json.createObjectBuilder()
+            .add("type", "object")
+            .add("properties", categoryProperties)
+            .add("required", requiredCategories);
+
+        return Json.createObjectBuilder()
+            .add("type", "object")
+            .add("properties", Json.createObjectBuilder().add("scores", scoresSchema))
+            .add("required", Json.createArrayBuilder().add("scores"))
+            .build();
+    }
+
     private static ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
-        var moderationResponse = JsonSchemaHelper.fromJson(responseBody, AITextHandler.ModerationResponse.class);
+        var responseJson = parseJson(responseBody);
         var scores = new TreeMap<String, Double>();
         var flagged = false;
 
-        if (!moderationResponse.scores().isEmpty()) {
-            for (var category : options.getCategories()) {
-                Double score = moderationResponse.scores().get(category);
-                if (score != null) {
+        if (responseJson.containsKey("scores")) {
+            var categoryScores = responseJson.getJsonObject("scores");
+            for (String category : options.getCategories()) {
+                if (categoryScores.containsKey(category)) {
+                    double score = categoryScores.getJsonNumber(category).doubleValue();
                     scores.put(category, score);
                     if (score > options.getThreshold()) {
                         flagged = true;

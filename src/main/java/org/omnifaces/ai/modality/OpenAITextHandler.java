@@ -90,7 +90,7 @@ public class OpenAITextHandler extends BaseAITextHandler {
             checkSupportsFileUpload(service);
 
             for (var file : input.getFiles()) {
-                var fileId = service.upload(file);
+                var fileId = service.upload(file.withPurpose(supportsResponsesApi ? "user_data" : "assistants"));
 
                 content.add(Json.createObjectBuilder()
                         .add("type", "input_file")
