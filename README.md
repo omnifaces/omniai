@@ -24,7 +24,7 @@ OmniHai provides a single, consistent API to interact with multiple AI providers
 </dependency>
 ```
 
-On non-Jakarta EE / non-MicroProfile runtimes such as Tomcat, you'll need to manually add JSON-P and optionally CDI dependencies:
+On non-Jakarta EE / non-MicroProfile runtimes such as Tomcat, you'll need to manually add JSON-P and optionally CDI / MP Config dependencies:
 
 ```xml
 <!-- JSON-P implementation (required) -->
@@ -376,8 +376,8 @@ private AIService trackedService;
 
 - Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
 - Built-in text utilities - Summarization, translation, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
-- Structured outputs - Get typed Java objects from AI responses using JSON schemas
-- File attachments - Send documents, images, and other files alongside chat messages
+- Structured outputs - Get typed Java objects from AI responses using JSON schemas with help of `JsonSchemaHelper`
+- File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
 - 10 providers out of the box - Including Ollama for local/offline
@@ -411,8 +411,8 @@ If Jakarta Agentic matures, OmniHai could potentially be a lightweight implement
 
 Yes, significantly:
 - OmniHai JAR: ~150 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
-- 69 source files, ~9,500 lines of code (~4,000 actual code, rest is javadocs/comments)
-- Zero runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly
+- 71 source files, ~9,500 lines of code (\~4,000 actual code, rest is javadocs/comments)
+- Zero external runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly without any SDKs
 - Only one required dependency: Jakarta JSON-P (which Jakarta EE and MicroProfile runtimes already have)
 - Other dependencies are optional: CDI, EL and/or MP Config APIs (which Jakarta EE resp. MicroProfile runtimes already have)
 
@@ -437,7 +437,7 @@ The design strongly suggests yes:
 ### When to Choose Each
 
 **Choose OmniHai when:**
-- You need a lightweight, focused solution for Jakarta EE or MicroProfile
+- You need a lean, focused solution for Jakarta EE or MicroProfile
 - Your use case is straightforward chat, translation, summarization, proofreading, or moderation
 - You want minimal dependencies and a small footprint
 - You prefer simplicity over feature completeness
