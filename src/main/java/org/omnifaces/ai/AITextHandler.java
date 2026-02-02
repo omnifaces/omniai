@@ -19,7 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.exception.AIResponseException;
-import org.omnifaces.ai.modality.BaseAITextHandler;
+import org.omnifaces.ai.modality.DefaultAITextHandler;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -47,12 +47,13 @@ import org.omnifaces.ai.model.Sse.Event;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIService
- * @see BaseAITextHandler
+ * @see DefaultAITextHandler
  */
 public interface AITextHandler extends Serializable {
 
     /**
      * Builds the JSON request payload for all chat operations.
+     * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
      * @param input The chat input.
      * @param options The chat options.
@@ -61,7 +62,9 @@ public interface AITextHandler extends Serializable {
      * @throws UnsupportedOperationException If streaming is requested but not supported as per {@link AIService#supportsStreaming()},
      * or if structured output is requested but not supported as per {@link AIService#supportsStructuredOutput()}.
      */
-    JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming);
+    default JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
+        throw new UnsupportedOperationException("Please implement buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) method in class " + getClass().getSimpleName());
+    }
 
     /**
      * Processes each stream event for {@link AIService#chatStream(String, ChatOptions, Consumer)}.
@@ -92,7 +95,7 @@ public interface AITextHandler extends Serializable {
      * <li>proofreading</li>
      * <li>content moderation</li>
      * </ul>
-     * @implNote The default implementation {@link BaseAITextHandler} returns 0.5.
+     * @implNote The default implementation {@link DefaultAITextHandler} returns 0.5.
      * @return default temperature value in range 0.0-1.0 for summarization and key-point extraction.
      * @see AIService#summarize(String, int)
      * @see AIService#extractKeyPoints(String, int)

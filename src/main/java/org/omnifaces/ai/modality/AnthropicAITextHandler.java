@@ -41,7 +41,7 @@ import org.omnifaces.ai.service.AnthropicAIService;
  * @since 1.0
  * @see AnthropicAIService
  */
-public class AnthropicAITextHandler extends BaseAITextHandler {
+public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     private static final long serialVersionUID = 1L;
 

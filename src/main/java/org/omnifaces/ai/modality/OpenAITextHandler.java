@@ -41,7 +41,7 @@ import org.omnifaces.ai.service.OpenAIService;
  * @since 1.0
  * @see OpenAIService
  */
-public class OpenAITextHandler extends BaseAITextHandler {
+public class OpenAITextHandler extends DefaultAITextHandler {
 
     private static final long serialVersionUID = 1L;
 

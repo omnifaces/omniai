@@ -29,7 +29,7 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.model.ModerationOptions;
 
 /**
- * Base class for AI text handler implementations that provides sensible, general-purpose prompt templates, and
+ * Default AI text handler implementation that provides sensible, general-purpose prompt templates, and
  * response parsing suitable for most modern large language models (LLMs).
  * <p>
  * This class is intended as a reasonable fallback / starting point when no provider-specific implementation is
@@ -53,12 +53,12 @@ import org.omnifaces.ai.model.ModerationOptions;
  * @see AITextHandler
  * @see AIService
  */
-public abstract class BaseAITextHandler implements AITextHandler {
+public class DefaultAITextHandler implements AITextHandler {
 
     private static final long serialVersionUID = 1L;
 
     /** Logger for current package. */
-    protected static final Logger logger = Logger.getLogger(BaseAITextHandler.class.getPackageName());
+    protected static final Logger logger = Logger.getLogger(DefaultAITextHandler.class.getPackageName());
 
     /** Default text analysis temperature: {@value} */
     protected static final double DEFAULT_TEXT_ANALYSIS_TEMPERATURE = 0.5;
@@ -212,9 +212,12 @@ public abstract class BaseAITextHandler implements AITextHandler {
      * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(String)}.
      * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the message content in the JSON response.
      */
-    public abstract List<String> getChatResponseContentPaths();
+    public List<String> getChatResponseContentPaths() {
+        throw new UnsupportedOperationException("Please implement getChatResponseContentPaths() method in class " + getClass().getSimpleName());
+    }
 
     /**
      * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(String)}.

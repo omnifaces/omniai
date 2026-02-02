@@ -18,7 +18,7 @@
  * {@link org.omnifaces.ai.AITextHandler} and {@link org.omnifaces.ai.AIImageHandler} implementations that adapt the
  * generic API to provider-specific requirements:
  * <ul>
- * <li>{@link org.omnifaces.ai.modality.BaseAITextHandler} / {@link org.omnifaces.ai.modality.BaseAIImageHandler} - sensible defaults for most LLMs</li>
+ * <li>{@link org.omnifaces.ai.modality.DefaultAITextHandler} / {@link org.omnifaces.ai.modality.DefaultAIImageHandler} - sensible defaults for most LLMs</li>
  * <li>{@code OpenAITextHandler} / {@code OpenAIImageHandler} - OpenAI-specific handling</li>
  * <li>{@code AnthropicAITextHandler} / {@code AnthropicAIImageHandler} - Anthropic-specific handling</li>
  * <li>{@code GoogleAITextHandler} / {@code GoogleAIImageHandler} - Google AI-specific handling</li>

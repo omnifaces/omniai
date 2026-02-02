@@ -31,7 +31,7 @@ import org.omnifaces.ai.service.OllamaAIService;
  * @since 1.0
  * @see OllamaAIService
  */
-public class OllamaAITextHandler extends BaseAITextHandler {
+public class OllamaAITextHandler extends DefaultAITextHandler {
 
     private static final long serialVersionUID = 1L;
 

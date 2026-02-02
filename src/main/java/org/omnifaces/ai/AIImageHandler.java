@@ -18,7 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.exception.AIResponseException;
-import org.omnifaces.ai.modality.BaseAIImageHandler;
+import org.omnifaces.ai.modality.DefaultAIImageHandler;
 import org.omnifaces.ai.model.GenerateImageOptions;
 
 /**
@@ -36,7 +36,7 @@ import org.omnifaces.ai.model.GenerateImageOptions;
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIService
- * @see BaseAIImageHandler
+ * @see DefaultAIImageHandler
  */
 public interface AIImageHandler extends Serializable {
 

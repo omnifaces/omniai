@@ -15,12 +15,11 @@ package org.omnifaces.ai;
 import static java.util.Arrays.stream;
 
 import org.omnifaces.ai.cdi.AI;
-import org.omnifaces.ai.modality.AnthropicAIImageHandler;
 import org.omnifaces.ai.modality.AnthropicAITextHandler;
+import org.omnifaces.ai.modality.DefaultAIImageHandler;
 import org.omnifaces.ai.modality.GoogleAIImageHandler;
 import org.omnifaces.ai.modality.GoogleAITextHandler;
 import org.omnifaces.ai.modality.MetaAITextHandler;
-import org.omnifaces.ai.modality.OllamaAIImageHandler;
 import org.omnifaces.ai.modality.OllamaAITextHandler;
 import org.omnifaces.ai.modality.OpenAIImageHandler;
 import org.omnifaces.ai.modality.OpenAITextHandler;
@@ -80,7 +79,7 @@ public enum AIProvider {
      * @see <a href="https://platform.claude.com/settings/keys">Manage Anthropic API Keys</a>
      * @see <a href="https://platform.claude.com/docs/en/about-claude/models/overview">Available Anthropic AI Models</a>
      */
-    ANTHROPIC("Anthropic", AnthropicAIService.class, true, "claude-sonnet-4-5-20250929", "https://api.anthropic.com/v1", AnthropicAITextHandler.class, AnthropicAIImageHandler.class),
+    ANTHROPIC("Anthropic", AnthropicAIService.class, true, "claude-sonnet-4-5-20250929", "https://api.anthropic.com/v1", AnthropicAITextHandler.class, DefaultAIImageHandler.class),
 
     /**
      * Google AI: Gemini Pro, Gemini Flash, Gemini Flash Lite, etc.
@@ -177,7 +176,7 @@ public enum AIProvider {
      * @see OllamaAIService
      * @see <a href="https://ollama.com/library">Available Ollama Models</a> (no API Keys required)
      */
-    OLLAMA("Ollama", OllamaAIService.class, false, "gemma3", "http://localhost:11434", OllamaAITextHandler.class, OllamaAIImageHandler.class),
+    OLLAMA("Ollama", OllamaAIService.class, false, "gemma3", "http://localhost:11434", OllamaAITextHandler.class, DefaultAIImageHandler.class),
 
     /**
      * Custom: provide the {@link Class} instance of your custom {@link AIService} implementation as the provider in {@link AIConfig},

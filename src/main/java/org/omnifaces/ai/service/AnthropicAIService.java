@@ -21,8 +21,8 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.modality.AnthropicAIImageHandler;
 import org.omnifaces.ai.modality.AnthropicAITextHandler;
+import org.omnifaces.ai.modality.DefaultAIImageHandler;
 
 /**
  * AI service implementation using Anthropic API.
@@ -48,7 +48,7 @@ import org.omnifaces.ai.modality.AnthropicAITextHandler;
  * @since 1.0
  * @see AIProvider#ANTHROPIC
  * @see AnthropicAITextHandler
- * @see AnthropicAIImageHandler
+ * @see DefaultAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://platform.claude.com/docs/en/api/overview">API Reference</a>

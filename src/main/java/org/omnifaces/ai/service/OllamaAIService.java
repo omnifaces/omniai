@@ -17,7 +17,7 @@ import org.omnifaces.ai.AIModality;
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
-import org.omnifaces.ai.modality.OllamaAIImageHandler;
+import org.omnifaces.ai.modality.DefaultAIImageHandler;
 import org.omnifaces.ai.modality.OllamaAITextHandler;
 
 /**
@@ -43,7 +43,7 @@ import org.omnifaces.ai.modality.OllamaAITextHandler;
  * @since 1.0
  * @see AIProvider#OLLAMA
  * @see OllamaAITextHandler
- * @see OllamaAIImageHandler
+ * @see DefaultAIImageHandler
  * @see BaseAIService
  * @see AIService
  * @see <a href="https://docs.ollama.com/api/introduction">API Reference</a>.

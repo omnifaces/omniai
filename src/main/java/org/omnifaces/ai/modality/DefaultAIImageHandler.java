@@ -24,7 +24,7 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 
 /**
- * Base class for AI image handler implementations that provides general-purpose prompt templates, and response parsing
+ * Default AI image handler implementation that provides general-purpose prompt templates, and response parsing
  * suitable for most current vision-capable models.
  * <p>
  * This class is intended as a fallback when no provider-specific implementation is available. It uses patterns that
@@ -47,12 +47,12 @@ import org.omnifaces.ai.exception.AIResponseException;
  * @see AIImageHandler
  * @see AIService
  */
-public abstract class BaseAIImageHandler implements AIImageHandler {
+public class DefaultAIImageHandler implements AIImageHandler {
 
     private static final long serialVersionUID = 1L;
 
     /** Logger for current package. */
-    protected static final Logger logger = Logger.getLogger(BaseAIImageHandler.class.getPackageName());
+    protected static final Logger logger = Logger.getLogger(DefaultAIImageHandler.class.getPackageName());
 
     /** Default max words per alt text sentence: {@value} */
     protected static final int DEFAULT_MAX_WORDS_PER_ALT_TEXT_SENTENCE = 30;

@@ -28,7 +28,7 @@ import org.omnifaces.ai.service.GoogleAIService;
  * @since 1.0
  * @see GoogleAIService
  */
-public class GoogleAIImageHandler extends BaseAIImageHandler {
+public class GoogleAIImageHandler extends DefaultAIImageHandler {
 
     private static final long serialVersionUID = 1L;
 

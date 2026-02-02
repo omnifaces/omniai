@@ -37,7 +37,7 @@ import org.omnifaces.ai.service.GoogleAIService;
  * @since 1.0
  * @see GoogleAIService
  */
-public class GoogleAITextHandler extends BaseAITextHandler {
+public class GoogleAITextHandler extends DefaultAITextHandler {
 
     private static final long serialVersionUID = 1L;
 
