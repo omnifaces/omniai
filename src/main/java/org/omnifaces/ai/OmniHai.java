@@ -18,7 +18,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
- * Provides access to OmniHai application properties.
+ * Provides access to OmniHai application properties such as name, version, and user agent string.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -26,6 +26,10 @@ import java.util.logging.Logger;
 public final class OmniHai {
 
     private static final Logger logger = Logger.getLogger(OmniHai.class.getPackageName());
+
+    private OmniHai() {
+        throw new AssertionError();
+    }
 
     private static String name;
     private static String version;
