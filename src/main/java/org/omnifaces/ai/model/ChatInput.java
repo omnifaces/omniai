@@ -97,9 +97,9 @@ public class ChatInput implements Serializable {
          * @return A new attachment instance with the specified additional metadata.
          */
         public Attachment withMetadata(String name, String value) {
-            var newHeaders = new HashMap<>(metadata);
-            newHeaders.put(requireNonBlank(name, "name").strip(), requireNonBlank(value, "value").strip());
-            return new Attachment(content, mimeType, fileName, metadata);
+            var newMetadata = new HashMap<>(metadata);
+            newMetadata.put(requireNonBlank(name, "name").strip(), requireNonBlank(value, "value").strip());
+            return new Attachment(content, mimeType, fileName, newMetadata);
         }
     }
 
