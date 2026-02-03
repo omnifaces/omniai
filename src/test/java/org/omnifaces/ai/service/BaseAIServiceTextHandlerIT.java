@@ -15,12 +15,15 @@ package org.omnifaces.ai.service;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Base64;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
+import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.opentest4j.TestAbortedException;
 
@@ -45,6 +48,52 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response = service.chat("Reply with only: OK");
         log(response);
         assertTrue(response.contains("OK"), response);
+    }
+
+    @Test
+    void persistentChat() {
+        var options = ChatOptions.newBuilder()
+            .systemPrompt("You are a helpful assistant. Reply concisely.")
+            .persistent()
+            .build();
+
+        var response1 = service.chat("My name is Bob.", options);
+        log("response1: " + response1);
+
+        var response2 = service.chat("What is my name?", options);
+        log("response2: " + response2);
+
+        var history = options.getHistory();
+
+        assertAll(
+            () -> assertTrue(response2.contains("Bob"), response2),
+            () -> assertEquals(4, history.size()),
+            () -> assertEquals(Role.USER, history.get(0).role()),
+            () -> assertEquals("My name is Bob.", history.get(0).content()),
+            () -> assertEquals(Role.ASSISTANT, history.get(1).role()),
+            () -> assertEquals(Role.USER, history.get(2).role()),
+            () -> assertEquals("What is my name?", history.get(2).content()),
+            () -> assertEquals(Role.ASSISTANT, history.get(3).role())
+        );
+    }
+
+    @Test
+    void nonPersistentChat() {
+        var options = ChatOptions.newBuilder()
+            .systemPrompt("You are a helpful assistant. Reply concisely.")
+            .build();
+
+        var response1 = service.chat("My name is Bob.", options);
+        log("response1: " + response1);
+
+        var response2 = service.chat("What is my name?", options);
+        log("response2: " + response2);
+
+        assertAll(
+            () -> assertFalse(response2.contains("Bob"), response2),
+            () -> assertFalse(options.isPersistent()),
+            () -> assertThrows(IllegalStateException.class, options::getHistory)
+        );
     }
 
     @Test
