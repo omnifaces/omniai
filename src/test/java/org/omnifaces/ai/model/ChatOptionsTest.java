@@ -154,36 +154,36 @@ class ChatOptionsTest {
 
     @Test
     void preset_default_isNotPersistent() {
-        assertFalse(ChatOptions.DEFAULT.isPersistent());
-        assertFalse(ChatOptions.CREATIVE.isPersistent());
-        assertFalse(ChatOptions.DETERMINISTIC.isPersistent());
+        assertFalse(ChatOptions.DEFAULT.hasMemory());
+        assertFalse(ChatOptions.CREATIVE.hasMemory());
+        assertFalse(ChatOptions.DETERMINISTIC.hasMemory());
     }
 
     @Test
-    void builder_persistent() {
-        var options = ChatOptions.newBuilder().persistent().build();
+    void builder_withMemory() {
+        var options = ChatOptions.newBuilder().withMemory().build();
 
-        assertTrue(options.isPersistent());
+        assertTrue(options.hasMemory());
         assertTrue(options.getHistory().isEmpty());
     }
 
     @Test
-    void builder_nonPersistent_getHistory_throwsException() {
+    void builder_nonMemory_getHistory_throwsException() {
         var options = ChatOptions.newBuilder().build();
 
         assertThrows(IllegalStateException.class, options::getHistory);
     }
 
     @Test
-    void builder_nonPersistent_recordMessage_throwsException() {
+    void builder_nonMemory_recordMessage_throwsException() {
         var options = ChatOptions.newBuilder().build();
 
         assertThrows(IllegalStateException.class, () -> options.recordMessage(Role.USER, "test"));
     }
 
     @Test
-    void persistent_recordMessage_updatesHistory() {
-        var options = ChatOptions.newBuilder().persistent().build();
+    void withMemory_recordMessage_updatesHistory() {
+        var options = ChatOptions.newBuilder().withMemory().build();
 
         options.recordMessage(Role.USER, "Hello");
         options.recordMessage(Role.ASSISTANT, "Hi there");
@@ -197,8 +197,8 @@ class ChatOptionsTest {
     }
 
     @Test
-    void persistent_getHistory_isImmutable() {
-        var options = ChatOptions.newBuilder().persistent().build();
+    void withMemory_getHistory_isImmutable() {
+        var options = ChatOptions.newBuilder().withMemory().build();
         options.recordMessage(Role.USER, "test");
 
         assertThrows(UnsupportedOperationException.class, () -> options.getHistory().clear());

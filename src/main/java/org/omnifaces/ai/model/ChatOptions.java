@@ -74,7 +74,7 @@ public class ChatOptions implements Serializable {
     private final Integer maxTokens;
     /** The Top-P value. */
     private final double topP;
-    /** The conversation history for persistent chat sessions. */
+    /** The conversation history for memory-enabled chat sessions. */
     private final transient List<Message> history;
 
     private ChatOptions(Builder builder) {
@@ -83,7 +83,7 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
-        this.history = builder.persistent ? new ArrayList<>() : null;
+        this.history = builder.memory ? new ArrayList<>() : null;
     }
 
     /**
@@ -205,26 +205,26 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns whether conversation history should be maintained across chat calls using this instance.
+     * Returns whether conversation memory is enabled for this instance.
      * <p>
      * When {@code true}, the AI service will automatically track all user messages and assistant responses
      * made with this {@code ChatOptions} instance, and include them as conversation history in subsequent requests.
      *
      * @return {@code true} if conversation history is maintained, {@code false} otherwise.
      */
-    public boolean isPersistent() {
+    public boolean hasMemory() {
         return history != null;
     }
 
     /**
-     * Returns the conversation history for this persistent chat options instance.
+     * Returns the conversation history for this memory-enabled instance.
      *
-     * @return An unmodifiable list of prior messages, or an empty list if this instance is not {@link #isPersistent() persistent}.
-     * @throws IllegalStateException if this instance is not {@link #isPersistent() persistent}.
+     * @return An unmodifiable list of prior messages, or an empty list if this instance is not {@link #hasMemory() persistent}.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() persistent}.
      */
     public List<Message> getHistory() {
-        if (!isPersistent()) {
-            throw new IllegalStateException("Cannot get history from non-persistent ChatOptions");
+        if (!hasMemory()) {
+            throw new IllegalStateException("Cannot get history from non-memory ChatOptions");
         }
 
         return unmodifiableList(history);
@@ -239,11 +239,11 @@ public class ChatOptions implements Serializable {
      *
      * @param role The role of the message.
      * @param message The message content.
-     * @throws IllegalStateException if this instance is not {@link #isPersistent() persistent}.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() persistent}.
      */
     public void recordMessage(Role role, String message) {
-        if (!isPersistent()) {
-            throw new IllegalStateException("Cannot record message on non-persistent ChatOptions");
+        if (!hasMemory()) {
+            throw new IllegalStateException("Cannot record message on non-memory ChatOptions");
         }
 
         history.add(new Message(role, message));
@@ -276,7 +276,7 @@ public class ChatOptions implements Serializable {
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
         private Integer maxTokens = null;
         private double topP = ChatOptions.DEFAULT_TOP_P;
-        private boolean persistent = false;
+        private boolean memory = false;
 
         private Builder() {}
 
@@ -401,16 +401,16 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Enables conversation history tracking for this {@code ChatOptions} instance.
+         * Enables conversation memory for this {@code ChatOptions} instance.
          * <p>
-         * When enabled, the AI service will automatically maintain a history of all user messages and assistant
-         * responses made with this instance, and include them in subsequent chat requests. This allows multi-turn
+         * When enabled, the AI service will automatically remember all user messages and assistant responses
+         * made with this instance, and include them in subsequent chat requests. This allows multi-turn
          * conversations where the AI has context of previous exchanges.
          *
          * @return This builder instance for chaining.
          */
-        public Builder persistent() {
-            this.persistent = true;
+        public Builder withMemory() {
+            this.memory = true;
             return this;
         }
 

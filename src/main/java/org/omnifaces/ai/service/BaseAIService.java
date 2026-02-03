@@ -155,15 +155,15 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
-        var effectiveInput = options.isPersistent() ? input.withHistory(options.getHistory()) : input;
+        var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
 
-        if (options.isPersistent()) {
+        if (options.hasMemory()) {
             options.recordMessage(Role.USER, input.getMessage());
         }
 
         var future = asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, effectiveInput, options, false));
 
-        if (options.isPersistent()) {
+        if (options.hasMemory()) {
             future = future.thenApply(response -> {
                 options.recordMessage(Role.ASSISTANT, response);
                 return response;
@@ -179,14 +179,14 @@ public abstract class BaseAIService implements AIService {
             throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
-        var effectiveInput = options.isPersistent() ? input.withHistory(options.getHistory()) : input;
-        var responseAccumulator = options.isPersistent() ? new StringBuilder() : null;
+        var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
+        var responseAccumulator = options.hasMemory() ? new StringBuilder() : null;
         Consumer<String> effectiveOnToken = responseAccumulator != null ? token -> {
             responseAccumulator.append(token);
             onToken.accept(token);
         } : onToken;
 
-        if (options.isPersistent()) {
+        if (options.hasMemory()) {
             options.recordMessage(Role.USER, input.getMessage());
         }
 

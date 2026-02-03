@@ -51,10 +51,10 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     }
 
     @Test
-    void persistentChat() {
+    void chatWithMemory() {
         var options = ChatOptions.newBuilder()
             .systemPrompt("You are a helpful assistant. Reply concisely.")
-            .persistent()
+            .withMemory()
             .build();
 
         var response1 = service.chat("My name is Bob.", options);
@@ -78,7 +78,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     }
 
     @Test
-    void nonPersistentChat() {
+    void chatWithoutMemory() {
         var options = ChatOptions.newBuilder()
             .systemPrompt("You are a helpful assistant. Reply concisely.")
             .build();
@@ -91,7 +91,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
         assertAll(
             () -> assertFalse(response2.contains("Bob"), response2),
-            () -> assertFalse(options.isPersistent()),
+            () -> assertFalse(options.hasMemory()),
             () -> assertThrows(IllegalStateException.class, options::getHistory)
         );
     }
