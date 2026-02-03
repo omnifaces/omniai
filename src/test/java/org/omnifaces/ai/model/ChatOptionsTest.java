@@ -13,6 +13,7 @@
 package org.omnifaces.ai.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,6 +28,7 @@ import java.io.Serializable;
 import jakarta.json.Json;
 
 import org.junit.jupiter.api.Test;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 
 class ChatOptionsTest {
 
@@ -144,6 +146,62 @@ class ChatOptionsTest {
         assertEquals(0.5, options.getTemperature());
         assertEquals(1000, options.getMaxTokens());
         assertEquals(0.8, options.getTopP());
+    }
+
+    // =================================================================================================================
+    // Persistent chat tests
+    // =================================================================================================================
+
+    @Test
+    void preset_default_isNotPersistent() {
+        assertFalse(ChatOptions.DEFAULT.isPersistent());
+        assertFalse(ChatOptions.CREATIVE.isPersistent());
+        assertFalse(ChatOptions.DETERMINISTIC.isPersistent());
+    }
+
+    @Test
+    void builder_persistent() {
+        var options = ChatOptions.newBuilder().persistent().build();
+
+        assertTrue(options.isPersistent());
+        assertTrue(options.getHistory().isEmpty());
+    }
+
+    @Test
+    void builder_nonPersistent_getHistory_throwsException() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertThrows(IllegalStateException.class, options::getHistory);
+    }
+
+    @Test
+    void builder_nonPersistent_recordMessage_throwsException() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertThrows(IllegalStateException.class, () -> options.recordMessage(Role.USER, "test"));
+    }
+
+    @Test
+    void persistent_recordMessage_updatesHistory() {
+        var options = ChatOptions.newBuilder().persistent().build();
+
+        options.recordMessage(Role.USER, "Hello");
+        options.recordMessage(Role.ASSISTANT, "Hi there");
+
+        var history = options.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(Role.USER, history.get(0).role());
+        assertEquals("Hello", history.get(0).content());
+        assertEquals(Role.ASSISTANT, history.get(1).role());
+        assertEquals("Hi there", history.get(1).content());
+    }
+
+    @Test
+    void persistent_getHistory_isImmutable() {
+        var options = ChatOptions.newBuilder().persistent().build();
+        options.recordMessage(Role.USER, "test");
+
+        assertThrows(UnsupportedOperationException.class, () -> options.getHistory().clear());
     }
 
     // =================================================================================================================

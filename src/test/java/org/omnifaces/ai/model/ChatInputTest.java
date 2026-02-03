@@ -27,12 +27,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.mime.MimeType;
 import org.omnifaces.ai.model.ChatInput.Attachment;
+import org.omnifaces.ai.model.ChatInput.Message;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 
 class ChatInputTest {
 
@@ -218,6 +221,49 @@ class ChatInputTest {
         assertTrue(withoutFiles.getFiles().isEmpty());
         // Original unchanged
         assertEquals(1, input.getFiles().size());
+    }
+
+    // =================================================================================================================
+    // withHistory tests
+    // =================================================================================================================
+
+    @Test
+    void withHistory_preservesMessageAndAttachments() {
+        var input = ChatInput.newBuilder()
+                .message("Current message")
+                .attach(PNG_BYTES, PDF_BYTES)
+                .build();
+
+        var history = List.of(new Message(Role.USER, "Hi"), new Message(Role.ASSISTANT, "Hello"));
+        var withHistory = input.withHistory(history);
+
+        assertNotSame(input, withHistory);
+        assertEquals("Current message", withHistory.getMessage());
+        assertEquals(1, withHistory.getImages().size());
+        assertEquals(1, withHistory.getFiles().size());
+        assertEquals(2, withHistory.getHistory().size());
+        assertEquals(Role.USER, withHistory.getHistory().get(0).role());
+        assertEquals("Hi", withHistory.getHistory().get(0).content());
+    }
+
+    @Test
+    void withHistory_originalUnchanged() {
+        var input = ChatInput.newBuilder()
+                .message("Test")
+                .build();
+
+        input.withHistory(List.of(new Message(Role.USER, "old")));
+
+        assertTrue(input.getHistory().isEmpty());
+    }
+
+    @Test
+    void builder_defaultHistory_isEmpty() {
+        var input = ChatInput.newBuilder()
+                .message("Test")
+                .build();
+
+        assertTrue(input.getHistory().isEmpty());
     }
 
     // =================================================================================================================
