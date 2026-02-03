@@ -173,6 +173,18 @@ String response = service.chat("Summarize this document", document);
 // With multiple attachments
 byte[] image = Files.readAllBytes(Path.of("chart.png"));
 String response = service.chat("Compare these files", document, image);
+
+// Multi-turn conversation with memory
+ChatOptions options = ChatOptions.newBuilder()
+    .systemPrompt("You are a helpful assistant.")
+    .withMemory()
+    .build();
+
+String response1 = service.chat("My name is Bob.", options);
+String response2 = service.chat("What is my name?", options); // AI remembers: "Bob"
+
+// Access conversation history
+List<ChatInput.Message> history = options.getHistory();
 ```
 
 ### Structured Outputs
@@ -345,7 +357,7 @@ private AIService trackedService;
 | **Translation** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Proofreading** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Summarization** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
-| **Memory/History** | ❌ | ✅ | ✅ | TBD |
+| **Memory/History** | ✅ | ✅ | ✅ | TBD |
 | **Agents** | ❌ | ✅ | ✅ | ✅ (core focus) |
 | **Prompt Templates** | ❌ | ✅ | ✅ | TBD |
 

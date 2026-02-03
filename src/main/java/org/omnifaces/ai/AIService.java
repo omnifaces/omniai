@@ -258,10 +258,13 @@ public interface AIService extends Serializable {
      * });
      * </pre>
      * <p>
-     * This is the core method for static chat-based AI interactions with images.
+     * This is the core method for chat-based AI interactions with images.
+     * <p>
+     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
+     * included in the request and updated with the user message and assistant response.
      *
      * @param input The user's input containing message and optional images.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
      */
@@ -371,9 +374,12 @@ public interface AIService extends Serializable {
      * </pre>
      * <p>
      * This is the core method for streaming chat-based AI interactions with images.
+     * <p>
+     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
+     * included in the request and updated with the user message and the accumulated assistant response upon completion.
      *
      * @param input The user's input containing message and optional images.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
      * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
