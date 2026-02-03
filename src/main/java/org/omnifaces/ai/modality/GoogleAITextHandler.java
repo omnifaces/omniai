@@ -26,6 +26,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.GoogleAIService;
@@ -50,6 +51,16 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
                 .add("parts", Json.createArrayBuilder()
                     .add(Json.createObjectBuilder()
                         .add("text", options.getSystemPrompt()))));
+        }
+
+        var contents = Json.createArrayBuilder();
+
+        for (var historyMessage : input.getHistory()) {
+            contents.add(Json.createObjectBuilder()
+                .add("role", historyMessage.role() == Role.USER ? "user" : "model")
+                .add("parts", Json.createArrayBuilder()
+                    .add(Json.createObjectBuilder()
+                        .add("text", historyMessage.content()))));
         }
 
         var parts = Json.createArrayBuilder();
@@ -77,10 +88,11 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         parts.add(Json.createObjectBuilder()
             .add("text", input.getMessage()));
 
-        payload.add("contents", Json.createArrayBuilder()
-            .add(Json.createObjectBuilder()
-                .add("role", "user")
-                .add("parts", parts)));
+        contents.add(Json.createObjectBuilder()
+            .add("role", "user")
+            .add("parts", parts));
+
+        payload.add("contents", contents);
 
         var generationConfig = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());

@@ -50,6 +50,7 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -154,7 +155,22 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
+        var effectiveInput = options.isPersistent() ? input.withHistory(options.getHistory()) : input;
+
+        if (options.isPersistent()) {
+            options.recordMessage(Role.USER, input.getMessage());
+        }
+
+        var future = asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, effectiveInput, options, false));
+
+        if (options.isPersistent()) {
+            future = future.thenApply(response -> {
+                options.recordMessage(Role.ASSISTANT, response);
+                return response;
+            });
+        }
+
+        return future;
     }
 
     @Override
@@ -163,10 +179,25 @@ public abstract class BaseAIService implements AIService {
             throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
+        var effectiveInput = options.isPersistent() ? input.withHistory(options.getHistory()) : input;
+        var responseAccumulator = options.isPersistent() ? new StringBuilder() : null;
+        Consumer<String> effectiveOnToken = responseAccumulator != null ? token -> {
+            responseAccumulator.append(token);
+            onToken.accept(token);
+        } : onToken;
+
+        if (options.isPersistent()) {
+            options.recordMessage(Role.USER, input.getMessage());
+        }
+
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), textHandler.buildChatPayload(this, input, options, true), event -> textHandler.processChatStreamEvent(this, event, onToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), textHandler.buildChatPayload(this, effectiveInput, options, true), event -> textHandler.processChatStreamEvent(this, event, effectiveOnToken)).handle((result, exception) -> {
             if (exception == null) {
+                if (responseAccumulator != null) {
+                    options.recordMessage(Role.ASSISTANT, responseAccumulator.toString());
+                }
+
                 return result;
             }
 

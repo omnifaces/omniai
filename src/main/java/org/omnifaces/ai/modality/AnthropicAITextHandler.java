@@ -30,6 +30,7 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.AnthropicAIService;
@@ -58,6 +59,17 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());
+        }
+
+        var messages = Json.createArrayBuilder();
+
+        for (var historyMessage : input.getHistory()) {
+            messages.add(Json.createObjectBuilder()
+                .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                .add("content", Json.createArrayBuilder()
+                    .add(Json.createObjectBuilder()
+                        .add("type", "text")
+                        .add("text", historyMessage.content()))));
         }
 
         var content = Json.createArrayBuilder();
@@ -89,10 +101,11 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             .add("type", "text")
             .add("text", input.getMessage()));
 
-        payload.add("messages", Json.createArrayBuilder()
-            .add(Json.createObjectBuilder()
-                .add("role", "user")
-                .add("content", content)));
+        messages.add(Json.createObjectBuilder()
+            .add("role", "user")
+            .add("content", content));
+
+        payload.add("messages", messages);
 
         if (streaming) {
             checkSupportsStreaming(service);

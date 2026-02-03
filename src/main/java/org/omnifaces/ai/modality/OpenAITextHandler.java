@@ -30,6 +30,7 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
@@ -69,6 +70,12 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                     .add("role", "system")
                     .add("content", options.getSystemPrompt()));
             }
+        }
+
+        for (var historyMessage : input.getHistory()) {
+            message.add(Json.createObjectBuilder()
+                .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                .add("content", historyMessage.content()));
         }
 
         var content = Json.createArrayBuilder();

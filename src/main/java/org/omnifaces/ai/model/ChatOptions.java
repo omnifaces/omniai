@@ -12,16 +12,21 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.unmodifiableList;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.helper.JsonSchemaHelper;
+import org.omnifaces.ai.model.ChatInput.Message;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 
 /**
  * Options for chat-based AI interactions.
@@ -69,6 +74,8 @@ public class ChatOptions implements Serializable {
     private final Integer maxTokens;
     /** The Top-P value. */
     private final double topP;
+    /** The conversation history for persistent chat sessions. */
+    private final transient List<Message> history;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -76,6 +83,7 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
+        this.history = builder.persistent ? new ArrayList<>() : null;
     }
 
     /**
@@ -197,6 +205,51 @@ public class ChatOptions implements Serializable {
     }
 
     /**
+     * Returns whether conversation history should be maintained across chat calls using this instance.
+     * <p>
+     * When {@code true}, the AI service will automatically track all user messages and assistant responses
+     * made with this {@code ChatOptions} instance, and include them as conversation history in subsequent requests.
+     *
+     * @return {@code true} if conversation history is maintained, {@code false} otherwise.
+     */
+    public boolean isPersistent() {
+        return history != null;
+    }
+
+    /**
+     * Returns the conversation history for this persistent chat options instance.
+     *
+     * @return An unmodifiable list of prior messages, or an empty list if this instance is not {@link #isPersistent() persistent}.
+     * @throws IllegalStateException if this instance is not {@link #isPersistent() persistent}.
+     */
+    public List<Message> getHistory() {
+        if (!isPersistent()) {
+            throw new IllegalStateException("Cannot get history from non-persistent ChatOptions");
+        }
+
+        return unmodifiableList(history);
+    }
+
+    /**
+     * Records a message in the conversation history.
+     * <p>
+     * This is automatically called by the AI service to record user messages before the API call
+     * and assistant responses after a successful response. It can also be called manually to seed
+     * the conversation with prior context.
+     *
+     * @param role The role of the message.
+     * @param message The message content.
+     * @throws IllegalStateException if this instance is not {@link #isPersistent() persistent}.
+     */
+    public void recordMessage(Role role, String message) {
+        if (!isPersistent()) {
+            throw new IllegalStateException("Cannot record message on non-persistent ChatOptions");
+        }
+
+        history.add(new Message(role, message));
+    }
+
+    /**
      * Creates a new builder for constructing {@link ChatOptions} instances. For example:
      * <pre>
      * ChatOptions options = ChatOptions.newBuilder()
@@ -223,6 +276,7 @@ public class ChatOptions implements Serializable {
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
         private Integer maxTokens = null;
         private double topP = ChatOptions.DEFAULT_TOP_P;
+        private boolean persistent = false;
 
         private Builder() {}
 
@@ -343,6 +397,20 @@ public class ChatOptions implements Serializable {
             }
 
             this.topP = topP;
+            return this;
+        }
+
+        /**
+         * Enables conversation history tracking for this {@code ChatOptions} instance.
+         * <p>
+         * When enabled, the AI service will automatically maintain a history of all user messages and assistant
+         * responses made with this instance, and include them in subsequent chat requests. This allows multi-turn
+         * conversations where the AI has context of previous exchanges.
+         *
+         * @return This builder instance for chaining.
+         */
+        public Builder persistent() {
+            this.persistent = true;
             return this;
         }
 

@@ -48,6 +48,29 @@ public class ChatInput implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Represents a single message in a conversation history.
+     *
+     * @param role The message role.
+     * @param content The message content text.
+     * @since 1.0
+     * @see #getHistory()
+     */
+    public record Message(Role role, String content) implements Serializable {
+
+        /**
+         * The role of a message in a conversation.
+         */
+        public enum Role {
+
+            /** A message sent by the user. */
+            USER,
+
+            /** A response from the AI assistant. */
+            ASSISTANT
+        }
+    }
+
+    /**
      * Represents an attached file.
      * @param content The content bytes.
      * @param mimeType The mime type.
@@ -109,17 +132,21 @@ public class ChatInput implements Serializable {
     private final List<Attachment> images;
     /** The file attachments. */
     private final List<Attachment> files;
+    /** The conversation history. */
+    private final List<Message> history;
 
     private ChatInput(Builder builder) {
         this.message = builder.message;
         this.images = unmodifiableList(builder.images);
         this.files = unmodifiableList(builder.files);
+        this.history = List.of();
     }
 
-    private ChatInput(String message, List<Attachment> images) {
+    private ChatInput(String message, List<Attachment> images, List<Attachment> files, List<Message> history) {
         this.message = message;
         this.images = unmodifiableList(images);
-        this.files = emptyList();
+        this.files = unmodifiableList(files);
+        this.history = history;
     }
 
     /**
@@ -147,14 +174,35 @@ public class ChatInput implements Serializable {
     }
 
     /**
+     * Gets the conversation history preceding this input.
+     *
+     * @return An unmodifiable list of prior messages, or an empty list if no history is present.
+     */
+    public List<Message> getHistory() {
+        return history;
+    }
+
+    /**
      * Returns a copy of this input without any files.
      * <p>
      * This is useful for providers that handle files separately from the main chat payload.
      *
-     * @return A new {@code ChatInput} containing only the message and images.
+     * @return A new {@code ChatInput} containing only the message, images, and history.
      */
     public ChatInput withoutFiles() {
-        return new ChatInput(message, images);
+        return new ChatInput(message, images, emptyList(), history);
+    }
+
+    /**
+     * Returns a copy of this input with the specified conversation history.
+     * <p>
+     * This is used to include prior messages in the AI request payload for multi-turn conversations.
+     *
+     * @param history The conversation history to include.
+     * @return A new {@code ChatInput} containing the same message, images, and files, but with the given history.
+     */
+    public ChatInput withHistory(List<Message> history) {
+        return new ChatInput(message, images, files, unmodifiableList(history));
     }
 
     /**
