@@ -205,6 +205,53 @@ class ChatOptionsTest {
     }
 
     // =================================================================================================================
+    // withJsonSchema tests
+    // =================================================================================================================
+
+    @Test
+    void withJsonSchema_copiesAllFields() {
+        var original = ChatOptions.newBuilder()
+                .systemPrompt("Test prompt")
+                .temperature(0.5)
+                .maxTokens(500)
+                .topP(0.8)
+                .build();
+
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+        var copy = original.withJsonSchema(schema);
+
+        assertEquals("Test prompt", copy.getSystemPrompt());
+        assertEquals(schema, copy.getJsonSchema());
+        assertEquals(0.5, copy.getTemperature());
+        assertEquals(500, copy.getMaxTokens());
+        assertEquals(0.8, copy.getTopP());
+    }
+
+    @Test
+    void withJsonSchema_setsNewSchema_originalUnchanged() {
+        var original = ChatOptions.newBuilder().build();
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+
+        var copy = original.withJsonSchema(schema);
+
+        assertNull(original.getJsonSchema());
+        assertEquals(schema, copy.getJsonSchema());
+    }
+
+    @Test
+    void withJsonSchema_sharesMemory() {
+        var original = ChatOptions.newBuilder().withMemory().build();
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+        var copy = original.withJsonSchema(schema);
+
+        assertTrue(copy.hasMemory());
+        copy.recordMessage(Role.USER, "Hello");
+
+        assertEquals(1, original.getHistory().size());
+        assertEquals("Hello", original.getHistory().get(0).content());
+    }
+
+    // =================================================================================================================
     // Serialization tests
     // =================================================================================================================
 

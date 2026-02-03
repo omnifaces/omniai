@@ -37,6 +37,7 @@ import org.omnifaces.ai.model.ChatInput.Message.Role;
  * @author Bauke Scholtz
  * @since 1.0
  * @see org.omnifaces.ai.AIService#chat(String, ChatOptions)
+ * @see org.omnifaces.ai.AIService#chat(String, Class)
  * @see ChatInput
  */
 public class ChatOptions implements Serializable {
@@ -75,7 +76,7 @@ public class ChatOptions implements Serializable {
     /** The Top-P value. */
     private final double topP;
     /** The conversation history for memory-enabled chat sessions. */
-    private final transient List<Message> history;
+    private final List<Message> history;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -84,6 +85,15 @@ public class ChatOptions implements Serializable {
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
         this.history = builder.memory ? new ArrayList<>() : null;
+    }
+
+    private ChatOptions(ChatOptions source, JsonObject jsonSchema) {
+        this.systemPrompt = source.systemPrompt;
+        this.jsonSchema = jsonSchema;
+        this.temperature = source.temperature;
+        this.maxTokens = source.maxTokens;
+        this.topP = source.topP;
+        this.history = source.history;
     }
 
     /**
@@ -124,6 +134,10 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the JSON schema for structured output. Defaults to {@code null}.
      * <p>
+     * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)} which
+     * handle schema generation and response parsing automatically. Use this property directly only when you need
+     * manual control over the schema.
+     * <p>
      * You can use {@link JsonSchemaHelper#buildJsonSchema(Class)} to create one for your record or bean class.
      * <p>
      * When set, the AI model is instructed to return a response that conforms to this JSON schema.
@@ -150,6 +164,17 @@ public class ChatOptions implements Serializable {
      */
     public JsonObject getJsonSchema() {
         return jsonSchema;
+    }
+
+    /**
+     * Returns a copy of this instance with the given JSON schema set, preserving all other options including
+     * any shared {@link #hasMemory() memory} state.
+     *
+     * @param jsonSchema The JSON schema to use for structured output.
+     * @return A new {@code ChatOptions} instance with the specified JSON schema.
+     */
+    public ChatOptions withJsonSchema(JsonObject jsonSchema) {
+        return new ChatOptions(this, jsonSchema);
     }
 
     /**
@@ -295,6 +320,10 @@ public class ChatOptions implements Serializable {
 
         /**
          * Sets the JSON schema for structured output. Defaults to {@code null}.
+         * <p>
+         * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)}
+         * which handle schema generation and response parsing automatically. Use this method directly only when you
+         * need manual control over the schema.
          * <p>
          * You can use {@link JsonSchemaHelper#buildJsonSchema(Class)} to create one for your record or bean class.
          * <p>

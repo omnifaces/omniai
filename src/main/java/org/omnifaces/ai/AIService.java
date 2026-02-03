@@ -12,6 +12,9 @@
  */
 package org.omnifaces.ai;
 
+import static org.omnifaces.ai.helper.JsonSchemaHelper.buildJsonSchema;
+import static org.omnifaces.ai.helper.JsonSchemaHelper.fromJson;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +24,7 @@ import java.util.function.Consumer;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.omnifaces.ai.exception.AIException;
+import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatOptions;
@@ -52,12 +56,7 @@ public interface AIService extends Serializable {
      * <p>
      * Usage example:
      * <pre>
-     * try {
-     *     var response = service.chat(message);
-     *     // handle full response
-     * } catch (Exception e) {
-     *     // handle exception
-     * }
+     * var response = service.chat(message);
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String)}.
      * @param message The user's message to send to the AI.
@@ -79,19 +78,14 @@ public interface AIService extends Serializable {
      * <p>
      * Usage example:
      * <pre>
-     * try {
-     *     var input = ChatInput.newBuilder()
-     *         .message(message)
-     *         .images(imageBytes)
-     *         .build();
-     *     var response = service.chat(input);
-     *     // handle full response
-     * } catch (Exception e) {
-     *     // handle exception
-     * }
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .attach(imageBytes)
+     *     .build();
+     * var response = service.chat(input);
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput)}.
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and optional file attachments.
      * @return The AI's response, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
      * @throws AIException if the chat request fails.
@@ -106,18 +100,81 @@ public interface AIService extends Serializable {
     }
 
     /**
+     * Sends a message to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * var review = service.chat("Analyze this review: " + reviewText, ProductReview.class);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #chatAsync(String, Class)}.
+     * @param <T> The target type.
+     * @param message The user's message to send to the AI.
+     * @param type The target class for the structured response (record or bean).
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the chat request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> T chat(String message, Class<T> type) throws AIException {
+        try {
+            return chatAsync(message, type).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends input to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * var input = ChatInput.newBuilder()
+     *     .message("Analyze this review: " + reviewText)
+     *     .attach(imageBytes)
+     *     .build();
+     * var review = service.chat(input, ProductReview.class);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, Class)}.
+     * @param <T> The target type.
+     * @param input The user's input containing message and file attachments.
+     * @param type The target class for the structured response (record or bean).
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the chat request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> T chat(ChatInput input, Class<T> type) throws AIException {
+        try {
+            return chatAsync(input, type).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
      * Sends a message to the AI and returns a response.
      * <p>
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
      * <pre>
-     * try {
-     *     var response = service.chat(message, options);
-     *     // handle full response
-     * } catch (Exception e) {
-     *     // handle exception
-     * }
+     * var response = service.chat(message, options);
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)}.
      * @param message The user's message to send to the AI.
@@ -138,23 +195,18 @@ public interface AIService extends Serializable {
     /**
      * Sends input to the AI and returns a response.
      * <p>
-     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
      * <pre>
-     * try {
-     *     var input = ChatInput.newBuilder()
-     *         .message(message)
-     *         .images(imageBytes)
-     *         .build();
-     *     var response = service.chat(input, options);
-     *     // handle full response
-     * } catch (Exception e) {
-     *     // handle exception
-     * }
+     * var input = ChatInput.newBuilder()
+     *     .message(message)
+     *     .attach(imageBytes)
+     *     .build();
+     * var response = service.chat(input, options);
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
      * @return The AI's response, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
@@ -163,6 +215,82 @@ public interface AIService extends Serializable {
     default String chat(ChatInput input, ChatOptions options) throws AIException {
         try {
             return chatAsync(input, options).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends a message to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * var options = ChatOptions.newBuilder()
+     *     .systemPrompt("You are a product review analyzer.")
+     *     .build();
+     * var review = service.chat("Analyze this review: " + reviewText, ProductReview.class, options);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
+     * @param <T> The target type.
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the chat request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> T chat(String message, ChatOptions options, Class<T> type) throws AIException {
+        try {
+            return chatAsync(message, options, type).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
+     * Sends input to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * var input = ChatInput.newBuilder()
+     *     .message("Analyze this review: " + reviewText)
+     *     .attach(imageBytes)
+     *     .build();
+     * var options = ChatOptions.newBuilder()
+     *     .systemPrompt("You are a product review analyzer.")
+     *     .build();
+     * var review = service.chat(input, options, ProductReview.class);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions, Class)}.
+     * @param <T> The target type.
+     * @param input The user's input containing message and file attachments.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the chat request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> T chat(ChatInput input, ChatOptions options, Class<T> type) throws AIException {
+        try {
+            return chatAsync(input, options, type).join();
         }
         catch (CompletionException e) {
             throw AIException.asyncRequestFailed(e);
@@ -197,7 +325,7 @@ public interface AIService extends Serializable {
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
-     *     .images(imageBytes)
+     *     .attach(imageBytes)
      *     .build();
      * service.chatAsync(input).thenAccept(response -> {
      *     // handle full response
@@ -207,12 +335,50 @@ public interface AIService extends Serializable {
      * });
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and file attachments.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
      */
     default CompletableFuture<String> chatAsync(ChatInput input) {
         return chatAsync(input, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build());
+    }
+
+    /**
+     * Asynchronously sends a message to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
+     * @param <T> The target type.
+     * @param message The user's message to send to the AI.
+     * @param type The target class for the structured response (record or bean).
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> CompletableFuture<T> chatAsync(String message, Class<T> type) {
+        return chatAsync(message, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build(), type);
+    }
+
+    /**
+     * Asynchronously sends input to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions, Class)}.
+     * @param <T> The target type.
+     * @param input The user's input containing message and file attachments.
+     * @param type The target class for the structured response (record or bean).
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> CompletableFuture<T> chatAsync(ChatInput input, Class<T> type) {
+        return chatAsync(input, ChatOptions.newBuilder().systemPrompt(getChatPrompt()).build(), type);
     }
 
     /**
@@ -240,15 +406,63 @@ public interface AIService extends Serializable {
     }
 
     /**
+     * Asynchronously sends a message to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     *
+     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
+     * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
+     * delegates to {@link #chatAsync(String, ChatOptions)},
+     * and parses the response via {@link JsonSchemaHelper#fromJson(String, Class)}.
+     * @param <T> The target type.
+     * @param message The user's message to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> CompletableFuture<T> chatAsync(String message, ChatOptions options, Class<T> type) {
+        return chatAsync(message, options.withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+    }
+
+    /**
+     * Asynchronously sends input to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     *
+     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
+     * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
+     * delegates to {@link #chatAsync(ChatInput, ChatOptions)},
+     * and parses the response via {@link JsonSchemaHelper#fromJson(String, Class)}.
+     * @param <T> The target type.
+     * @param input The user's input containing message and file attachments.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if input message is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     */
+    default <T> CompletableFuture<T> chatAsync(ChatInput input, ChatOptions options, Class<T> type) {
+        return chatAsync(input, options.withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+    }
+
+    /**
      * Asynchronously sends input to the AI and returns a response.
      * <p>
-     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
-     *     .images(imageBytes)
+     *     .attach(imageBytes)
      *     .build();
      * service.chatAsync(input, options).thenAccept(response -> {
      *     // handle full response
@@ -258,17 +472,20 @@ public interface AIService extends Serializable {
      * });
      * </pre>
      * <p>
-     * This is the core method for chat-based AI interactions with images.
+     * This is the core method for chat-based AI interactions.
      * <p>
      * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
      * included in the request and updated with the user message and assistant response.
      *
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
      */
     CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options);
+
+
+    // Chat Streaming capabilities -------------------------------------------------------------------------------------
 
     /**
      * Send a message to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
@@ -302,7 +519,7 @@ public interface AIService extends Serializable {
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
-     *     .images(imageBytes)
+     *     .attach(imageBytes)
      *     .build();
      * service.chatStream(input, token -> {
      *     // handle partial response
@@ -314,7 +531,7 @@ public interface AIService extends Serializable {
      * });
      * </pre>
      * @implNote The default implementation delegates to {@link #chatStream(ChatInput, ChatOptions, Consumer)}.
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and file attachments.
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
      * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
      * @throws IllegalArgumentException if input message is blank.
@@ -355,13 +572,13 @@ public interface AIService extends Serializable {
     /**
      * Send input to the AI and retrieve an asynchronous stream of tokens.
      * <p>
-     * The input contains the user's message and optional images, while the system prompt in options defines the AI's behavior.
+     * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
-     *     .images(imageBytes)
+     *     .attach(imageBytes)
      *     .build();
      * service.chatStream(input, options, token -> {
      *     // handle partial response
@@ -378,7 +595,7 @@ public interface AIService extends Serializable {
      * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
      * included in the request and updated with the user message and the accumulated assistant response upon completion.
      *
-     * @param input The user's input containing message and optional images.
+     * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
      * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.

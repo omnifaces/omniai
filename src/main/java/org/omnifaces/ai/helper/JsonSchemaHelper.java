@@ -84,15 +84,21 @@ import jakarta.json.JsonValue;
  * <pre>
  * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
  *
- * // Generate schema for AI structured output
- * JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
+ * // Simplest: use the typed chat overload (handles schema generation and parsing automatically)
+ * ProductReview review = service.chat("Analyze this review: " + reviewText, ProductReview.class);
  *
- * // Parse AI response back to typed object
+ * // Manual: generate schema, chat with it, and parse the response yourself
+ * JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
+ * String responseJson = service.chat("Analyze this review: " + reviewText,
+ *     ChatOptions.newBuilder()
+ *         .jsonSchema(schema)
+ *         .build());
  * ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
  * </pre>
  *
  * @author Bauke Scholtz
  * @since 1.0
+ * @see org.omnifaces.ai.AIService#chat(String, Class)
  * @see org.omnifaces.ai.model.ChatOptions#getJsonSchema()
  */
 public final class JsonSchemaHelper {
@@ -246,8 +252,8 @@ public final class JsonSchemaHelper {
      * <pre>
      * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
      *
-     * String json = "{\"sentiment\":\"positive\",\"rating\":5,\"pros\":[\"great\"],\"cons\":[]}";
-     * ProductReview review = JsonSchemaHelper.fromJson(json, ProductReview.class);
+     * String responseJson = "{\"sentiment\":\"positive\",\"rating\":5,\"pros\":[\"great\"],\"cons\":[]}";
+     * ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
      * </pre>
      *
      * @param <T>  The target type.

@@ -202,26 +202,34 @@ List<ChatInput.Message> history = options.getHistory();
 
 ### Structured Outputs
 
-Get responses as JSON conforming to a schema:
+Get typed Java objects directly from AI responses:
 
 ```java
 // Define your response structure as a record (or bean)
 record ProductReview(String sentiment, int rating, List<String> pros, List<String> cons) {}
 
-// Generate schema automatically from the record
-JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
+// Get a typed response in one call
+ProductReview review = service.chat("Analyze this review: " + reviewText, ProductReview.class);
+```
 
-// Get structured response
-String responseJson = service.chat("Analyze this review: " + reviewText,
+With options:
+```java
+ProductReview review = service.chat("Analyze this review: " + reviewText, ProductReview.class,
     ChatOptions.newBuilder()
-        .jsonSchema(schema)
+        .systemPrompt("You are a product review analyzer.")
         .build());
+```
 
-// Parse the JSON response
+Under the hood, OmniHai generates a JSON schema from the class, instructs the AI to return conforming JSON, and parses the response back into the typed object. You can also do this manually if you need more control:
+
+```java
+JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
+String responseJson = service.chat("Analyze this review: " + reviewText,
+    ChatOptions.newBuilder().jsonSchema(schema).build());
 ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
 ```
 
-The `JsonSchemaHelper` generates JSON schemas from Java records and beans. It supports primitive types, strings, enums, temporals, collections, arrays, nested types, and `Optional` fields (which are excluded from `"required"`).
+`JsonSchemaHelper` supports primitive types, strings, enums, temporals, collections, arrays, maps, nested types, and `Optional` fields (which are excluded from `"required"`).
 
 ### Text Analysis
 
@@ -403,7 +411,7 @@ private AIService trackedService;
 
 - Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
 - Built-in text utilities - Summarization, translation, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
-- Structured outputs - Get typed Java objects from AI responses using JSON schemas with help of `JsonSchemaHelper`
+- Structured outputs - Get typed Java objects directly from AI responses: `service.chat(message, MyRecord.class)`
 - File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
@@ -439,7 +447,7 @@ If Jakarta Agentic matures, OmniHai could potentially be a lightweight implement
 
 Yes, significantly:
 - OmniHai JAR: ~155 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
-- 69 source files, ~9,700 lines of code (\~4,100 actual code, rest is javadocs/comments)
+- 69 source files, ~10,000 lines of code (\~4,100 actual code, rest is javadoc)
 - Zero external runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly without any SDKs
 - Only one required dependency: Jakarta JSON-P (which Jakarta EE and MicroProfile runtimes already have)
 - Other dependencies are optional: CDI, EL and/or MP Config APIs (which Jakarta EE resp. MicroProfile runtimes already have)

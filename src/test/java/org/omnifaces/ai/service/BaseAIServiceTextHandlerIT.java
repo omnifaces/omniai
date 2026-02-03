@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Base64;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
@@ -122,6 +123,26 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response = service.chat(input);
         log(response);
         assertTrue(response.contains("Dummy PDF"), response);
+    }
+
+    public record Capital(String city, String country) {}
+    public record Capitals(List<Capital> capitals) {}
+
+    @Test
+    void chatWithStructuredOutput() {
+        if (!service.supportsStructuredOutput()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var response = service.chat("What are the capitals of Curacao and The Netherlands?", Capitals.class);
+        log(response.toString());
+        assertAll(
+            () -> assertEquals(2, response.capitals().size()),
+            () -> assertTrue(response.capitals().get(0).city().toLowerCase().contains("willemstad")),
+            () -> assertTrue(response.capitals().get(0).country().toLowerCase().contains("cura")),
+            () -> assertTrue(response.capitals().get(1).city().toLowerCase().contains("amsterdam")),
+            () -> assertTrue(response.capitals().get(1).country().toLowerCase().contains("netherlands"))
+        );
     }
 
     @Test

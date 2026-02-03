@@ -36,7 +36,7 @@ import org.omnifaces.ai.mime.MimeType;
 /**
  * Input for chat-based AI interactions.
  * <p>
- * This class encapsulates the user input for AI chat operations, including the text message and optional image and/or file attachments.
+ * This class encapsulates the user input for AI chat operations, including the text message and optional file attachments.
  *
  * @author Bauke Scholtz
  * @since 1.0
