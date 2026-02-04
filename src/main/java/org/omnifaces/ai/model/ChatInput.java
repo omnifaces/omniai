@@ -53,9 +53,9 @@ public class ChatInput implements Serializable {
      * @param role The message role.
      * @param content The message content text.
      * @since 1.0
-     * @see #getHistory()
+     * @see ChatInput#getHistory()
      */
-    public record Message(Role role, String content) implements Serializable {
+    public final record Message(Role role, String content) implements Serializable {
 
         /**
          * The role of a message in a conversation.
@@ -76,6 +76,9 @@ public class ChatInput implements Serializable {
      * @param mimeType The mime type.
      * @param fileName The file name.
      * @param metadata Additional provider-specific metadata to use in upload request.
+     * @see ChatInput.Builder#attach(byte[]...)
+     * @see ChatInput#getImages()
+     * @see ChatInput#getFiles()
      */
     public final record Attachment(byte[] content, MimeType mimeType, String fileName, Map<String, String> metadata) implements Serializable {
 
@@ -136,10 +139,7 @@ public class ChatInput implements Serializable {
     private final List<Message> history;
 
     private ChatInput(Builder builder) {
-        this.message = builder.message;
-        this.images = unmodifiableList(builder.images);
-        this.files = unmodifiableList(builder.files);
-        this.history = List.of();
+        this(builder.message, builder.images, builder.files, emptyList());
     }
 
     private ChatInput(String message, List<Attachment> images, List<Attachment> files, List<Message> history) {
@@ -159,6 +159,7 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the list of images associated with this input.
+     * This does not include non-image files; these are available via {@link #getFiles()}.
      * @return An unmodifiable list of images, or an empty list if no images are attached.
      */
     public List<Attachment> getImages() {
@@ -167,6 +168,7 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the list of files associated with this input.
+     * This does not include image files; these are available via {@link #getImages()}.
      * @return An unmodifiable list of files, or an empty list if no files are attached.
      */
     public List<Attachment> getFiles() {
