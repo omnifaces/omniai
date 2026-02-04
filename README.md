@@ -1,7 +1,7 @@
 [![Maven](https://img.shields.io/maven-central/v/org.omnifaces/omnihai)](https://search.maven.org/artifact/org.omnifaces/omnihai)
 [![Javadoc](https://javadoc.io/badge/org.omnifaces/omnihai.svg)](https://javadoc.io/doc/org.omnifaces/omnihai) 
 
-![logo](logo-96x96.png)
+![logo](https://raw.githubusercontent.com/omnifaces/omnihai/refs/heads/main/logo-96x96.png)
 
 # OmniHai
 
@@ -510,6 +510,7 @@ Bottom line: If you need a lightweight utility for AI chat/text operations in Ja
 - [GitHub](https://github.com/omnifaces/omnihai)
 - [Blog post: One API, any AI](https://balusc.omnifaces.org/2026/01/one-api-any-ai.html)
 - [Blog post: Real-time AI, your way](https://balusc.omnifaces.org/2026/01/real-time-ai-your-way.html)
+- [Blog post: OmniHai 1.0 released!](https://balusc.omnifaces.org/2026/02/omnihai-10-released.html)
 
 ## Credits
 
