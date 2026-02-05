@@ -75,7 +75,7 @@ You can technically also use it on plain Java SE, you'll still need the JSON-P i
 
 ```java
 // Create a service instance
-AIService service = AIConfig.of(AIProvider.ANTHROPIC, "your-api-key").createService();
+AIService service = AIConfig.of("your-openai-api-key").createService();
 
 // Simple chat
 String response = service.chat("What is Jakarta EE?");
@@ -85,7 +85,7 @@ String response = service.chat("What is Jakarta EE?");
 
 ```java
 @Inject
-@AI(provider = AIProvider.ANTHROPIC, apiKey = "your-api-key")
+@AI(provider = AIProvider.ANTHROPIC, apiKey = "your-anthropic-api-key")
 private AIService claude;
 
 // Use EL expressions for dynamic configuration
@@ -101,7 +101,7 @@ private AIService gpt;
     prompt = "You are a helpful assistant specialized in Jakarta EE.")
 private AIService jakartaExpert;
 
-// With different model
+// With different model than default
 @Inject
 @AI(provider = AIProvider.XAI,
     apiKey = "#{configBean.xaiApiKey}",
@@ -161,7 +161,7 @@ String response = service.chat("Explain microservices",
 
 Streaming:
 ```java
-service.chatStream(message, options, token -> {
+service.chatStream(message, token -> {
     // handle partial response
     System.out.print(token);
 }).exceptionally(e -> {
@@ -214,22 +214,24 @@ ProductReview review = service.chat("Analyze this review: " + reviewText, Produc
 
 With options:
 ```java
-ProductReview review = service.chat("Analyze this review: " + reviewText, ProductReview.class,
-    ChatOptions.newBuilder()
-        .systemPrompt("You are a product review analyzer.")
-        .build());
+ChatOptions options = ChatOptions.newBuilder()
+    .systemPrompt("You are a product review analyzer.")
+    .temperature(0.3)
+    .build();
+ProductReview review = service.chat("Analyze this review: " + reviewText, options, ProductReview.class);
 ```
 
-Under the hood, OmniHai generates a JSON schema from the class, instructs the AI to return conforming JSON, and parses the response back into the typed object. You can also do this manually if you need more control:
+Under the hood, OmniHai generates a JSON schema from the class, instructs the AI to return conforming JSON, and parses the response back into the typed object. 
+You can also do this manually if you need more control:
 
 ```java
 JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
-String responseJson = service.chat("Analyze this review: " + reviewText,
-    ChatOptions.newBuilder().jsonSchema(schema).build());
+ChatOptions options = ChatOptions.newBuilder().jsonSchema(schema).build();
+String responseJson = service.chat("Analyze this review: " + reviewText, options);
 ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
 ```
 
-`JsonSchemaHelper` supports primitive types, strings, enums, temporals, collections, arrays, maps, nested types, and `Optional` fields (which are excluded from `"required"`).
+`JsonSchemaHelper` supports primitive types, strings, enums, temporals, collections, arrays, maps, nested types, and `Optional` fields (which are excluded from `"required"` in JSON schema).
 
 ### Text Analysis
 
