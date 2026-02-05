@@ -234,7 +234,7 @@ public interface AIService extends Serializable {
      * var options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a product review analyzer.")
      *     .build();
-     * var review = service.chat("Analyze this review: " + reviewText, ProductReview.class, options);
+     * var review = service.chat("Analyze this review: " + reviewText, options, ProductReview.class);
      * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
      * @param <T> The target type.
