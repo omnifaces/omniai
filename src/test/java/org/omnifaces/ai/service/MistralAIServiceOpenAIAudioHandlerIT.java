@@ -32,6 +32,6 @@ class MistralAIServiceOpenAIAudioHandlerIT extends BaseAIServiceAudioHandlerIT {
 
     @Override
     protected String getModel() {
-        return "voxtral-mini-latest";
+        return "voxtral-mini-2602";
     }
 }
