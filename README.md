@@ -300,7 +300,15 @@ byte[] image = service.generateImage("A modern office",
         .build());
 ```
 
-All methods have async variants returning `CompletableFuture` (e.g., `chatAsync`, `summarizeAsync`, `translateAsync`, `proofreadAsync`, `generateImageAsync`, etc.).
+### Audio Transcription
+
+```java
+// Transcribe audio
+byte[] audioBytes = Files.readAllBytes(audioPath);
+String transcription = service.transcribe(audioBytes);
+```
+
+All methods have async variants returning `CompletableFuture` (e.g., `chatAsync`, `summarizeAsync`, `translateAsync`, `proofreadAsync`, `generateImageAsync`, `transcribeAsync`, etc.).
 
 ## Custom Providers
 
@@ -339,7 +347,7 @@ public class TrackingTextHandler extends OpenAITextHandler {
 ### Programmatic Configuration
 
 ```java
-AIStrategy strategy = new AIStrategy(TrackingTextHandler.class, null);
+AIStrategy strategy = AIStrategy.of(TrackingTextHandler.class);
 AIService service = AIConfig.of("your-api-key").withStrategy(strategy).createService();
 ```
 
@@ -376,7 +384,8 @@ private AIService trackedService;
 | **Embeddings** | ❌ | ✅ | ✅ | TBD |
 | **Image Analysis** | ✅ | ✅ | ✅ | TBD |
 | **Image Generation** | ✅ | ✅ | ✅ | TBD |
-| **Content Moderation** | ✅ (native + fallback) | ❌ | ❌ | TBD |
+| **Audio Transcription** | ✅ (native + fallback) | ✅ | ✅ | TBD |
+| **Content Moderation** | ✅ (native + fallback) | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Translation** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Proofreading** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Summarization** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
@@ -412,7 +421,7 @@ private AIService trackedService;
 ### Where OmniHai Shines
 
 - Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
-- Built-in text utilities - Summarization, translation, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
+- Built-in text utilities - Summarization, translation, transcription, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
 - Structured outputs - Get typed Java objects directly from AI responses: `service.chat(message, MyRecord.class)`
 - File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
@@ -438,6 +447,8 @@ OmniHai fills a different niche. For apps that need:
 
 - Multi-provider chat with easy switching
 - Text analysis (summarize, translate, proofread, moderate)
+- Image analysis (describe, generate alt text)
+- Audio analysis (transcribe)
 - Minimal dependencies
 - Pure Jakarta EE / MicroProfile
 
@@ -449,7 +460,7 @@ If Jakarta Agentic matures, OmniHai could potentially be a lightweight implement
 
 Yes, significantly:
 - OmniHai JAR: ~155 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
-- 69 source files, ~10,000 lines of code (\~4,100 actual code, rest is javadoc)
+- 71 source files, ~10,400 lines of code (\~4,300 actual code, rest is javadoc)
 - Zero external runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly without any SDKs
 - Only one required dependency: Jakarta JSON-P (which Jakarta EE and MicroProfile runtimes already have)
 - Other dependencies are optional: CDI, EL and/or MP Config APIs (which Jakarta EE resp. MicroProfile runtimes already have)
