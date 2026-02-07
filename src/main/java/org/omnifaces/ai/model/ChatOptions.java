@@ -56,6 +56,9 @@ public class ChatOptions implements Serializable {
     /** Default Top-P: {@value}. */
     public static final double DEFAULT_TOP_P = 1.0;
 
+    /** Default maximum number of messages (both sent and received) retained in conversation history: {@value}. */
+    public static final int DEFAULT_MAX_HISTORY = 20;
+
     /** Default chat options with temperature of {@value #DEFAULT_TEMPERATURE}. */
     public static final ChatOptions DEFAULT = ChatOptions.newBuilder().build();
 
@@ -77,6 +80,8 @@ public class ChatOptions implements Serializable {
     private final double topP;
     /** The conversation history for memory-enabled chat sessions. */
     private final List<Message> history;
+    /** The maximum number of messages retained in the conversation history. */
+    private final int maxHistory;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -84,7 +89,8 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
-        this.history = builder.memory ? new ArrayList<>() : null;
+        this.history = builder.maxHistory > 0 ? new ArrayList<>() : null;
+        this.maxHistory = builder.maxHistory;
     }
 
     private ChatOptions(ChatOptions source, JsonObject jsonSchema) {
@@ -94,6 +100,7 @@ public class ChatOptions implements Serializable {
         this.maxTokens = source.maxTokens;
         this.topP = source.topP;
         this.history = source.history;
+        this.maxHistory = source.maxHistory;
     }
 
     /**
@@ -234,6 +241,8 @@ public class ChatOptions implements Serializable {
      * <p>
      * When {@code true}, the AI service will automatically track all user messages and assistant responses
      * made with this {@code ChatOptions} instance, and include them as conversation history in subsequent requests.
+     * The history is kept within a sliding window of {@link #getMaxHistory()} messages, counting both sent and received
+     * messages (default {@value #DEFAULT_MAX_HISTORY}, i.e. 10 conversational turns).
      *
      * @return {@code true} if conversation history is maintained, {@code false} otherwise.
      */
@@ -242,10 +251,31 @@ public class ChatOptions implements Serializable {
     }
 
     /**
+     * Gets the maximum number of messages retained in the conversation history for this memory-enabled instance.
+     * <p>
+     * This counts both sent (user) and received (assistant) messages. For example, the default of
+     * {@value #DEFAULT_MAX_HISTORY} retains up to 10 conversational turns.
+     * <p>
+     * When conversation memory is enabled, the history acts as a sliding window: once the number of recorded
+     * messages exceeds this limit, the oldest messages are automatically discarded.
+     *
+     * @return The maximum number of messages retained.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
+     * @since 1.1
+     */
+    public int getMaxHistory() {
+        if (!hasMemory()) {
+            throw new IllegalStateException("Cannot get max history from non-memory ChatOptions");
+        }
+
+        return maxHistory;
+    }
+
+    /**
      * Returns the conversation history for this memory-enabled instance.
      *
-     * @return An unmodifiable list of prior messages, or an empty list if this instance is not {@link #hasMemory() persistent}.
-     * @throws IllegalStateException if this instance is not {@link #hasMemory() persistent}.
+     * @return An unmodifiable list of prior messages.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
      */
     public List<Message> getHistory() {
         if (!hasMemory()) {
@@ -256,15 +286,18 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Records a message in the conversation history.
+     * Records a message in the conversation history for this memory-enabled instance..
      * <p>
      * This is automatically called by the AI service to record user messages before the API call
      * and assistant responses after a successful response. It can also be called manually to seed
      * the conversation with prior context.
+     * <p>
+     * When the history exceeds the configured maximum (default {@value #DEFAULT_MAX_HISTORY} messages, counting both
+     * sent and received), the oldest messages are automatically discarded to maintain the sliding window.
      *
      * @param role The role of the message.
      * @param message The message content.
-     * @throws IllegalStateException if this instance is not {@link #hasMemory() persistent}.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
      */
     public void recordMessage(Role role, String message) {
         if (!hasMemory()) {
@@ -272,6 +305,10 @@ public class ChatOptions implements Serializable {
         }
 
         history.add(new Message(role, message));
+
+        while (history.size() > maxHistory) {
+            history.remove(0);
+        }
     }
 
     /**
@@ -296,12 +333,12 @@ public class ChatOptions implements Serializable {
      * Use {@link ChatOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
-        private String systemPrompt = null;
-        private JsonObject jsonSchema = null;
+        private String systemPrompt;
+        private JsonObject jsonSchema;
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
-        private Integer maxTokens = null;
+        private Integer maxTokens;
         private double topP = ChatOptions.DEFAULT_TOP_P;
-        private boolean memory = false;
+        private int maxHistory;
 
         private Builder() {}
 
@@ -430,16 +467,43 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Enables conversation memory for this {@code ChatOptions} instance.
+         * Enables conversation memory for this {@code ChatOptions} instance with a default sliding window
+         * of {@value ChatOptions#DEFAULT_MAX_HISTORY} messages (counting both sent and received, i.e. 10 conversational turns).
          * <p>
          * When enabled, the AI service will automatically remember all user messages and assistant responses
          * made with this instance, and include them in subsequent chat requests. This allows multi-turn
          * conversations where the AI has context of previous exchanges.
+         * <p>
+         * Once the number of recorded messages exceeds the maximum, the oldest messages are automatically discarded.
          *
          * @return This builder instance for chaining.
+         * @see #withMemory(int)
          */
         public Builder withMemory() {
-            this.memory = true;
+            return withMemory(DEFAULT_MAX_HISTORY);
+        }
+
+        /**
+         * Enables conversation memory for this {@code ChatOptions} instance with a custom sliding window size.
+         * <p>
+         * When enabled, the AI service will automatically remember all user messages and assistant responses
+         * made with this instance, and include them in subsequent chat requests. This allows multi-turn
+         * conversations where the AI has context of previous exchanges.
+         * <p>
+         * Once the number of recorded messages exceeds the given maximum, the oldest messages are automatically discarded.
+         *
+         * @param maxHistory The maximum number of messages (both sent and received) to retain in the conversation history. Must be positive.
+         * @return This builder instance for chaining.
+         * @throws IllegalArgumentException if maxHistory is less than 1.
+         * @see #withMemory()
+         * @since 1.1
+         */
+        public Builder withMemory(int maxHistory) {
+            if (maxHistory < 1) {
+                throw new IllegalArgumentException("Max history must be positive");
+            }
+
+            this.maxHistory = maxHistory;
             return this;
         }
 

@@ -204,6 +204,65 @@ class ChatOptionsTest {
         assertThrows(UnsupportedOperationException.class, () -> options.getHistory().clear());
     }
 
+    @Test
+    void builder_nonMemory_getMaxHistory_throwsException() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertThrows(IllegalStateException.class, options::getMaxHistory);
+    }
+
+    @Test
+    void withMemory_defaultMaxHistory() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        assertEquals(ChatOptions.DEFAULT_MAX_HISTORY, options.getMaxHistory());
+    }
+
+    @Test
+    void withMemory_customMaxHistory() {
+        var options = ChatOptions.newBuilder().withMemory(10).build();
+
+        assertTrue(options.hasMemory());
+        assertEquals(10, options.getMaxHistory());
+    }
+
+    @Test
+    void withMemory_customMaxHistory_zero_throwsException() {
+        var builder = ChatOptions.newBuilder();
+
+        var exception = assertThrows(IllegalArgumentException.class, () -> builder.withMemory(0));
+        assertEquals("Max history must be positive", exception.getMessage());
+    }
+
+    @Test
+    void withMemory_customMaxHistory_negative_throwsException() {
+        var builder = ChatOptions.newBuilder();
+
+        assertThrows(IllegalArgumentException.class, () -> builder.withMemory(-1));
+    }
+
+    @Test
+    void withMemory_slidingWindow_dropsOldestMessages() {
+        var options = ChatOptions.newBuilder().withMemory(4).build();
+
+        options.recordMessage(Role.USER, "msg1");
+        options.recordMessage(Role.ASSISTANT, "reply1");
+        options.recordMessage(Role.USER, "msg2");
+        options.recordMessage(Role.ASSISTANT, "reply2");
+
+        assertEquals(4, options.getHistory().size());
+
+        options.recordMessage(Role.USER, "msg3");
+        options.recordMessage(Role.ASSISTANT, "reply3");
+
+        var history = options.getHistory();
+        assertEquals(4, history.size());
+        assertEquals("msg2", history.get(0).content());
+        assertEquals("reply2", history.get(1).content());
+        assertEquals("msg3", history.get(2).content());
+        assertEquals("reply3", history.get(3).content());
+    }
+
     // =================================================================================================================
     // withJsonSchema tests
     // =================================================================================================================
