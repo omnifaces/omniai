@@ -97,7 +97,7 @@ public enum AIProvider {
      * Defaults currently to model {@code grok-4-1-fast-reasoning} at endpoint {@code https://api.x.ai/v1}.
      * @see XAIService
      * @see <a href="https://console.x.ai/">Manage xAI API Keys</a>
-     * @see <a href="https://docs.x.ai/docs/models">Available xAI Models</a>
+     * @see <a href="https://docs.x.ai/developers/models">Available xAI Models</a>
      */
     XAI("xAI", XAIService.class, true, "grok-4-1-fast-reasoning", "https://api.x.ai/v1", OpenAITextHandler.class, XAIImageHandler.class),
 
