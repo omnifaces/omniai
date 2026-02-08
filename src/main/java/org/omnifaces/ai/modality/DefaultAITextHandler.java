@@ -267,13 +267,13 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Validates that the given service supports file uploads.
+     * Validates that the given service supports file attachments (other than images and audio).
      *
      * @param service The AI service to check.
      * @throws UnsupportedOperationException if file upload is not supported.
      */
-    static void checkSupportsFileUpload(AIService service) {
-        if (!service.supportsFileUpload()) {
+    static void checkSupportsFileAttachments(AIService service) {
+        if (!service.supportsFileAttachments()) {
             throw new UnsupportedOperationException("File upload is not supported by " + service.getName());
         }
     }

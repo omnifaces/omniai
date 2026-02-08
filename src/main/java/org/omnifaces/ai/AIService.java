@@ -1072,11 +1072,11 @@ public interface AIService extends Serializable {
     }
 
     /**
-     * Returns whether this AI service implementation supports file uploads for chat attachments.
+     * Returns whether this AI service implementation supports file attachments for chat.
      * @implNote The default implementation returns false.
-     * @return Whether this AI service implementation supports file uploads for chat attachments.
+     * @return Whether this AI service implementation supports file attachments for chat.
      */
-    default boolean supportsFileUpload() {
+    default boolean supportsFileAttachments() {
         return false;
     }
 

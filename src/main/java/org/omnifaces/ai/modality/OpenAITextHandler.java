@@ -105,11 +105,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         }
 
         if (!remainingFiles.isEmpty()) {
-            checkSupportsFileUpload(service);
+            checkSupportsFileAttachments(service);
 
             for (var file : remainingFiles) {
                 if (supportsFilesApi(service)) {
-                    var purpose = supportsResponsesApi ? currentModelVersion.gte(GPT_5) ? "user_data" : "assistants" : "ocr"; // NOTE: "ocr" is actually for Mistral. Other models ignore this but this needs improvement in long term.
+                    var purpose = supportsResponsesApi ? currentModelVersion.gte(GPT_5) ? "user_data" : "assistants" : "ocr"; // NOTE: "ocr" is actually for Mistral. Other models ignore this but this may need improvement in long term.
                     var fileId = service.upload(file.withMetadata(Map.of("purpose", purpose, "expires_after[anchor]", "created_at", "expires_after[seconds]", String.valueOf(TimeUnit.HOURS.toSeconds(1)))));
                     content.add(Json.createObjectBuilder()
                         .add("type", supportsResponsesApi ? "input_file" : "file")
@@ -184,9 +184,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
-        var supportsResponsesApi = supportsResponsesApi(service);
-
-        if (supportsResponsesApi) {
+        if (supportsResponsesApi(service)) {
             return processChatStreamEventWithResponsesApi(event, onToken);
         }
         else {

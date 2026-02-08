@@ -83,7 +83,7 @@ public class MistralAIService extends OpenAIService {
     }
 
     @Override
-    public boolean supportsFileUpload() {
+    public boolean supportsFileAttachments() {
         return true;
     }
 

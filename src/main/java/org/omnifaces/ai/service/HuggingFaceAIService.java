@@ -85,7 +85,7 @@ public class HuggingFaceAIService extends OpenAIService {
     }
 
     @Override
-    public boolean supportsFileUpload() {
+    public boolean supportsFileAttachments() {
         return false;
     }
 

@@ -101,7 +101,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
     @Test
     void chatWithAttachedFile() {
-        if (!service.supportsFileUpload()) {
+        if (!service.supportsFileAttachments()) {
             throw new TestAbortedException("Not supported by " + getProvider());
         }
 

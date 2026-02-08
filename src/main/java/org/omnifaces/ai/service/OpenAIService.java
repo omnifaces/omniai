@@ -136,9 +136,9 @@ public class OpenAIService extends BaseAIService {
     }
 
     /**
-     * Returns whether this OpenAI based service implementation supports the {@code files} API for file inputs.
+     * Returns whether this OpenAI based service implementation supports the {@code files} API for file attachments.
      * @implNote The default implementation delegates to {@link #supportsOpenAIResponsesApi()}.
-     * @return Whether this OpenAI based service implementation supports the {@code files} API for file inputs.
+     * @return Whether this OpenAI based service implementation supports the {@code files} API for file attachments.
      */
     public boolean supportsOpenAIFilesApi() {
         return supportsOpenAIResponsesApi();
@@ -150,7 +150,7 @@ public class OpenAIService extends BaseAIService {
     }
 
     @Override
-    public boolean supportsFileUpload() {
+    public boolean supportsFileAttachments() {
         return getModelVersion().gte(GPT_4);
     }
 

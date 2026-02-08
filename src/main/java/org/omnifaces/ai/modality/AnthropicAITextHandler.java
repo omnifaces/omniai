@@ -83,7 +83,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
         }
 
         if (!input.getFiles().isEmpty()) {
-            checkSupportsFileUpload(service);
+            checkSupportsFileAttachments(service);
 
             for (var file : input.getFiles()) {
                 var fileId = service.upload(file);

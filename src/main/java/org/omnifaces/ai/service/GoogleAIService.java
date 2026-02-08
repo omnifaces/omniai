@@ -93,7 +93,7 @@ public class GoogleAIService extends BaseAIService {
     }
 
     @Override
-    public boolean supportsFileUpload() {
+    public boolean supportsFileAttachments() {
         return true; // Not version-bound, support is API-bound.
     }
 

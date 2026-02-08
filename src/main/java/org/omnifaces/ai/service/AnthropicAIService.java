@@ -89,7 +89,7 @@ public class AnthropicAIService extends BaseAIService {
     }
 
     @Override
-    public boolean supportsFileUpload() {
+    public boolean supportsFileAttachments() {
         return getModelVersion().gte(CLAUDE_3);
     }
 
@@ -103,7 +103,7 @@ public class AnthropicAIService extends BaseAIService {
         var headers = new HashMap<>(Map.of("x-api-key", apiKey, "anthropic-version", ANTHROPIC_VERSION));
         var betas = new ArrayList<String>();
 
-        if (supportsFileUpload()) {
+        if (supportsFileAttachments()) {
             betas.add(ANTHROPIC_BETA_FILES_API);
         }
 
