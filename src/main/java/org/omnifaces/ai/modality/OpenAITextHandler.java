@@ -78,18 +78,25 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
         if (options.hasMemory()) {
             for (var historyMessage : options.getHistory()) {
-                var content = Json.createArrayBuilder();
-                for (var uploadedFile : options.getUploadedFileHistory(historyMessage)) {
+                if (supportsFilesApi(service)) {
+                    var content = Json.createArrayBuilder();
+                    for (var uploadedFile : options.getUploadedFileHistory(historyMessage)) {
+                        content.add(Json.createObjectBuilder()
+                            .add("type", "input_file")
+                            .add("file_id", uploadedFile.id()));
+                    }
                     content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
-                        .add("file_id", uploadedFile.id()));
+                        .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
+                        .add("text", historyMessage.content()));
+                    message.add(Json.createObjectBuilder()
+                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                        .add("content", content));
                 }
-                content.add(Json.createObjectBuilder()
-                    .add("type", "input_text")
-                    .add("text", historyMessage.content()));
-                message.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", content));
+                else {
+                    message.add(Json.createObjectBuilder()
+                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                        .add("content", historyMessage.content()));
+                }
             }
         }
 
