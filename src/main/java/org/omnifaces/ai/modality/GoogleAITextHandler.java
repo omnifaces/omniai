@@ -25,8 +25,8 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
-import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.Message.Role;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.GoogleAIService;
 
@@ -54,12 +54,24 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
         var contents = Json.createArrayBuilder();
 
-        for (var historyMessage : input.getHistory()) {
-            contents.add(Json.createObjectBuilder()
-                .add("role", historyMessage.role() == Role.USER ? "user" : "model")
-                .add("parts", Json.createArrayBuilder()
-                    .add(Json.createObjectBuilder()
-                        .add("text", historyMessage.content()))));
+        if (options.hasMemory()) {
+            for (var historyMessage : options.getHistory()) {
+                var parts = Json.createArrayBuilder();
+
+                for (var uploadedFile : options.getUploadedFileHistory(historyMessage)) {
+                    parts.add(Json.createObjectBuilder()
+                        .add("file_data", Json.createObjectBuilder()
+                            .add("mime_type", uploadedFile.mimeType().value())
+                            .add("file_uri", uploadedFile.id())));
+                }
+
+                parts.add(Json.createObjectBuilder()
+                    .add("text", historyMessage.content()));
+
+                contents.add(Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "model")
+                    .add("parts", parts));
+            }
         }
 
         var parts = Json.createArrayBuilder();
@@ -76,6 +88,10 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
             for (var file : input.getFiles()) {
                 var fileId = service.upload(file);
+
+                if (options.hasMemory()) {
+                    options.recordUploadedFile(fileId, file.mimeType());
+                }
 
                 parts.add(Json.createObjectBuilder()
                     .add("file_data", Json.createObjectBuilder()

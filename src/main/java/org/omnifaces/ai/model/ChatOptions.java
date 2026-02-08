@@ -12,21 +12,27 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.IntStream.iterate;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.helper.JsonSchemaHelper;
-import org.omnifaces.ai.model.ChatInput.Message;
-import org.omnifaces.ai.model.ChatInput.Message.Role;
+import org.omnifaces.ai.mime.MimeType;
+import org.omnifaces.ai.model.ChatOptions.Message.Role;
 
 /**
  * Options for chat-based AI interactions.
@@ -68,6 +74,63 @@ public class ChatOptions implements Serializable {
     /** Deterministic chat with zero temperature. */
     public static final ChatOptions DETERMINISTIC = ChatOptions.newBuilder().temperature(DETERMINISTIC_TEMPERATURE).build();
 
+    /**
+     * Represents a single message in a conversation history.
+     *
+     * @param role The message role.
+     * @param content The message content text.
+     * @since 1.0
+     * @see ChatOptions#getHistory()
+     */
+    public final record Message(Role role, String content) implements Serializable {
+
+        /**
+         * Validates the record components.
+         *
+         * @param role The message role, may not be null.
+         * @param content The message content text, may not be blank.
+         */
+        public Message {
+            role = requireNonNull(role, "role");
+            content = requireNonBlank(content, "content");
+        }
+
+        /**
+         * The role of a message in a conversation.
+         */
+        public enum Role {
+
+            /** A message sent by the user. */
+            USER,
+
+            /** A response from the AI assistant. */
+            ASSISTANT
+        }
+    }
+
+    /**
+     * Represents a reference to a file uploaded during a conversation turn.
+     *
+     * @param id The provider-assigned file ID.
+     * @param mimeType The MIME type of the uploaded file.
+     * @since 1.1
+     * @see ChatOptions#getUploadedFileHistory(Message)
+     * @see ChatOptions#recordUploadedFile(String, MimeType)
+     */
+    public final record UploadedFile(String id, MimeType mimeType) implements Serializable {
+
+        /**
+         * Validates the record components.
+         *
+         * @param id The provider-assigned file ID, may not be blank.
+         * @param mimeType The MIME type of the uploaded file, may not be null.
+         */
+        public UploadedFile {
+            id = requireNonBlank(id, "id");
+            mimeType = requireNonNull(mimeType, "mimeType");
+        }
+    }
+
     /** The system prompt. */
     private final String systemPrompt;
     /** The JSON schema for structured output. */
@@ -82,6 +145,8 @@ public class ChatOptions implements Serializable {
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
     private final int maxHistory;
+    /** The uploaded file history for memory-enabled chat sessions. */
+    private final Map<Message, List<UploadedFile>> uploadedFileHistory;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -91,6 +156,7 @@ public class ChatOptions implements Serializable {
         this.topP = builder.topP;
         this.history = builder.maxHistory > 0 ? new ArrayList<>() : null;
         this.maxHistory = builder.maxHistory;
+        this.uploadedFileHistory = builder.maxHistory > 0 ? new HashMap<>() : null;
     }
 
     private ChatOptions(ChatOptions source, JsonObject jsonSchema) {
@@ -101,6 +167,7 @@ public class ChatOptions implements Serializable {
         this.topP = source.topP;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
+        this.uploadedFileHistory = source.uploadedFileHistory;
     }
 
     /**
@@ -279,10 +346,30 @@ public class ChatOptions implements Serializable {
      */
     public List<Message> getHistory() {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot get history from non-memory ChatOptions");
+            throw new IllegalStateException("Cannot get message history from non-memory ChatOptions");
         }
 
         return unmodifiableList(history);
+    }
+
+    /**
+     * Returns the uploaded files associated with a specific message in the conversation history.
+     * <p>
+     * This is used by text handlers to reconstruct file references when replaying history messages
+     * in the chat payload, so the AI model retains access to previously uploaded files.
+     *
+     * @param message The history message to retrieve uploaded files for.
+     * @return An unmodifiable list of uploaded file references, or an empty list if none are associated.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
+     * @since 1.1
+     * @see #recordUploadedFile(String, MimeType)
+     */
+    public List<UploadedFile> getUploadedFileHistory(Message message) {
+        if (!hasMemory()) {
+            throw new IllegalStateException("Cannot get uploaded file history from non-memory ChatOptions");
+        }
+
+        return unmodifiableList(uploadedFileHistory.getOrDefault(message, emptyList()));
     }
 
     /**
@@ -293,7 +380,8 @@ public class ChatOptions implements Serializable {
      * the conversation with prior context.
      * <p>
      * When the history exceeds the configured maximum (default {@value #DEFAULT_MAX_HISTORY} messages, counting both
-     * sent and received), the oldest messages are automatically discarded to maintain the sliding window.
+     * sent and received), the oldest messages are automatically discarded to maintain the sliding window,
+     * along with any {@linkplain #recordUploadedFile(String, MimeType) uploaded file references} associated with them.
      *
      * @param role The role of the message.
      * @param message The message content.
@@ -307,8 +395,34 @@ public class ChatOptions implements Serializable {
         history.add(new Message(role, message));
 
         while (history.size() > maxHistory) {
-            history.remove(0);
+            uploadedFileHistory.remove(history.remove(0));
         }
+    }
+
+    /**
+     * Records an uploaded file reference against the most recent message in the conversation history.
+     * <p>
+     * This is called by text handlers during {@code buildChatPayload} after uploading a file, so the file ID
+     * can be replayed in subsequent turns. The file reference is automatically discarded when its associated
+     * message is evicted from the sliding window.
+     *
+     * @param fileId The provider-assigned file ID or URI.
+     * @param mimeType The MIME type of the uploaded file.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
+     * @since 1.1
+     * @see #getUploadedFileHistory(Message)
+     */
+    public void recordUploadedFile(String fileId, MimeType mimeType) {
+        if (!hasMemory()) {
+            throw new IllegalStateException("Cannot record uploaded file on non-memory ChatOptions");
+        }
+
+        iterate(history.size() - 1, i -> i >= 0, i -> i - 1).mapToObj(history::get)
+            .filter(message -> message.role() == Role.USER)
+            .findFirst()
+            .ifPresentOrElse(
+                message -> uploadedFileHistory.computeIfAbsent(message, k -> new ArrayList<>()).add(new UploadedFile(fileId, mimeType)),
+                () -> { throw new IllegalStateException("Cannot record uploaded file without a preceding user message"); });
     }
 
     /**

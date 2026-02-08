@@ -156,6 +156,30 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<String> upload(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
+//        try {
+//            HttpResponse<String> response = client.send(HttpRequest.newBuilder()
+//                    .uri(URI.create("https://api.openai.com/v1/files"))
+//                    .header("Authorization", "Bearer " + service.apiKey)
+//                    .header("Content-Type", "application/json")
+//                    .GET()
+//                    .build(), HttpResponse.BodyHandlers.ofString());
+//            System.out.println("=====================================================================");
+//            System.out.println(response.body());
+//            List<String> fileIds = JsonHelper.findAllByPath(JsonHelper.parseJson(response.body()), "data[*].id");
+//            for (var id : fileIds) {
+//                response = client.send(HttpRequest.newBuilder()
+//                        .uri(URI.create("https://api.openai.com/v1/files/" + id))
+//                        .header("Authorization", "Bearer " + service.apiKey)
+//                        .DELETE()
+//                        .build(), HttpResponse.BodyHandlers.ofString());
+//                System.out.println("DELETE "+ id + ": " + response.statusCode() + ": " + response.body());
+//            }
+//            System.out.println("=====================================================================");
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+
         return sendWithRetryAsync(service, path, attachment, newUploadRequest(service, path, attachment, APPLICATION_JSON));
     }
 

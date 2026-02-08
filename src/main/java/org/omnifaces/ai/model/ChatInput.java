@@ -12,7 +12,6 @@
  */
 package org.omnifaces.ai.model;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -46,29 +45,6 @@ import org.omnifaces.ai.mime.MimeType;
 public class ChatInput implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * Represents a single message in a conversation history.
-     *
-     * @param role The message role.
-     * @param content The message content text.
-     * @since 1.0
-     * @see ChatInput#getHistory()
-     */
-    public final record Message(Role role, String content) implements Serializable {
-
-        /**
-         * The role of a message in a conversation.
-         */
-        public enum Role {
-
-            /** A message sent by the user. */
-            USER,
-
-            /** A response from the AI assistant. */
-            ASSISTANT
-        }
-    }
 
     /**
      * Represents an attached file.
@@ -131,8 +107,7 @@ public class ChatInput implements Serializable {
         /**
          * Returns a copy of this attachment with the specified additional metadata.
          *
-         * @param name Name of additional provider-specific metadata to use in upload request.
-         * @param value Value of additional provider-specific metadata to use in upload request.
+         * @param metadata Additional provider-specific metadata to use in upload request.
          * @return A new attachment instance with the specified additional metadata.
          * @since 1.1
          */
@@ -149,18 +124,15 @@ public class ChatInput implements Serializable {
     private final List<Attachment> images;
     /** The file attachments. */
     private final List<Attachment> files;
-    /** The conversation history. */
-    private final List<Message> history;
 
     private ChatInput(Builder builder) {
-        this(builder.message, builder.images, builder.files, emptyList());
+        this(builder.message, builder.images, builder.files);
     }
 
-    private ChatInput(String message, List<Attachment> images, List<Attachment> files, List<Message> history) {
+    private ChatInput(String message, List<Attachment> images, List<Attachment> files) {
         this.message = message;
         this.images = unmodifiableList(images);
         this.files = unmodifiableList(files);
-        this.history = history;
     }
 
     /**
@@ -187,27 +159,6 @@ public class ChatInput implements Serializable {
      */
     public List<Attachment> getFiles() {
         return files;
-    }
-
-    /**
-     * Gets the conversation history preceding this input.
-     *
-     * @return An unmodifiable list of prior messages, or an empty list if no history is present.
-     */
-    public List<Message> getHistory() {
-        return history;
-    }
-
-    /**
-     * Returns a copy of this input with the specified conversation history.
-     * <p>
-     * This is used to include prior messages in the AI request payload for multi-turn conversations.
-     *
-     * @param history The conversation history to include.
-     * @return A new {@code ChatInput} containing the same message, images, and files, but with the given history.
-     */
-    public ChatInput withHistory(List<Message> history) {
-        return new ChatInput(message, images, files, unmodifiableList(history));
     }
 
     /**

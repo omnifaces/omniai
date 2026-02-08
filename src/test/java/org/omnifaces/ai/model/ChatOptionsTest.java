@@ -28,7 +28,10 @@ import java.io.Serializable;
 import jakarta.json.Json;
 
 import org.junit.jupiter.api.Test;
-import org.omnifaces.ai.model.ChatInput.Message.Role;
+import org.omnifaces.ai.mime.MimeType;
+import org.omnifaces.ai.model.ChatOptions.Message;
+import org.omnifaces.ai.model.ChatOptions.Message.Role;
+import org.omnifaces.ai.model.ChatOptions.UploadedFile;
 
 class ChatOptionsTest {
 
@@ -364,5 +367,238 @@ class ChatOptionsTest {
 
             assertNull(deserialized.getJsonSchema());
         }
+    }
+
+    // =================================================================================================================
+    // Message record tests
+    // =================================================================================================================
+
+    @Test
+    void message_validConstruction() {
+        var message = new Message(Role.USER, "Hello");
+
+        assertEquals(Role.USER, message.role());
+        assertEquals("Hello", message.content());
+    }
+
+    @Test
+    void message_assistantRole() {
+        var message = new Message(Role.ASSISTANT, "Hi there");
+
+        assertEquals(Role.ASSISTANT, message.role());
+        assertEquals("Hi there", message.content());
+    }
+
+    @Test
+    void message_nullRole_throwsException() {
+        assertThrows(NullPointerException.class, () -> new Message(null, "Hello"));
+    }
+
+    @Test
+    void message_nullContent_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, null));
+    }
+
+    @Test
+    void message_blankContent_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, ""));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "   "));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "\t\n"));
+    }
+
+    @Test
+    void message_implementsSerializable() {
+        assertTrue(Serializable.class.isAssignableFrom(Message.class));
+    }
+
+    // =================================================================================================================
+    // UploadedFile record tests
+    // =================================================================================================================
+
+    private static final MimeType TEST_PDF = new MimeType() {
+        @Override public String value() { return "application/pdf"; }
+        @Override public String extension() { return "pdf"; }
+    };
+
+    private static final MimeType TEST_PNG = new MimeType() {
+        @Override public String value() { return "image/png"; }
+        @Override public String extension() { return "png"; }
+    };
+
+    @Test
+    void uploadedFile_validConstruction() {
+        var uploadedFile = new UploadedFile("file-123", TEST_PDF);
+
+        assertEquals("file-123", uploadedFile.id());
+        assertEquals(TEST_PDF, uploadedFile.mimeType());
+    }
+
+    @Test
+    void uploadedFile_nullId_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> new UploadedFile(null, TEST_PDF));
+    }
+
+    @Test
+    void uploadedFile_blankId_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> new UploadedFile("", TEST_PDF));
+        assertThrows(IllegalArgumentException.class, () -> new UploadedFile("   ", TEST_PDF));
+    }
+
+    @Test
+    void uploadedFile_nullMimeType_throwsException() {
+        assertThrows(NullPointerException.class, () -> new UploadedFile("file-123", null));
+    }
+
+    @Test
+    void uploadedFile_implementsSerializable() {
+        assertTrue(Serializable.class.isAssignableFrom(UploadedFile.class));
+    }
+
+    // =================================================================================================================
+    // getHistory - returns full history
+    // =================================================================================================================
+
+    @Test
+    void getHistory_returnsAllRecordedMessages() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        options.recordMessage(Role.USER, "msg1");
+        options.recordMessage(Role.ASSISTANT, "reply1");
+        options.recordMessage(Role.USER, "msg2");
+
+        var history = options.getHistory();
+        assertEquals(3, history.size());
+        assertEquals(Role.USER, history.get(0).role());
+        assertEquals("msg1", history.get(0).content());
+        assertEquals(Role.ASSISTANT, history.get(1).role());
+        assertEquals("reply1", history.get(1).content());
+        assertEquals(Role.USER, history.get(2).role());
+        assertEquals("msg2", history.get(2).content());
+    }
+
+    // =================================================================================================================
+    // recordUploadedFile tests
+    // =================================================================================================================
+
+    @Test
+    void recordUploadedFile_associatesWithLastUserMessage() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        options.recordMessage(Role.USER, "Analyze this file");
+        options.recordUploadedFile("file-123", TEST_PDF);
+
+        var userMessage = new Message(Role.USER, "Analyze this file");
+        var uploadedFiles = options.getUploadedFileHistory(userMessage);
+        assertEquals(1, uploadedFiles.size());
+        assertEquals("file-123", uploadedFiles.get(0).id());
+        assertEquals(TEST_PDF, uploadedFiles.get(0).mimeType());
+    }
+
+    @Test
+    void recordUploadedFile_multipleFilesOnSameMessage() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        options.recordMessage(Role.USER, "Analyze these files");
+        options.recordUploadedFile("file-1", TEST_PDF);
+        options.recordUploadedFile("file-2", TEST_PNG);
+
+        var userMessage = new Message(Role.USER, "Analyze these files");
+        var uploadedFiles = options.getUploadedFileHistory(userMessage);
+        assertEquals(2, uploadedFiles.size());
+        assertEquals("file-1", uploadedFiles.get(0).id());
+        assertEquals("file-2", uploadedFiles.get(1).id());
+    }
+
+    @Test
+    void recordUploadedFile_findsLastUserMessageAfterAssistant() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        options.recordMessage(Role.USER, "First message");
+        options.recordMessage(Role.ASSISTANT, "Reply");
+        options.recordMessage(Role.USER, "Second message");
+        options.recordUploadedFile("file-123", TEST_PDF);
+
+        var firstMessage = new Message(Role.USER, "First message");
+        var secondMessage = new Message(Role.USER, "Second message");
+        assertTrue(options.getUploadedFileHistory(firstMessage).isEmpty());
+        assertEquals(1, options.getUploadedFileHistory(secondMessage).size());
+    }
+
+    @Test
+    void recordUploadedFile_noUserMessage_throwsException() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        assertThrows(IllegalStateException.class, () -> options.recordUploadedFile("file-123", TEST_PDF));
+    }
+
+    @Test
+    void recordUploadedFile_nonMemory_throwsException() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertThrows(IllegalStateException.class, () -> options.recordUploadedFile("file-123", TEST_PDF));
+    }
+
+    // =================================================================================================================
+    // getUploadedFileHistory tests
+    // =================================================================================================================
+
+    @Test
+    void getUploadedFileHistory_noFilesForMessage_returnsEmpty() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+        options.recordMessage(Role.USER, "No files here");
+
+        var userMessage = new Message(Role.USER, "No files here");
+        assertTrue(options.getUploadedFileHistory(userMessage).isEmpty());
+    }
+
+    @Test
+    void getUploadedFileHistory_isImmutable() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+        options.recordMessage(Role.USER, "Test");
+        options.recordUploadedFile("file-1", TEST_PDF);
+
+        var userMessage = new Message(Role.USER, "Test");
+        assertThrows(UnsupportedOperationException.class,
+                () -> options.getUploadedFileHistory(userMessage).add(new UploadedFile("file-2", TEST_PNG)));
+    }
+
+    @Test
+    void getUploadedFileHistory_nonMemory_throwsException() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertThrows(IllegalStateException.class,
+                () -> options.getUploadedFileHistory(new Message(Role.USER, "test")));
+    }
+
+    // =================================================================================================================
+    // Sliding window - uploaded file cleanup
+    // =================================================================================================================
+
+    @Test
+    void slidingWindow_removesUploadedFilesWithEvictedMessages() {
+        var options = ChatOptions.newBuilder().withMemory(4).build();
+
+        options.recordMessage(Role.USER, "msg1");
+        options.recordUploadedFile("file-1", TEST_PDF);
+        options.recordMessage(Role.ASSISTANT, "reply1");
+        options.recordMessage(Role.USER, "msg2");
+        options.recordUploadedFile("file-2", TEST_PNG);
+        options.recordMessage(Role.ASSISTANT, "reply2");
+
+        // History is now full (4 messages). Verify files are accessible.
+        var msg1 = new Message(Role.USER, "msg1");
+        var msg2 = new Message(Role.USER, "msg2");
+        assertEquals(1, options.getUploadedFileHistory(msg1).size());
+        assertEquals(1, options.getUploadedFileHistory(msg2).size());
+
+        // Add two more messages, causing msg1 and reply1 to be evicted.
+        options.recordMessage(Role.USER, "msg3");
+        options.recordMessage(Role.ASSISTANT, "reply3");
+
+        // msg1's uploaded file should be cleaned up.
+        assertTrue(options.getUploadedFileHistory(msg1).isEmpty());
+        // msg2's uploaded file should still be accessible.
+        assertEquals(1, options.getUploadedFileHistory(msg2).size());
+        assertEquals("file-2", options.getUploadedFileHistory(msg2).get(0).id());
     }
 }
