@@ -12,7 +12,6 @@
  */
 package org.omnifaces.ai.modality;
 
-import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.JsonHelper.findByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -129,8 +128,6 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
-        logger.log(FINE, event::toString);
-
         if (event.type() == DATA) {
             return tryParseEventDataJson(event.value(), json -> {
                 findByPath(json, "candidates[0].content.parts[0].text").ifPresent(onToken);

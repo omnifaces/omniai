@@ -160,14 +160,10 @@ public abstract class BaseAIService implements AIService {
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
         var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
-
-        if (options.hasMemory()) {
-            options.recordMessage(Role.USER, input.getMessage());
-        }
-
         var future = asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, effectiveInput, options, false));
 
         if (options.hasMemory()) {
+            options.recordMessage(Role.USER, input.getMessage());
             future = future.thenApply(response -> {
                 options.recordMessage(Role.ASSISTANT, response);
                 return response;
@@ -183,7 +179,7 @@ public abstract class BaseAIService implements AIService {
             throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
-        var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
+        var payload = textHandler.buildChatPayload(this, options.hasMemory() ? input.withHistory(options.getHistory()) : input, options, true);
         var responseAccumulator = options.hasMemory() ? new StringBuilder() : null;
         Consumer<String> effectiveOnToken = responseAccumulator != null ? token -> {
             responseAccumulator.append(token);
@@ -196,7 +192,7 @@ public abstract class BaseAIService implements AIService {
 
         var neededForStackTrace = new Exception("Async chat streaming failed");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), textHandler.buildChatPayload(this, effectiveInput, options, true), event -> textHandler.processChatStreamEvent(this, event, effectiveOnToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), payload, event -> textHandler.processChatStreamEvent(this, event, effectiveOnToken)).handle((result, exception) -> {
             if (exception == null) {
                 if (responseAccumulator != null) {
                     options.recordMessage(Role.ASSISTANT, responseAccumulator.toString());

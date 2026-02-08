@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.service;
 
+import static java.util.Collections.emptyMap;
+
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,6 +23,7 @@ import org.omnifaces.ai.AIProvider;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.mime.MimeType;
+import org.omnifaces.ai.model.ChatInput.Attachment;
 
 /**
  * AI service implementation using Hugging Face API.
@@ -115,10 +118,11 @@ public class HuggingFaceAIService extends OpenAIService {
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
         var mimeType = MimeType.guessMimeType(audio);
 
-        if (!mimeType.value().startsWith("audio/")) {
+        if (!mimeType.isAudio()) {
             throw new UnsupportedOperationException("Unrecognized audio mime type.");
         }
 
-        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), audio, mimeType.value()).thenApply(this::parseOpenAITranscribeResponse);
+        var attachment = new Attachment(audio, mimeType, "audio." + mimeType.extension(), emptyMap());
+        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), attachment).thenApply(this::parseOpenAITranscribeResponse);
     }
 }

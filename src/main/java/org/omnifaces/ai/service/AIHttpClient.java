@@ -23,7 +23,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Function.identity;
-import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
 import static java.util.stream.Collectors.joining;
 import static org.omnifaces.ai.exception.AIHttpException.fromStatusCode;
 
@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -66,6 +67,7 @@ import org.omnifaces.ai.model.Sse.Event.Type;
 final class AIHttpClient {
 
     private static final Logger logger = Logger.getLogger(AIHttpClient.class.getPackageName());
+    private static final AtomicInteger requestCounter = new AtomicInteger();
 
     private static final String APPLICATION_JSON = "application/json";
     private static final String EVENT_STREAM = "text/event-stream";
@@ -79,11 +81,13 @@ final class AIHttpClient {
     private final HttpClient client;
     private final Duration requestTimeout;
     private final String userAgent;
+    private final String multipartBoundaryPrefix;
 
     private AIHttpClient(HttpClient client, Duration requestTimeout) {
         this.client = client;
         this.requestTimeout = requestTimeout;
         this.userAgent = OmniHai.userAgent();
+        this.multipartBoundaryPrefix = OmniHai.name() + "Boundary";
     }
 
     /**
@@ -108,7 +112,7 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<String> post(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
-        return sendWithRetryAsync(newJsonRequest(service, path, payload, APPLICATION_JSON), 0);
+        return sendWithRetryAsync(service, path, payload, newJsonRequest(service, path, payload, APPLICATION_JSON));
     }
 
     /**
@@ -117,14 +121,13 @@ final class AIHttpClient {
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
-     * @param payload The raw payload
-     * @param contentType The content type of that payload.
+     * @param attachment The raw payload
      * @return The response body as a string
      * @throws AIHttpException if the request fails
      * @since 1.1
      */
-    public CompletableFuture<String> post(BaseAIService service, String path, byte[] payload, String contentType) throws AIHttpException {
-        return sendWithRetryAsync(newRequest(service, path, contentType, APPLICATION_JSON, BodyPublishers.ofByteArray(payload)), 0);
+    public CompletableFuture<String> post(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
+        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, attachment.mimeType().value(), APPLICATION_JSON, BodyPublishers.ofByteArray(attachment.content())));
     }
 
     /**
@@ -139,7 +142,7 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<Void> stream(BaseAIService service, String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIHttpException {
-        return streamWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), eventProcessor, 0);
+        return streamWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), logRequest(service, path, payload), eventProcessor, 0);
     }
 
     /**
@@ -153,7 +156,26 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<String> upload(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
-        return sendWithRetryAsync(newUploadRequest(service, path, attachment, APPLICATION_JSON), 0);
+        return sendWithRetryAsync(service, path, attachment, newUploadRequest(service, path, attachment, APPLICATION_JSON));
+    }
+
+    private CompletableFuture<String> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request) {
+        final int requestId = logRequest(service, path, payload);
+        return sendWithRetryAsync(request, 0).thenApply(response -> {
+            logger.log(FINER, () -> "Response for #" + requestId + ": " + response);
+            return response;
+        });
+    }
+
+    private static int logRequest(BaseAIService service, String path, Object payload) {
+        if (logger.isLoggable(FINER)) {
+            int requestId = requestCounter.incrementAndGet();
+            logger.log(FINER, () -> "Request #" + requestId + " to " + service.resolveURI(path).toString().split("\\?", 2)[0] + ": " + (payload instanceof Attachment attachment ? attachment.fileName() : payload.toString()));
+            return requestId;
+        }
+        else {
+            return 0;
+        }
     }
 
     private HttpRequest newJsonRequest(BaseAIService service, String path, JsonObject payload, String accept) {
@@ -161,7 +183,7 @@ final class AIHttpClient {
     }
 
     private HttpRequest newUploadRequest(BaseAIService service, String path, Attachment attachment, String accept) {
-        var multipart = MultipartBodyPublisher.of(attachment);
+        var multipart = new MultipartBodyPublisher(attachment);
         return newRequest(service, path, MULTIPART_FORM_DATA + "; boundary=" + multipart.boundary, accept, multipart.body);
     }
 
@@ -178,8 +200,8 @@ final class AIHttpClient {
         return withRetry(() -> client.sendAsync(request, ofString()).thenCompose(response -> handleResponse(request, response, HttpResponse::body, r -> completedFuture(r.body()))), attempt);
     }
 
-    private CompletableFuture<Void> streamWithRetryAsync(HttpRequest request, Predicate<Event> eventProcessor, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofLines()).thenCompose(response -> handleResponse(request, response, r -> r.body().collect(joining("\n")), r -> consumeEventStream(r, eventProcessor))), attempt);
+    private CompletableFuture<Void> streamWithRetryAsync(HttpRequest request, int requestId, Predicate<Event> eventProcessor, int attempt) {
+        return withRetry(() -> client.sendAsync(request, ofLines()).thenCompose(response -> handleResponse(request, response, r -> r.body().collect(joining("\n")), r -> consumeEventStream(requestId, r, eventProcessor))), attempt);
     }
 
     private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
@@ -192,13 +214,13 @@ final class AIHttpClient {
         return successHandler.apply(response);
     }
 
-    private static CompletableFuture<Void> consumeEventStream(HttpResponse<Stream<String>> response, Predicate<Event> eventProcessor) {
+    private static CompletableFuture<Void> consumeEventStream(int requestId, HttpResponse<Stream<String>> response, Predicate<Event> eventProcessor) {
         var future = new CompletableFuture<Void>();
-        runAsync(() -> processEvents(response, future, eventProcessor));
+        runAsync(() -> processEvents(requestId, response, future, eventProcessor));
         return future;
     }
 
-    private static void processEvents(HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
+    private static void processEvents(int requestId, HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
         try {
             var lines = response.body().iterator();
             var dataBuffer = new StringBuilder();
@@ -207,7 +229,7 @@ final class AIHttpClient {
                 var line = lines.next();
 
                 if (line.isBlank()) {
-                    if (!processDataEvent(dataBuffer, eventProcessor)) {
+                    if (!processDataEvent(requestId, dataBuffer, eventProcessor)) {
                         break;
                     }
 
@@ -220,7 +242,7 @@ final class AIHttpClient {
                     continue;
                 }
 
-                var event = createEvent(line);
+                var event = createEvent(line, requestId);
 
                 if (event == null) {
                     continue;
@@ -233,12 +255,12 @@ final class AIHttpClient {
 
                     dataBuffer.append(line.substring(5).strip());
                 }
-                else if (!processDataEvent(dataBuffer, eventProcessor) || !eventProcessor.test(event)) {
+                else if (!processDataEvent(requestId, dataBuffer, eventProcessor) || !eventProcessor.test(event)) {
                     break;
                 }
             }
 
-            processDataEvent(dataBuffer, eventProcessor);
+            processDataEvent(requestId, dataBuffer, eventProcessor);
             future.complete(null);
         }
         catch (Exception e) {
@@ -246,12 +268,36 @@ final class AIHttpClient {
         }
     }
 
-    private static boolean processDataEvent(StringBuilder dataBuffer, Predicate<Event> eventProcessor) {
-        if (!dataBuffer.isEmpty()) {
-            var data = dataBuffer.toString();
-            dataBuffer.setLength(0);
+    private static Event createEvent(String line, int requestId) {
+        Event event = null;
 
-            if (!eventProcessor.test(new Event(Type.DATA, data))) {
+        if (line.startsWith("id:")) {
+            event = new Event(Type.ID, line.substring(3).strip());
+        }
+        if (line.startsWith("event:")) {
+            event = new Event(Type.EVENT, line.substring(6).strip());
+        }
+        if (line.startsWith("data:")) {
+            event = new Event(Type.DATA, line.substring(5).strip());
+        }
+
+        if (event == null) {
+            logger.log(FINER, () -> "Ignoring unknown SSE line for #" + requestId + ": " + line);
+        }
+        else if (event.type() != Type.DATA) { // Final data event is logged in processDataEvent.
+            logEvent(requestId, event);
+        }
+
+        return event;
+    }
+
+    private static boolean processDataEvent(int requestId, StringBuilder dataBuffer, Predicate<Event> eventProcessor) {
+        if (!dataBuffer.isEmpty()) {
+            var event = new Event(Type.DATA, dataBuffer.toString());
+            dataBuffer.setLength(0);
+            logEvent(requestId, event);
+
+            if (!eventProcessor.test(event)) {
                 return false;
             }
         }
@@ -259,22 +305,11 @@ final class AIHttpClient {
         return true;
     }
 
-    private static Event createEvent(String line) {
-        if (line.startsWith("id:")) {
-            var id = line.substring(3).strip();
-            return new Event(Type.ID, id);
+    private static void logEvent(int requestId, Event event) {
+        if (logger.isLoggable(FINER)) {
+            final var eventString = event.toString();
+            logger.log(FINER, () -> "SSE event for #" + requestId + ": " + eventString);
         }
-        if (line.startsWith("event:")) {
-            var event = line.substring(6).strip();
-            return new Event(Type.EVENT, event);
-        }
-        if (line.startsWith("data:")) {
-            var data = line.substring(5).strip();
-            return new Event(Type.DATA, data);
-        }
-
-        logger.log(FINE, () -> "Ignoring unknown SSE line: " + line);
-        return null;
     }
 
     private static <R> CompletableFuture<R> withRetry(Supplier<CompletableFuture<R>> action, int attempt) {
@@ -322,12 +357,13 @@ final class AIHttpClient {
             .orElse(false);
     }
 
-    private static class MultipartBodyPublisher {
+    private class MultipartBodyPublisher {
+
         private final BodyPublisher body;
         private final String boundary;
 
         private MultipartBodyPublisher(Attachment attachment) {
-            this.boundary = "----OmniHaiBoundary" + System.currentTimeMillis();
+            this.boundary = AIHttpClient.this.multipartBoundaryPrefix + System.currentTimeMillis();
 
             try (var os = new ByteArrayOutputStream()) {
                 for (var entry : attachment.metadata().entrySet()) {
@@ -340,10 +376,6 @@ final class AIHttpClient {
             catch (IOException e) {
                 throw new AIException("Cannot prepare multipart/form-data request for " + attachment.fileName(), e);
             }
-        }
-
-        public static MultipartBodyPublisher of(Attachment attachment) {
-            return new MultipartBodyPublisher(attachment);
         }
 
         private void writeTextPart(OutputStream os, String name, String value) throws IOException {

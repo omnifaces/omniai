@@ -12,7 +12,6 @@
  */
 package org.omnifaces.ai.modality;
 
-import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.JsonHelper.findByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
@@ -186,7 +185,6 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
         var supportsResponsesApi = supportsResponsesApi(service);
-        logger.log(FINE, () -> event + " (" + supportsResponsesApi + ")");
 
         if (supportsResponsesApi) {
             return processChatStreamEventWithResponsesApi(event, onToken);

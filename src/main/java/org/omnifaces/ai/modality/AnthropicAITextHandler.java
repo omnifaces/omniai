@@ -13,7 +13,6 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.Optional.ofNullable;
-import static java.util.logging.Level.FINE;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -137,8 +136,6 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
-        logger.log(FINE, event::toString);
-
         if (event.type() == EVENT) {
             if ("max_tokens".equals(event.value())) {
                 throw new AITokenLimitExceededException();
