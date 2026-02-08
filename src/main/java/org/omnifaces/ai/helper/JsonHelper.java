@@ -104,14 +104,14 @@ public final class JsonHelper {
     }
 
     /**
-     * Finds the first non-empty string value from a JSON object found at the given dot-separated path.
+     * Finds the first string value from a JSON object found at the given dot-separated path.
      * <p>
      * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
      * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
      *
      * @param root JSON root value (usually a {@link JsonObject})
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
-     * @return an {@link Optional} containing the first non-empty string value, or empty if not found
+     * @return an {@link Optional} containing the first string value, or empty if not found
      */
     public static Optional<String> findByPath(JsonObject root, String path) {
         var values = findAllByPath(root, path);
@@ -140,7 +140,17 @@ public final class JsonHelper {
         return Optional.empty();
     }
 
-    private static List<String> findAllByPath(JsonValue root, String path) {
+    /**
+     * Finds all string values from a JSON object found at the given dot-separated path.
+     * <p>
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
+     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     *
+     * @param root JSON root value (usually a {@link JsonObject})
+     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
+     * @return a {@link List} all string values, or empty if none found
+     */
+    public static List<String> findAllByPath(JsonValue root, String path) {
         if (root == null || path == null) {
             return emptyList();
         }
