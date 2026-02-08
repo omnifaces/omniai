@@ -286,7 +286,7 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Records a message in the conversation history for this memory-enabled instance..
+     * Records a message in the conversation history for this memory-enabled instance.
      * <p>
      * This is automatically called by the AI service to record user messages before the API call
      * and assistant responses after a successful response. It can also be called manually to seed

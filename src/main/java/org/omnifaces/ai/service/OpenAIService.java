@@ -117,7 +117,7 @@ public class OpenAIService extends BaseAIService {
 
     /**
      * Returns whether this OpenAI based service supports native transcription.
-     * When {@code true}, {@link #transcribeAsync(byte[] audio)} will use OpenAI's transcription API.
+     * When {@code true}, {@link #transcribeAsync(byte[])} will use OpenAI's transcription API.
      * When {@code false}, it falls back to the chat-based transcription in {@link BaseAIService}.
      *
      * @implNote The default implementation returns true.
