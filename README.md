@@ -200,6 +200,32 @@ String response2 = service.chat("What is my name?", options); // AI remembers: "
 List<ChatInput.Message> history = options.getHistory();
 ```
 
+History is maintained as a sliding window, defaulting to 20 messages (10 conversational turns). Oldest messages are automatically evicted when the limit is exceeded. You can customize the window size:
+```java
+ChatOptions options = ChatOptions.newBuilder()
+    .withMemory(50) // Keep up to 50 messages (25 turns)
+    .build();
+```
+
+File attachments are automatically tracked in history. When you upload files in a memory-enabled chat, their references are preserved across turns so the AI can continue referencing them:
+```java
+ChatOptions options = ChatOptions.newBuilder()
+    .withMemory()
+    .build();
+
+ChatInput input = ChatInput.newBuilder()
+    .message("Analyze this PDF")
+    .attach(Files.readAllBytes(Path.of("report.pdf")))
+    .build();
+
+String analysis = service.chat(input, options);
+String followUp = service.chat("What's on page 2?", options); // AI still has access to the PDF
+```
+
+When messages slide out of the window, their associated file references are evicted as well. Uploaded files on the provider's servers are automatically cleaned up in the background after 2 days, preventing stale file accumulation. Only files uploaded by OmniHai are cleaned up.
+
+Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI(-compatible) providers, Anthropic, and Google AI.
+
 ### Structured Outputs
 
 Get typed Java objects directly from AI responses:
@@ -427,7 +453,8 @@ private AIService trackedService;
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
 - 10 providers out of the box - Including Ollama for local/offline
-- Caller-owned conversation memory - History lives in `ChatOptions`, not in the service. No server-side session state, no memory leaks, no lifecycle management. The caller controls it.
+- Caller-owned conversation memory - History lives in `ChatOptions`, not in the service. No server-side session state, no memory leaks, no lifecycle management. The caller controls it. Sliding window keeps context manageable, and uploaded file references are tracked across turns.
+- Automatic file cleanup - Uploaded files on provider servers are cleaned up after 2 days in a fire-and-forget background task, preventing stale file accumulation.
 - Clean exception hierarchy - Specific exceptions per HTTP status
 
 ### Where OmniHai is Intentionally Simpler
