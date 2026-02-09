@@ -12,9 +12,12 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,11 +29,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.List;
+
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.mime.MimeType;
 import org.omnifaces.ai.model.ChatInput.Attachment;
+import org.omnifaces.ai.model.ChatInput.Message;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 
 class ChatInputTest {
 
@@ -183,7 +190,7 @@ class ChatInputTest {
                 .build();
 
         assertThrows(UnsupportedOperationException.class,
-                () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png", null)));
+                () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png", emptyMap())));
     }
 
     @Test
@@ -194,7 +201,50 @@ class ChatInputTest {
                 .build();
 
         assertThrows(UnsupportedOperationException.class,
-                () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf", null)));
+                () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf", emptyMap())));
+    }
+
+    // =================================================================================================================
+    // withHistory tests
+    // =================================================================================================================
+
+    @Test
+    void withHistory_preservesMessageAndAttachments() {
+        var input = ChatInput.newBuilder()
+                .message("Current message")
+                .attach(PNG_BYTES, PDF_BYTES)
+                .build();
+
+        var history = List.of(new Message(Role.USER, "Hi", emptyList()), new Message(Role.ASSISTANT, "Hello", emptyList()));
+        var withHistory = input.withHistory(history);
+
+        assertNotSame(input, withHistory);
+        assertEquals("Current message", withHistory.getMessage());
+        assertEquals(1, withHistory.getImages().size());
+        assertEquals(1, withHistory.getFiles().size());
+        assertEquals(2, withHistory.getHistory().size());
+        assertEquals(Role.USER, withHistory.getHistory().get(0).role());
+        assertEquals("Hi", withHistory.getHistory().get(0).content());
+    }
+
+    @Test
+    void withHistory_originalUnchanged() {
+        var input = ChatInput.newBuilder()
+                .message("Test")
+                .build();
+
+        input.withHistory(List.of(new Message(Role.USER, "old", emptyList())));
+
+        assertTrue(input.getHistory().isEmpty());
+    }
+
+    @Test
+    void builder_defaultHistory_isEmpty() {
+        var input = ChatInput.newBuilder()
+                .message("Test")
+                .build();
+
+        assertTrue(input.getHistory().isEmpty());
     }
 
     // =================================================================================================================
@@ -204,7 +254,7 @@ class ChatInputTest {
     @Test
     void attachment_content() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
+        var attachment = new Attachment(content, TEST_PNG, "test.png", emptyMap());
 
         assertArrayEquals(content, attachment.content());
         assertEquals(TEST_PNG, attachment.mimeType());
@@ -214,7 +264,7 @@ class ChatInputTest {
     @Test
     void attachment_base64() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
+        var attachment = new Attachment(content, TEST_PNG, "test.png", emptyMap());
 
         var base64 = attachment.toBase64();
         var decoded = Base64.getDecoder().decode(base64);
@@ -224,7 +274,7 @@ class ChatInputTest {
     @Test
     void attachment_dataUri() {
         var content = new byte[] { 1, 2, 3, 4, 5 };
-        var attachment = new Attachment(content, TEST_PNG, "test.png", null);
+        var attachment = new Attachment(content, TEST_PNG, "test.png", emptyMap());
 
         var dataUri = attachment.toDataUri();
         assertTrue(dataUri.startsWith("data:image/png;base64,"));
@@ -268,7 +318,7 @@ class ChatInputTest {
 
     @Test
     void attachment_emptyContent() {
-        var attachment = new Attachment(new byte[0], TEST_PNG, "empty.png", null);
+        var attachment = new Attachment(new byte[0], TEST_PNG, "empty.png", emptyMap());
 
         assertEquals(0, attachment.content().length);
         assertNotNull(attachment.toBase64());

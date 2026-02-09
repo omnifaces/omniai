@@ -21,8 +21,8 @@ import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ChatOptions.Message.Role;
 import org.omnifaces.ai.service.OllamaAIService;
 
 /**
@@ -46,12 +46,10 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
                 .add("content", options.getSystemPrompt()));
         }
 
-        if (options.hasMemory()) {
-            for (var historyMessage : options.getHistory()) {
-                messages.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", historyMessage.content()));
-            }
+        for (var historyMessage : input.getHistory()) {
+            messages.add(Json.createObjectBuilder()
+                .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                .add("content", historyMessage.content()));
         }
 
         var message = Json.createObjectBuilder().add("role", "user");

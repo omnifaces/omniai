@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -47,6 +48,65 @@ public class ChatInput implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Represents a single message in a conversation history.
+     *
+     * @param role The message role.
+     * @param content The message content text.
+     * @param uploadedFiles The uploaded files.
+     * @since 1.0
+     * @see ChatInput#getHistory()
+     */
+    public final record Message(Role role, String content, List<UploadedFile> uploadedFiles) implements Serializable {
+
+        /**
+         * Validates the record components.
+         *
+         * @param role The message role, may not be null.
+         * @param content The message content text, may not be blank.
+         * @param uploadedFiles The uploaded files, may not be null.
+         */
+        public Message {
+            role = requireNonNull(role, "role");
+            content = requireNonBlank(content, "content");
+            uploadedFiles = unmodifiableList(requireNonNull(uploadedFiles, "uploadedFiles"));
+        }
+
+        /**
+         * The role of a message in a conversation.
+         */
+        public enum Role {
+
+            /** A message sent by the user. */
+            USER,
+
+            /** A response from the AI assistant. */
+            ASSISTANT
+        }
+    }
+
+    /**
+     * Represents a reference to a file uploaded during a conversation turn.
+     *
+     * @param id The provider-assigned file ID.
+     * @param mimeType The MIME type of the uploaded file.
+     * @since 1.1
+     * @see ChatInput#getHistory()
+     */
+    public final record UploadedFile(String id, MimeType mimeType) implements Serializable {
+
+        /**
+         * Validates the record components.
+         *
+         * @param id The provider-assigned file ID, may not be blank.
+         * @param mimeType The MIME type of the uploaded file, may not be null.
+         */
+        public UploadedFile {
+            id = requireNonBlank(id, "id");
+            mimeType = requireNonNull(mimeType, "mimeType");
+        }
+    }
+
+    /**
      * Represents an attached file.
      * @param content The content bytes.
      * @param mimeType The mime type.
@@ -55,6 +115,7 @@ public class ChatInput implements Serializable {
      * @see ChatInput.Builder#attach(byte[]...)
      * @see ChatInput#getImages()
      * @see ChatInput#getFiles()
+     * @since 1.0
      */
     public final record Attachment(byte[] content, MimeType mimeType, String fileName, Map<String, String> metadata) implements Serializable {
 
@@ -64,13 +125,13 @@ public class ChatInput implements Serializable {
          * @param content The content bytes.
          * @param mimeType The mime type.
          * @param fileName The file name.
-         * @param metadata Additional provider-specific metadata to use in upload request.
+         * @param metadata Additional provider-specific metadata to use in upload request, may not be null.
          */
         public Attachment {
             content = requireNonNull(content, "content");
             mimeType = requireNonNull(mimeType, "mimeType");
             fileName = requireNonBlank(fileName, "fileName");
-            metadata = metadata == null ? emptyMap() : metadata.entrySet().stream()
+            metadata = requireNonNull(metadata, "metadata").entrySet().stream()
                     .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
                     .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
         }
@@ -124,15 +185,18 @@ public class ChatInput implements Serializable {
     private final List<Attachment> images;
     /** The file attachments. */
     private final List<Attachment> files;
+    /** The conversation history. */
+    private final List<Message> history;
 
     private ChatInput(Builder builder) {
-        this(builder.message, builder.images, builder.files);
+        this(builder.message, builder.images, builder.files, emptyList());
     }
 
-    private ChatInput(String message, List<Attachment> images, List<Attachment> files) {
+    private ChatInput(String message, List<Attachment> images, List<Attachment> files, List<Message> history) {
         this.message = message;
         this.images = unmodifiableList(images);
         this.files = unmodifiableList(files);
+        this.history = history;
     }
 
     /**
@@ -159,6 +223,27 @@ public class ChatInput implements Serializable {
      */
     public List<Attachment> getFiles() {
         return files;
+    }
+
+    /**
+     * Gets the conversation history preceding this input.
+     *
+     * @return An unmodifiable list of prior messages, or an empty list if no history is present.
+     */
+    public List<Message> getHistory() {
+        return history;
+    }
+
+    /**
+     * Returns a copy of this input with the specified conversation history.
+     * <p>
+     * This is used to include prior messages in the AI request payload for multi-turn conversations.
+     *
+     * @param history The conversation history to include.
+     * @return A new {@code ChatInput} containing the same message, images, and files, but with the given history.
+     */
+    public ChatInput withHistory(List<Message> history) {
+        return new ChatInput(message, images, files, unmodifiableList(history));
     }
 
     /**
@@ -219,7 +304,7 @@ public class ChatInput implements Serializable {
                 var prefix = isImage ? "image" : "file";
                 var list = isImage ? this.images : this.files;
                 var fileName = String.format("%s%d.%s", prefix, list.size() + 1, mimeType.extension());
-                list.add(new Attachment(processedContent, mimeType, fileName, null));
+                list.add(new Attachment(processedContent, mimeType, fileName, emptyMap()));
             }
 
             return this;

@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.cdi;
 
+import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -77,13 +78,13 @@ class ELExpressionResolverTest {
     @Test
     void resolveEL_nullResult_becomesEmptyString() {
         // Empty inner map — MapELResolver returns null for missing key.
-        var beans = Map.of("config", Map.of());
+        var beans = Map.of("config", emptyMap());
         assertResolved("#{config.apiKey}", beans, "");
     }
 
     @Test
     void resolveEL_nullResultWithSurroundingText() {
-        var beans = Map.of("config", Map.of());
+        var beans = Map.of("config", emptyMap());
         assertResolved("prefix-#{config.value}-suffix", beans, "prefix--suffix");
     }
 
@@ -256,7 +257,7 @@ class ELExpressionResolverTest {
      * Asserts that the input passes through resolveEL unchanged (no expressions matched).
      */
     private static void assertPassedThrough(String input) {
-        var beanManager = mockBeanManager(Map.of());
+        var beanManager = mockBeanManager(emptyMap());
         assertEquals(input, ELExpressionResolver.resolveELExpression(beanManager, input));
     }
 

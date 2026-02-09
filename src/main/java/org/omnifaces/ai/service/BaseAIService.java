@@ -51,8 +51,8 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ChatOptions.Message.Role;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationResult;
@@ -159,11 +159,14 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
+        var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
+
         if (options.hasMemory()) {
             options.recordMessage(Role.USER, input.getMessage());
         }
 
-        var future = asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
+        var payload = textHandler.buildChatPayload(this, effectiveInput, options, false);
+        var future = asyncPostAndParseChatResponse(getChatPath(false), payload);
 
         if (options.hasMemory()) {
             future = future.thenApply(response -> {
@@ -181,11 +184,13 @@ public abstract class BaseAIService implements AIService {
             throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
+        var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
+
         if (options.hasMemory()) {
             options.recordMessage(Role.USER, input.getMessage());
         }
 
-        var payload = textHandler.buildChatPayload(this, input, options, true);
+        var payload = textHandler.buildChatPayload(this, effectiveInput, options, true);
         var responseAccumulator = options.hasMemory() ? new StringBuilder() : null;
         Consumer<String> effectiveOnToken = responseAccumulator != null ? token -> {
             responseAccumulator.append(token);

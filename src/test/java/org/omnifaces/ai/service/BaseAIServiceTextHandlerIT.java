@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ChatOptions.Message.Role;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.opentest4j.TestAbortedException;
 
@@ -112,6 +112,34 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response = service.chat(input, DETERMINISTIC);
         log(response);
         assertTrue(response.contains("Dummy PDF file"), response);
+    }
+
+    @Test
+    void chatWithAttachedFileAndMemory() {
+        if (!service.supportsFileAttachments()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var input = ChatInput.newBuilder()
+            .attach(readAllBytes("/dummy.pdf"))
+            .message("Extract the contents of this PDF. No explanation.")
+            .build();
+        var options = ChatOptions.newBuilder()
+            .temperature(ChatOptions.DETERMINISTIC_TEMPERATURE)
+            .withMemory()
+            .build();
+        var response1 = service.chat(input, options);
+
+        if (options.getHistory().get(0).uploadedFiles().isEmpty()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        log(response1);
+        assertTrue(response1.contains("Dummy PDF file"), response1);
+
+        var response2 = service.chat("How many pages does this PDF have?", options);
+        log(response2);
+        assertTrue(response2.toLowerCase().contains("1 page") || response2.toLowerCase().contains("one"), response2);
     }
 
     public record Capital(String city, String country) {}

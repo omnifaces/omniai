@@ -31,8 +31,8 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ChatOptions.Message.Role;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -76,27 +76,25 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             }
         }
 
-        if (options.hasMemory()) {
-            for (var historyMessage : options.getHistory()) {
-                if (supportsFilesApi(service)) {
-                    var content = Json.createArrayBuilder();
-                    for (var uploadedFile : options.getUploadedFileHistory(historyMessage)) {
-                        content.add(Json.createObjectBuilder()
-                            .add("type", "input_file")
-                            .add("file_id", uploadedFile.id()));
-                    }
+        for (var historyMessage : input.getHistory()) {
+            if (supportsFilesApi(service)) {
+                var content = Json.createArrayBuilder();
+                for (var uploadedFile : historyMessage.uploadedFiles()) {
                     content.add(Json.createObjectBuilder()
-                        .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
-                        .add("text", historyMessage.content()));
-                    message.add(Json.createObjectBuilder()
-                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                        .add("content", content));
+                        .add("type", "input_file")
+                        .add("file_id", uploadedFile.id()));
                 }
-                else {
-                    message.add(Json.createObjectBuilder()
-                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                        .add("content", historyMessage.content()));
-                }
+                content.add(Json.createObjectBuilder()
+                    .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
+                    .add("text", historyMessage.content()));
+                message.add(Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add("content", content));
+            }
+            else {
+                message.add(Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add("content", historyMessage.content()));
             }
         }
 
@@ -128,7 +126,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             for (var file : remainingFiles) {
                 if (supportsFilesApi(service)) {
                     var purpose = supportsResponsesApi ? currentModelVersion.gte(GPT_5) ? "user_data" : "assistants" : "ocr"; // NOTE: "ocr" is actually for Mistral. Other models ignore this but this may need improvement in long term.
-                    var fileId = service.upload(file.withMetadata(Map.of("purpose", purpose, "expires_after[anchor]", "created_at", "expires_after[seconds]", String.valueOf(TimeUnit.HOURS.toSeconds(1)))));
+                    var fileId = service.upload(file.withMetadata(Map.of("purpose", purpose, "expires_after[anchor]", "created_at", "expires_after[seconds]", String.valueOf(TimeUnit.DAYS.toSeconds(1)))));
 
                     if (options.hasMemory()) {
                         options.recordUploadedFile(fileId, file.mimeType());

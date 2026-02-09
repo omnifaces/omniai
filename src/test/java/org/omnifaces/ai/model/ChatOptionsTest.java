@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,9 +30,9 @@ import jakarta.json.Json;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.mime.MimeType;
-import org.omnifaces.ai.model.ChatOptions.Message;
-import org.omnifaces.ai.model.ChatOptions.Message.Role;
-import org.omnifaces.ai.model.ChatOptions.UploadedFile;
+import org.omnifaces.ai.model.ChatInput.Message;
+import org.omnifaces.ai.model.ChatInput.Message.Role;
+import org.omnifaces.ai.model.ChatInput.UploadedFile;
 
 class ChatOptionsTest {
 
@@ -375,7 +376,7 @@ class ChatOptionsTest {
 
     @Test
     void message_validConstruction() {
-        var message = new Message(Role.USER, "Hello");
+        var message = new Message(Role.USER, "Hello", emptyList());
 
         assertEquals(Role.USER, message.role());
         assertEquals("Hello", message.content());
@@ -383,7 +384,7 @@ class ChatOptionsTest {
 
     @Test
     void message_assistantRole() {
-        var message = new Message(Role.ASSISTANT, "Hi there");
+        var message = new Message(Role.ASSISTANT, "Hi there", emptyList());
 
         assertEquals(Role.ASSISTANT, message.role());
         assertEquals("Hi there", message.content());
@@ -391,19 +392,19 @@ class ChatOptionsTest {
 
     @Test
     void message_nullRole_throwsException() {
-        assertThrows(NullPointerException.class, () -> new Message(null, "Hello"));
+        assertThrows(NullPointerException.class, () -> new Message(null, "Hello", emptyList()));
     }
 
     @Test
     void message_nullContent_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, null));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, null, emptyList()));
     }
 
     @Test
     void message_blankContent_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, ""));
-        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "   "));
-        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "\t\n"));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "", emptyList()));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "   ", emptyList()));
+        assertThrows(IllegalArgumentException.class, () -> new Message(Role.USER, "\t\n", emptyList()));
     }
 
     @Test
@@ -487,8 +488,9 @@ class ChatOptionsTest {
         options.recordMessage(Role.USER, "Analyze this file");
         options.recordUploadedFile("file-123", TEST_PDF);
 
-        var userMessage = new Message(Role.USER, "Analyze this file");
-        var uploadedFiles = options.getUploadedFileHistory(userMessage);
+        var history = options.getHistory();
+        assertEquals(1, history.size());
+        var uploadedFiles = history.get(0).uploadedFiles();
         assertEquals(1, uploadedFiles.size());
         assertEquals("file-123", uploadedFiles.get(0).id());
         assertEquals(TEST_PDF, uploadedFiles.get(0).mimeType());
@@ -502,8 +504,7 @@ class ChatOptionsTest {
         options.recordUploadedFile("file-1", TEST_PDF);
         options.recordUploadedFile("file-2", TEST_PNG);
 
-        var userMessage = new Message(Role.USER, "Analyze these files");
-        var uploadedFiles = options.getUploadedFileHistory(userMessage);
+        var uploadedFiles = options.getHistory().get(0).uploadedFiles();
         assertEquals(2, uploadedFiles.size());
         assertEquals("file-1", uploadedFiles.get(0).id());
         assertEquals("file-2", uploadedFiles.get(1).id());
@@ -518,10 +519,9 @@ class ChatOptionsTest {
         options.recordMessage(Role.USER, "Second message");
         options.recordUploadedFile("file-123", TEST_PDF);
 
-        var firstMessage = new Message(Role.USER, "First message");
-        var secondMessage = new Message(Role.USER, "Second message");
-        assertTrue(options.getUploadedFileHistory(firstMessage).isEmpty());
-        assertEquals(1, options.getUploadedFileHistory(secondMessage).size());
+        var history = options.getHistory();
+        assertTrue(history.get(0).uploadedFiles().isEmpty());
+        assertEquals(1, history.get(2).uploadedFiles().size());
     }
 
     @Test
@@ -539,35 +539,15 @@ class ChatOptionsTest {
     }
 
     // =================================================================================================================
-    // getUploadedFileHistory tests
+    // getHistory - uploaded files inline
     // =================================================================================================================
 
     @Test
-    void getUploadedFileHistory_noFilesForMessage_returnsEmpty() {
+    void getHistory_noFilesForMessage_returnsEmptyUploadedFiles() {
         var options = ChatOptions.newBuilder().withMemory().build();
         options.recordMessage(Role.USER, "No files here");
 
-        var userMessage = new Message(Role.USER, "No files here");
-        assertTrue(options.getUploadedFileHistory(userMessage).isEmpty());
-    }
-
-    @Test
-    void getUploadedFileHistory_isImmutable() {
-        var options = ChatOptions.newBuilder().withMemory().build();
-        options.recordMessage(Role.USER, "Test");
-        options.recordUploadedFile("file-1", TEST_PDF);
-
-        var userMessage = new Message(Role.USER, "Test");
-        assertThrows(UnsupportedOperationException.class,
-                () -> options.getUploadedFileHistory(userMessage).add(new UploadedFile("file-2", TEST_PNG)));
-    }
-
-    @Test
-    void getUploadedFileHistory_nonMemory_throwsException() {
-        var options = ChatOptions.newBuilder().build();
-
-        assertThrows(IllegalStateException.class,
-                () -> options.getUploadedFileHistory(new Message(Role.USER, "test")));
+        assertTrue(options.getHistory().get(0).uploadedFiles().isEmpty());
     }
 
     // =================================================================================================================
@@ -586,19 +566,20 @@ class ChatOptionsTest {
         options.recordMessage(Role.ASSISTANT, "reply2");
 
         // History is now full (4 messages). Verify files are accessible.
-        var msg1 = new Message(Role.USER, "msg1");
-        var msg2 = new Message(Role.USER, "msg2");
-        assertEquals(1, options.getUploadedFileHistory(msg1).size());
-        assertEquals(1, options.getUploadedFileHistory(msg2).size());
+        var history = options.getHistory();
+        assertEquals(1, history.get(0).uploadedFiles().size());
+        assertEquals(1, history.get(2).uploadedFiles().size());
 
         // Add two more messages, causing msg1 and reply1 to be evicted.
         options.recordMessage(Role.USER, "msg3");
         options.recordMessage(Role.ASSISTANT, "reply3");
 
-        // msg1's uploaded file should be cleaned up.
-        assertTrue(options.getUploadedFileHistory(msg1).isEmpty());
-        // msg2's uploaded file should still be accessible.
-        assertEquals(1, options.getUploadedFileHistory(msg2).size());
-        assertEquals("file-2", options.getUploadedFileHistory(msg2).get(0).id());
+        // msg1's uploaded file should be cleaned up; msg2's should remain.
+        history = options.getHistory();
+        assertEquals(4, history.size());
+        assertEquals("msg2", history.get(0).content());
+        assertEquals(1, history.get(0).uploadedFiles().size());
+        assertEquals("file-2", history.get(0).uploadedFiles().get(0).id());
+        assertTrue(history.get(2).uploadedFiles().isEmpty()); // msg3 has no files
     }
 }
