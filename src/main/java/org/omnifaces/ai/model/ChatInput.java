@@ -177,6 +177,19 @@ public class ChatInput implements Serializable {
             newMetadata.putAll(metadata);
             return new Attachment(content, mimeType, fileName, newMetadata);
         }
+
+        @Override
+        public String toString() {
+            var stringBuilder = new StringBuilder("Attachment[fileName=").append(fileName)
+                .append(", mimeType=").append(mimeType.value())
+                .append(", contentLength=").append(content.length);
+
+            if (!metadata.isEmpty()) {
+                stringBuilder.append(", metadata=").append(metadata);
+            }
+
+            return stringBuilder.append(']').toString();
+        }
     }
 
     /** The user message. */
