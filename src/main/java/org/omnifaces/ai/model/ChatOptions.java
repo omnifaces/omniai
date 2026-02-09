@@ -113,6 +113,17 @@ public class ChatOptions implements Serializable {
         this.uploadedFileHistory = source.uploadedFileHistory;
     }
 
+    private ChatOptions(ChatOptions source, String systemPrompt) {
+        this.systemPrompt = systemPrompt;
+        this.jsonSchema = source.jsonSchema;
+        this.temperature = source.temperature;
+        this.maxTokens = source.maxTokens;
+        this.topP = source.topP;
+        this.history = source.history;
+        this.maxHistory = source.maxHistory;
+        this.uploadedFileHistory = source.uploadedFileHistory;
+    }
+
     /**
      * Custom serialization to handle non-serializable {@link JsonObject}.
      * @param output The object output stream.
@@ -192,6 +203,18 @@ public class ChatOptions implements Serializable {
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
         return new ChatOptions(this, jsonSchema);
+    }
+
+    /**
+     * Returns a copy of this instance with the given system prompt set, preserving all other options including
+     * any shared {@link #hasMemory() memory} state.
+     *
+     * @param systemPrompt The system prompt to use for providing high-level instructions to the model.
+     * @return A new {@code ChatOptions} instance with the specified system prompt.
+     * @since 1.1
+     */
+    public ChatOptions withSystemPrompt(String systemPrompt) {
+        return new ChatOptions(this, systemPrompt);
     }
 
     /**

@@ -487,8 +487,9 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
-        var input = ChatInput.newBuilder().message(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : prompt).attach(image).build();
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, DETERMINISTIC, false));
+        var input = ChatInput.newBuilder().message(isBlank(prompt) ? "Analyze image" : prompt).attach(image).build();
+        var options = DETERMINISTIC.withSystemPrompt(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : null);
+        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
     }
 
     @Override
@@ -517,8 +518,9 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
-        var input = ChatInput.newBuilder().message(audioHandler.buildTranscribePrompt()).attach(audio).build();
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, DETERMINISTIC, false));
+        var input = ChatInput.newBuilder().message("Transcribe audio").attach(audio).build();
+        var options = DETERMINISTIC.withSystemPrompt(audioHandler.buildTranscribePrompt());
+        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
     }
 
 
