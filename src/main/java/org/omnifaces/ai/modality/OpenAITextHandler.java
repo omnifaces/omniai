@@ -82,7 +82,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 var content = Json.createArrayBuilder();
                 for (var uploadedFile : historyMessage.uploadedFiles()) {
                     content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
+                        .add("type", supportsResponsesApi ? "input_file" : "file")
                         .add("file_id", uploadedFile.id()));
                 }
                 content.add(Json.createObjectBuilder()
