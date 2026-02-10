@@ -141,7 +141,7 @@ class AIServiceProducer {
         try {
             return Class.forName("jakarta.json.spi.JsonProvider").getMethod("provider").invoke(null) != null;
         }
-        catch (Exception ignore) {
+        catch (Exception | LinkageError ignore) {
             return false;
         }
     }
@@ -150,7 +150,7 @@ class AIServiceProducer {
         try {
             return Class.forName("org.eclipse.microprofile.config.ConfigProvider").getMethod("getConfig").invoke(null) != null;
         }
-        catch (Exception ignore) {
+        catch (Exception | LinkageError ignore) {
             return false;
         }
     }
@@ -159,7 +159,7 @@ class AIServiceProducer {
         try {
             return Class.forName("jakarta.enterprise.inject.spi.el.ELAwareBeanManager").isInstance(beanManager);
         }
-        catch (Exception ignore) {
+        catch (Exception | LinkageError ignore) {
             return false;
         }
     }
@@ -168,7 +168,7 @@ class AIServiceProducer {
         try {
             return Class.forName("jakarta.el.ELProcessor").getDeclaredConstructor().newInstance() != null;
         }
-        catch (Exception ignore) {
+        catch (Exception | LinkageError ignore) {
             return false;
         }
     }

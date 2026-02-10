@@ -50,11 +50,11 @@ class ExecutorServiceManager {
                 }
             }
         }
-        catch (Exception ignoreAndTryMicroProfile) {
+        catch (Exception | LinkageError ignoreAndTryMicroProfile) {
             try {
                 executorService = (ExecutorService) CDI.current().select(Class.forName("org.eclipse.microprofile.context.ManagedExecutor")).get();
             }
-            catch (Exception ignoreAndGiveUp) {
+            catch (Exception | LinkageError ignoreAndGiveUp) {
                 // Can happen when running on non-JEE-server (e.g. Tomcat) or when it is disabled in server config for some reason.
             }
         }
