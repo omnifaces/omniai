@@ -22,7 +22,7 @@ OmniHai provides a single, consistent API to interact with multiple AI providers
 <dependency>
     <groupId>org.omnifaces</groupId>
     <artifactId>omnihai</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
 </dependency>
 ```
 
@@ -446,7 +446,7 @@ private AIService trackedService;
 
 ### Where OmniHai Shines
 
-- Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps.
+- Ultra-lightweight - No external HTTP library, just [`java.net.http.HttpClient`](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.html). Minimal deps. Transparent gzip compression for reduced bandwidth.
 - Built-in text utilities - Summarization, translation, transcription, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
 - Structured outputs - Get typed Java objects directly from AI responses: `service.chat(message, MyRecord.class)`
 - File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
@@ -486,8 +486,8 @@ If Jakarta Agentic matures, OmniHai could potentially be a lightweight implement
 ### Is OmniHai smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniHai JAR: ~155 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
-- 71 source files, ~10,400 lines of code (\~4,300 actual code, rest is javadoc)
+- OmniHai JAR: ~175 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 35x smaller
+- 73 source files, ~11,000 lines of code (\~4,600 actual code, rest is javadoc)
 - Zero external runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly without any SDKs
 - Only one required dependency: Jakarta JSON-P (which Jakarta EE and MicroProfile runtimes already have)
 - Other dependencies are optional: CDI, EL and/or MP Config APIs (which Jakarta EE resp. MicroProfile runtimes already have)
