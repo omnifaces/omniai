@@ -22,7 +22,7 @@ OmniHai provides a single, consistent API to interact with multiple AI providers
 <dependency>
     <groupId>org.omnifaces</groupId>
     <artifactId>omnihai</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
 </dependency>
 ```
 
