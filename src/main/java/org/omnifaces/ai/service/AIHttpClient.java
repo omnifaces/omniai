@@ -13,8 +13,7 @@
 package org.omnifaces.ai.service;
 
 import static java.net.http.HttpClient.newBuilder;
-import static java.net.http.HttpResponse.BodyHandlers.ofLines;
-import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static java.net.http.HttpResponse.BodyHandlers.ofInputStream;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
@@ -24,12 +23,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Function.identity;
 import static java.util.logging.Level.FINER;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.iterate;
 import static org.omnifaces.ai.exception.AIHttpException.fromStatusCode;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.http.HttpClient;
@@ -46,7 +47,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import jakarta.json.JsonObject;
 
@@ -164,7 +165,8 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      */
     public CompletableFuture<Void> stream(BaseAIService service, String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIHttpException {
-        return streamWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), logRequest(service, path, payload), eventProcessor, 0);
+        final int requestId = logRequest(service, path, payload);
+        return sendWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), r -> consumeEventStream(requestId, r, eventProcessor), 0);
     }
 
     /**
@@ -197,7 +199,7 @@ final class AIHttpClient {
 
     private CompletableFuture<String> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request) {
         final int requestId = logRequest(service, path, payload);
-        return sendWithRetryAsync(request, 0).thenApply(response -> {
+        return sendWithRetryAsync(request, r -> completedFuture(readBody(r)), 0).thenApply(response -> {
             logger.log(FINER, () -> "Response for #" + requestId + ": " + response);
             return response;
         });
@@ -231,16 +233,13 @@ final class AIHttpClient {
             builder.header("Content-Type", contentType);
         }
         builder.header("Accept", accept);
+        builder.header("Accept-Encoding", "gzip");
         service.getRequestHeaders().forEach(builder::header);
         return builder.build();
     }
 
-    private CompletableFuture<String> sendWithRetryAsync(HttpRequest request, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofString()).thenCompose(response -> handleResponse(request, response, HttpResponse::body, r -> completedFuture(r.body()))), attempt);
-    }
-
-    private CompletableFuture<Void> streamWithRetryAsync(HttpRequest request, int requestId, Predicate<Event> eventProcessor, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofLines()).thenCompose(response -> handleResponse(request, response, r -> r.body().collect(joining("\n")), r -> consumeEventStream(requestId, r, eventProcessor))), attempt);
+    private <R> CompletableFuture<R> sendWithRetryAsync(HttpRequest request, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler, int attempt) {
+        return withRetry(() -> client.sendAsync(request, ofInputStream()).thenCompose(response -> handleResponse(request, response, AIHttpClient::readBody, successHandler)), attempt);
     }
 
     private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
@@ -253,19 +252,18 @@ final class AIHttpClient {
         return successHandler.apply(response);
     }
 
-    private static CompletableFuture<Void> consumeEventStream(int requestId, HttpResponse<Stream<String>> response, Predicate<Event> eventProcessor) {
+    private static CompletableFuture<Void> consumeEventStream(int requestId, HttpResponse<InputStream> response, Predicate<Event> eventProcessor) {
         var future = new CompletableFuture<Void>();
         runAsync(() -> processEvents(requestId, response, future, eventProcessor));
         return future;
     }
 
-    private static void processEvents(int requestId, HttpResponse<Stream<String>> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
-        try {
-            var lines = response.body().iterator();
+    private static void processEvents(int requestId, HttpResponse<InputStream> response, CompletableFuture<Void> future, Predicate<Event> eventProcessor) {
+        try (var reader = new BufferedReader(new InputStreamReader(decompressIfNeeded(response), UTF_8))) {
             var dataBuffer = new StringBuilder();
+            String line;
 
-            while (lines.hasNext()) {
-                var line = lines.next();
+            while ((line = reader.readLine()) != null) {
 
                 if (line.isBlank()) {
                     if (!processDataEvent(requestId, dataBuffer, eventProcessor)) {
@@ -348,6 +346,20 @@ final class AIHttpClient {
         if (logger.isLoggable(FINER)) {
             final var eventString = event.toString();
             logger.log(FINER, () -> "SSE event for #" + requestId + ": " + eventString);
+        }
+    }
+
+    private static InputStream decompressIfNeeded(HttpResponse<InputStream> response) throws IOException {
+        var encoding = response.headers().firstValue("Content-Encoding").orElse("");
+        return "gzip".equalsIgnoreCase(encoding) ? new GZIPInputStream(response.body()) : response.body();
+    }
+
+    private static String readBody(HttpResponse<InputStream> response) {
+        try (var is = decompressIfNeeded(response)) {
+            return new String(is.readAllBytes(), UTF_8);
+        }
+        catch (IOException e) {
+            throw new AIException("Cannot read response body", e);
         }
     }
 
