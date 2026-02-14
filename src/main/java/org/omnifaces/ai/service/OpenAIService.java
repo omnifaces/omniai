@@ -16,6 +16,7 @@ import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.isEmpty;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,12 +246,25 @@ public class OpenAIService extends BaseAIService {
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
         if (supportsOpenAITranscriptionCapability()) {
             var mimeType = MimeType.guessMimeType(audio);
-            var attachment = new Attachment(audio, mimeType, "audio." + mimeType.extension(), Map.of("model", getModelName(), "response_format", "json"));
-            return HTTP_CLIENT.upload(this, "audio/transcriptions", attachment).thenApply(this::parseOpenAITranscribeResponse);
+            return transcribeOpenAIAsync(new Attachment(audio, mimeType, "audio." + mimeType.extension()));
         }
         else {
             return super.transcribeAsync(audio);
         }
+    }
+
+    @Override
+    public CompletableFuture<String> transcribeAsync(Path audio) throws AIException {
+        if (supportsOpenAITranscriptionCapability()) {
+            return transcribeOpenAIAsync(new Attachment(audio));
+        }
+        else {
+            return super.transcribeAsync(audio);
+        }
+    }
+
+    private CompletableFuture<String> transcribeOpenAIAsync(Attachment attachment) {
+        return HTTP_CLIENT.upload(this, "audio/transcriptions", attachment.withMetadata(Map.of("model", getModelName(), "response_format", "json"))).thenApply(this::parseOpenAITranscribeResponse);
     }
 
     /**

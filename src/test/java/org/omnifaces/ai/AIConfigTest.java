@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -687,5 +688,6 @@ class AIConfigTest {
         @Override public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException { return null; }
         @Override public String transcribe(byte[] audio) throws AIException { return AIService.super.transcribe(audio); }
         @Override public CompletableFuture<String> transcribeAsync(byte[] audio) { return null; }
+        @Override public CompletableFuture<String> transcribeAsync(Path audio) { return null; }
     }
 }

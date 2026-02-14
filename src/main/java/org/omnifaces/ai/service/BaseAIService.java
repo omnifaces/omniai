@@ -29,6 +29,7 @@ import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC_TEMPERATURE;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -504,9 +505,19 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
-        var input = ChatInput.newBuilder().message("Transcribe audio").attach(audio).build();
+        return transcribeAsync(input -> input.attach(audio));
+    }
+
+    @Override
+    public CompletableFuture<String> transcribeAsync(Path audio) throws AIException {
+        return transcribeAsync(input -> input.attach(audio));
+    }
+
+    private CompletableFuture<String> transcribeAsync(Consumer<ChatInput.Builder> inputBuilder) throws AIException {
+        var input = ChatInput.newBuilder().message("Transcribe audio");
+        inputBuilder.accept(input);
         var options = DETERMINISTIC.withSystemPrompt(audioHandler.buildTranscribePrompt());
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
+        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input.build(), options, false));
     }
 
 

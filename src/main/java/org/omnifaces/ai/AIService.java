@@ -17,6 +17,7 @@ import static org.omnifaces.ai.helper.JsonSchemaHelper.fromJson;
 import static org.omnifaces.ai.model.ChatOptions.DEFAULT;
 
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -1036,9 +1037,27 @@ public interface AIService extends Serializable {
     }
 
     /**
+     * Transcribes audio to text.
+     * @implNote The default implementation delegates to {@link #transcribeAsync(Path)}.
+     * @param audio The audio source to transcribe.
+     * @return The transcription text, never {@code null}.
+     * @throws UnsupportedOperationException if audio transcription is not supported by the implementation.
+     * @throws AIException if transcription fails.
+     * @since 1.2
+     */
+    default String transcribe(Path audio) throws AIException {
+        try {
+            return transcribeAsync(audio).join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
+
+    /**
      * Asynchronously transcribes audio to text.
      * <p>
-     * This is the core method for audio transcription.
+     * This is the core method for in-memory audio transcription.
      *
      * @param audio The audio bytes to transcribe.
      * @return A CompletableFuture that will contain the transcription text, never {@code null}.
@@ -1046,7 +1065,20 @@ public interface AIService extends Serializable {
      * @throws AIException if transcription fails.
      * @since 1.1
      */
-    CompletableFuture<String> transcribeAsync(byte[] audio);
+    CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException;
+
+    /**
+     * Asynchronously transcribes audio to text.
+     * <p>
+     * This is the core method for streaming audio transcription.
+     *
+     * @param audio The audio source to transcribe.
+     * @return A CompletableFuture that will contain the transcription text, never {@code null}.
+     * @throws UnsupportedOperationException if audio transcription is not supported by the implementation.
+     * @throws AIException if transcription fails.
+     * @since 1.2
+     */
+    CompletableFuture<String> transcribeAsync(Path audio) throws AIException;
 
 
     // Service Metadata -----------------------------------------------------------------------------------------------

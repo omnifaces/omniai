@@ -139,6 +139,18 @@ public class ChatInput implements Serializable {
         private final Map<String, String> metadata;
 
         /**
+         * Creates a new attachment with the given content, MIME type, and file name.
+         *
+         * @param content The content bytes, must not be {@code null}.
+         * @param mimeType The MIME type, must not be {@code null}.
+         * @param fileName The file name, must not be blank.
+         * @since 1.2
+         */
+        public Attachment(byte[] content, MimeType mimeType, String fileName) {
+            this(content, mimeType, fileName, emptyMap());
+        }
+
+        /**
          * Creates a new attachment with the given content, MIME type, file name, and metadata.
          *
          * @param content The content bytes, must not be {@code null}.
@@ -148,6 +160,22 @@ public class ChatInput implements Serializable {
          */
         public Attachment(byte[] content, MimeType mimeType, String fileName, Map<String, String> metadata) {
             this(requireNonNull(content, "content"), null, mimeType, fileName, metadata);
+        }
+
+        /**
+         * Creates a new attachment backed by a source path for memory-efficient streaming.
+         * <p>
+         * The file name is derived from the path and the MIME type is detected by reading the first kilobyte of magic
+         * bytes. The file content is initially <strong>not</strong> loaded into memory; it will be streamed when the AI
+         * service builds the request payload and supports a {@code files} API for file attachments. It is only loaded
+         * into memory when the AI service does not support any {@code files} API.
+         *
+         * @param source The source path, must not be {@code null}.
+         * @throws UncheckedIOException if the source cannot be read for MIME type detection.
+         * @since 1.2
+         */
+        public Attachment(Path source) {
+            this(source, emptyMap());
         }
 
         /**
