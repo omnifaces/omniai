@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -265,6 +267,141 @@ class ChatOptionsTest {
         assertEquals("reply2", history.get(1).content());
         assertEquals("msg3", history.get(2).content());
         assertEquals("reply3", history.get(3).content());
+    }
+
+    // =================================================================================================================
+    // Builder history tests
+    // =================================================================================================================
+
+    @Test
+    void builder_history_restoresMessages() {
+        var saved = List.of(
+                new Message(Role.USER, "Hello", emptyList()),
+                new Message(Role.ASSISTANT, "Hi there", emptyList()),
+                new Message(Role.USER, "How are you?", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().withMemory().history(saved).build();
+
+        assertTrue(options.hasMemory());
+        var history = options.getHistory();
+        assertEquals(3, history.size());
+        assertEquals(Role.USER, history.get(0).role());
+        assertEquals("Hello", history.get(0).content());
+        assertEquals(Role.ASSISTANT, history.get(1).role());
+        assertEquals("Hi there", history.get(1).content());
+        assertEquals(Role.USER, history.get(2).role());
+        assertEquals("How are you?", history.get(2).content());
+    }
+
+    @Test
+    void builder_history_implicitlyEnablesMemory() {
+        var saved = List.of(
+                new Message(Role.USER, "Hello", emptyList()),
+                new Message(Role.ASSISTANT, "Hi", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().history(saved).build();
+
+        assertTrue(options.hasMemory());
+        assertEquals(ChatOptions.DEFAULT_MAX_HISTORY, options.getMaxHistory());
+        assertEquals(2, options.getHistory().size());
+    }
+
+    @Test
+    void builder_history_respectsSlidingWindow() {
+        var saved = List.of(
+                new Message(Role.USER, "msg1", emptyList()),
+                new Message(Role.ASSISTANT, "reply1", emptyList()),
+                new Message(Role.USER, "msg2", emptyList()),
+                new Message(Role.ASSISTANT, "reply2", emptyList()),
+                new Message(Role.USER, "msg3", emptyList()),
+                new Message(Role.ASSISTANT, "reply3", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().withMemory(4).history(saved).build();
+
+        var history = options.getHistory();
+        assertEquals(4, history.size());
+        assertEquals("msg2", history.get(0).content());
+        assertEquals("reply2", history.get(1).content());
+        assertEquals("msg3", history.get(2).content());
+        assertEquals("reply3", history.get(3).content());
+    }
+
+    @Test
+    void builder_history_restoresUploadedFiles() {
+        var saved = List.of(
+                new Message(Role.USER, "Analyze this", List.of(new UploadedFile("file-1", TEST_PDF))),
+                new Message(Role.ASSISTANT, "It contains data", emptyList()),
+                new Message(Role.USER, "And this", List.of(new UploadedFile("file-2", TEST_PNG), new UploadedFile("file-3", TEST_PDF))),
+                new Message(Role.ASSISTANT, "Got it", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().withMemory().history(saved).build();
+
+        var history = options.getHistory();
+        assertEquals(4, history.size());
+        assertEquals(1, history.get(0).uploadedFiles().size());
+        assertEquals("file-1", history.get(0).uploadedFiles().get(0).id());
+        assertTrue(history.get(1).uploadedFiles().isEmpty());
+        assertEquals(2, history.get(2).uploadedFiles().size());
+        assertEquals("file-2", history.get(2).uploadedFiles().get(0).id());
+        assertEquals("file-3", history.get(2).uploadedFiles().get(1).id());
+        assertTrue(history.get(3).uploadedFiles().isEmpty());
+    }
+
+    @Test
+    void builder_history_slidingWindowCleansUpUploadedFiles() {
+        var saved = List.of(
+                new Message(Role.USER, "msg1", List.of(new UploadedFile("file-1", TEST_PDF))),
+                new Message(Role.ASSISTANT, "reply1", emptyList()),
+                new Message(Role.USER, "msg2", List.of(new UploadedFile("file-2", TEST_PNG))),
+                new Message(Role.ASSISTANT, "reply2", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().withMemory(2).history(saved).build();
+
+        var history = options.getHistory();
+        assertEquals(2, history.size());
+        assertEquals("msg2", history.get(0).content());
+        assertEquals(1, history.get(0).uploadedFiles().size());
+        assertEquals("file-2", history.get(0).uploadedFiles().get(0).id());
+        assertEquals("reply2", history.get(1).content());
+    }
+
+    @Test
+    void builder_history_continuingConversationAfterRestore() {
+        var saved = List.of(
+                new Message(Role.USER, "Hello", emptyList()),
+                new Message(Role.ASSISTANT, "Hi there", emptyList())
+        );
+
+        var options = ChatOptions.newBuilder().withMemory().history(saved).build();
+        options.recordMessage(Role.USER, "Follow up");
+        options.recordMessage(Role.ASSISTANT, "Sure");
+
+        var history = options.getHistory();
+        assertEquals(4, history.size());
+        assertEquals("Hello", history.get(0).content());
+        assertEquals("Hi there", history.get(1).content());
+        assertEquals("Follow up", history.get(2).content());
+        assertEquals("Sure", history.get(3).content());
+    }
+
+    @Test
+    void builder_history_null_throwsException() {
+        var builder = ChatOptions.newBuilder().withMemory();
+
+        assertThrows(NullPointerException.class, () -> builder.history(null));
+    }
+
+    @Test
+    void builder_history_emptyList() {
+        var options = ChatOptions.newBuilder().withMemory().history(emptyList()).build();
+
+        assertTrue(options.hasMemory());
+        assertTrue(options.getHistory().isEmpty());
     }
 
     // =================================================================================================================
@@ -536,6 +673,21 @@ class ChatOptionsTest {
         var options = ChatOptions.newBuilder().build();
 
         assertThrows(IllegalStateException.class, () -> options.recordUploadedFile("file-123", TEST_PDF));
+    }
+
+    @Test
+    void recordUploadedFile_duplicateMessageContent_associatesWithCorrectMessage() {
+        var options = ChatOptions.newBuilder().withMemory().build();
+
+        options.recordMessage(Role.USER, "yes");
+        options.recordMessage(Role.ASSISTANT, "Got it");
+        options.recordMessage(Role.USER, "yes");
+        options.recordUploadedFile("file-1", TEST_PDF);
+
+        var history = options.getHistory();
+        assertTrue(history.get(0).uploadedFiles().isEmpty());
+        assertEquals(1, history.get(2).uploadedFiles().size());
+        assertEquals("file-1", history.get(2).uploadedFiles().get(0).id());
     }
 
     // =================================================================================================================

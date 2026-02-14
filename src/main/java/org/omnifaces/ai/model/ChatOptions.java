@@ -13,8 +13,7 @@
 package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.IntStream.iterate;
+import static java.util.Collections.unmodifiableList;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
@@ -22,9 +21,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.json.JsonObject;
 
@@ -88,8 +85,6 @@ public class ChatOptions implements Serializable {
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
     private final int maxHistory;
-    /** The uploaded file history for memory-enabled chat sessions. */
-    private final Map<Message, List<UploadedFile>> uploadedFileHistory;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -97,9 +92,18 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
-        this.history = builder.maxHistory > 0 ? new ArrayList<>() : null;
-        this.maxHistory = builder.maxHistory;
-        this.uploadedFileHistory = builder.maxHistory > 0 ? new HashMap<>() : null;
+
+        var memoryEnabled = builder.maxHistory > 0 || builder.history != null;
+        this.maxHistory = builder.maxHistory > 0 ? builder.maxHistory : (memoryEnabled ? DEFAULT_MAX_HISTORY : 0);
+        this.history = memoryEnabled ? new ArrayList<>() : null;
+
+        if (memoryEnabled && builder.history != null) {
+            history.addAll(builder.history);
+
+            while (history.size() > maxHistory) {
+                history.remove(0);
+            }
+        }
     }
 
     private ChatOptions(ChatOptions source, JsonObject jsonSchema) {
@@ -110,7 +114,6 @@ public class ChatOptions implements Serializable {
         this.topP = source.topP;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
-        this.uploadedFileHistory = source.uploadedFileHistory;
     }
 
     private ChatOptions(ChatOptions source, String systemPrompt) {
@@ -121,7 +124,6 @@ public class ChatOptions implements Serializable {
         this.topP = source.topP;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
-        this.uploadedFileHistory = source.uploadedFileHistory;
     }
 
     /**
@@ -315,7 +317,7 @@ public class ChatOptions implements Serializable {
             throw new IllegalStateException("Cannot get message history from non-memory ChatOptions");
         }
 
-        return history.stream().map(message -> new Message(message.role(), message.content(), uploadedFileHistory.getOrDefault(message, emptyList()))).collect(toUnmodifiableList());
+        return unmodifiableList(history);
     }
 
     /**
@@ -326,8 +328,7 @@ public class ChatOptions implements Serializable {
      * the conversation with prior context.
      * <p>
      * When the history exceeds the configured maximum (default {@value #DEFAULT_MAX_HISTORY} messages, counting both
-     * sent and received), the oldest messages are automatically discarded to maintain the sliding window,
-     * along with any {@linkplain #recordUploadedFile(String, MimeType) uploaded file references} associated with them.
+     * sent and received), the oldest messages are automatically discarded to maintain the sliding window.
      *
      * @param role The role of the message.
      * @param message The message content.
@@ -341,12 +342,12 @@ public class ChatOptions implements Serializable {
         history.add(new Message(role, message, emptyList()));
 
         while (history.size() > maxHistory) {
-            uploadedFileHistory.remove(history.remove(0));
+            history.remove(0);
         }
     }
 
     /**
-     * Records an uploaded file reference against the most recent message in the conversation history.
+     * Records an uploaded file reference against the most recent user message in the conversation history.
      * <p>
      * This is called by text handlers during {@code buildChatPayload} after uploading a file, so the file ID
      * can be replayed in subsequent turns. The file reference is automatically discarded when its associated
@@ -354,7 +355,7 @@ public class ChatOptions implements Serializable {
      *
      * @param fileId The provider-assigned file ID or URI.
      * @param mimeType The MIME type of the uploaded file.
-     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
+     * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}, or if there is no preceding user message.
      * @since 1.1
      * @see #getHistory()
      */
@@ -363,12 +364,18 @@ public class ChatOptions implements Serializable {
             throw new IllegalStateException("Cannot record uploaded file on non-memory ChatOptions");
         }
 
-        iterate(history.size() - 1, i -> i >= 0, i -> i - 1).mapToObj(history::get)
-            .filter(message -> message.role() == Role.USER)
-            .findFirst()
-            .ifPresentOrElse(
-                message -> uploadedFileHistory.computeIfAbsent(message, k -> new ArrayList<>()).add(new UploadedFile(fileId, mimeType)),
-                () -> { throw new IllegalStateException("Cannot record uploaded file without a preceding user message"); });
+        for (var i = history.size() - 1; i >= 0; i--) {
+            var message = history.get(i);
+
+            if (message.role() == Role.USER) {
+                var uploadedFiles = new ArrayList<>(message.uploadedFiles());
+                uploadedFiles.add(new UploadedFile(fileId, mimeType));
+                history.set(i, new Message(message.role(), message.content(), uploadedFiles));
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Cannot record uploaded file without a preceding user message");
     }
 
     /**
@@ -399,6 +406,7 @@ public class ChatOptions implements Serializable {
         private Integer maxTokens;
         private double topP = ChatOptions.DEFAULT_TOP_P;
         private int maxHistory;
+        private List<Message> history;
 
         private Builder() {}
 
@@ -564,6 +572,44 @@ public class ChatOptions implements Serializable {
             }
 
             this.maxHistory = maxHistory;
+            return this;
+        }
+
+        /**
+         * Sets the initial conversation history for this memory-enabled {@code ChatOptions} instance.
+         * <p>
+         * This allows restoring a previously saved conversation. The history list is typically obtained from
+         * {@link ChatOptions#getHistory()} of a prior session and persisted externally (e.g. in a database or HTTP session).
+         * <p>
+         * If the provided history exceeds the configured {@link #withMemory(int) maximum}, the oldest messages are
+         * automatically discarded to fit within the sliding window.
+         * <p>
+         * Memory is implicitly enabled with {@value ChatOptions#DEFAULT_MAX_HISTORY} if not already set via
+         * {@link #withMemory()} or {@link #withMemory(int)}.
+         * <p>
+         * Usage example:
+         * <pre>
+         * // Save history from a previous session
+         * List&lt;Message&gt; saved = options.getHistory();
+         *
+         * // Restore history in a new session
+         * ChatOptions restored = ChatOptions.newBuilder()
+         *     .systemPrompt("You are a helpful assistant")
+         *     .withMemory(20)
+         *     .history(saved)
+         *     .build();
+         * </pre>
+         *
+         * @param history The initial conversation history to seed. Must not be {@code null}.
+         * @return This builder instance for chaining.
+         * @throws NullPointerException if history is {@code null}.
+         * @since 1.2
+         * @see ChatOptions#getHistory()
+         * @see #withMemory()
+         * @see #withMemory(int)
+         */
+        public Builder history(List<Message> history) {
+            this.history = List.copyOf(history);
             return this;
         }
 

@@ -207,6 +207,21 @@ ChatOptions options = ChatOptions.newBuilder()
     .build();
 ```
 
+Since `ChatOptions` is `Serializable`, you can save and restore the entire instance across sessions (e.g., in an HTTP session or database).
+If you need to reuse the same conversation history with different settings (e.g., a different system prompt or temperature), you can seed a new `ChatOptions` with the history from an existing one:
+```java
+List<ChatInput.Message> saved = originalOptions.getHistory();
+
+ChatOptions tweakedOptions = ChatOptions.newBuilder()
+    .systemPrompt("Now respond in Spanish.")
+    .temperature(0.3)
+    .withMemory(originalOptions.getMaxHistory())
+    .history(saved)
+    .build();
+
+String response = service.chat("Continue where we left off", tweakedOptions);
+```
+
 File attachments are automatically tracked in history. When you upload files in a memory-enabled chat, their references are preserved across turns so the AI can continue referencing them:
 ```java
 ChatOptions options = ChatOptions.newBuilder()
