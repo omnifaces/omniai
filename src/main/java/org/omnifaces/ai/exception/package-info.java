@@ -16,11 +16,18 @@
  * <p>
  * All exceptions extend {@link org.omnifaces.ai.exception.AIException}:
  * <ul>
- * <li>{@link org.omnifaces.ai.exception.AIHttpException} - HTTP-level errors (4xx/5xx responses)</li>
+ * <li>{@link org.omnifaces.ai.exception.AIHttpException} - HTTP-level errors (4xx/5xx responses)
+ *     <ul>
+ *     <li>{@link org.omnifaces.ai.exception.AIAuthenticationException} - authentication failures (401)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIAuthorizationException} - authorization failures (403)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIBadRequestException} - malformed requests (400)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIEndpointNotFoundException} - endpoint not found (404)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIRateLimitExceededException} - rate limit exceeded (429)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIServiceUnavailableException} - service unavailable (503)</li>
+ *     </ul>
+ * </li>
  * <li>{@link org.omnifaces.ai.exception.AIResponseException} - response parsing or content errors</li>
  * <li>{@link org.omnifaces.ai.exception.AITokenLimitExceededException} - input/output token limit exceeded</li>
  * </ul>
- * HTTP exceptions are further specialized for common error conditions (authentication, authorization, rate limiting,
- * bad request, endpoint not found, service unavailable).
  */
 package org.omnifaces.ai.exception;
