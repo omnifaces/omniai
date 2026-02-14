@@ -163,8 +163,8 @@ final class AIHttpClient {
      * @throws AIHttpException if the request fails
      * @since 1.2
      */
-    public CompletableFuture<HttpResponse<InputStream>> stream(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
-        return sendWithRetryAsync(service, path, payload, newJsonRequest(service, path, payload, APPLICATION_JSON), CompletableFuture::completedFuture);
+    public CompletableFuture<InputStream> stream(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
+        return sendWithRetryAsync(service, path, payload, newJsonRequest(service, path, payload, APPLICATION_JSON), HttpResponse::body);
     }
 
     /**
@@ -180,7 +180,7 @@ final class AIHttpClient {
      */
     public CompletableFuture<Void> stream(BaseAIService service, String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIHttpException {
         final int requestId = logRequest(service, path, payload);
-        return sendWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), r -> consumeEventStream(requestId, r, eventProcessor), 0);
+        return sendWithRetryAsync(newJsonRequest(service, path, payload, EVENT_STREAM), r -> { consumeEventStream(requestId, r, eventProcessor); return null; }, 0);
     }
 
     /**
@@ -212,12 +212,12 @@ final class AIHttpClient {
     }
 
     private CompletableFuture<String> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request) {
-        return sendWithRetryAsync(service, path, payload, request, r -> completedFuture(readBody(r)));
+        return sendWithRetryAsync(service, path, payload, request, AIHttpClient::readBody);
     }
 
-    private <R> CompletableFuture<R> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request, Function<HttpResponse<InputStream>, CompletableFuture<R>> responseHandler) {
+    private <R> CompletableFuture<R> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request, Function<HttpResponse<InputStream>, R> bodyExtractor) {
         final int requestId = logRequest(service, path, payload);
-        return sendWithRetryAsync(request, responseHandler, 0).thenApply(response -> {
+        return sendWithRetryAsync(request, bodyExtractor, 0).thenApply(response -> {
             logger.log(FINER, () -> "Response for #" + requestId + ": " + response);
             return response;
         });
@@ -250,26 +250,24 @@ final class AIHttpClient {
         if (contentType != null) {
             builder.header("Content-Type", contentType);
         }
-        if (accept != null) {
-            builder.header("Accept", accept);
-        }
+        builder.header("Accept", accept);
         builder.header("Accept-Encoding", "gzip");
         service.getRequestHeaders().forEach(builder::header);
         return builder.build();
     }
 
-    private <R> CompletableFuture<R> sendWithRetryAsync(HttpRequest request, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofInputStream()).thenCompose(response -> handleResponse(request, response, AIHttpClient::readBody, successHandler)), attempt);
+    private <R> CompletableFuture<R> sendWithRetryAsync(HttpRequest request, Function<HttpResponse<InputStream>, R> bodyExtractor, int attempt) {
+        return withRetry(() -> client.sendAsync(request, ofInputStream()).thenCompose(response -> handleResponse(request, response, bodyExtractor)), attempt);
     }
 
-    private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, String> bodyExtractor, Function<HttpResponse<T>, CompletableFuture<R>> successHandler) {
+    private static <R, T> CompletableFuture<R> handleResponse(HttpRequest request, HttpResponse<T> response, Function<HttpResponse<T>, R> bodyExtractor) {
         var statusCode = response.statusCode();
 
         if (statusCode >= AIBadRequestException.STATUS_CODE) {
-            return failedFuture(fromStatusCode(request.uri(), statusCode, bodyExtractor.apply(response)));
+            return failedFuture(fromStatusCode(request.uri(), statusCode, String.valueOf(bodyExtractor.apply(response))));
         }
 
-        return successHandler.apply(response);
+        return completedFuture(bodyExtractor.apply(response));
     }
 
     private static CompletableFuture<Void> consumeEventStream(int requestId, HttpResponse<InputStream> response, Predicate<Event> eventProcessor) {

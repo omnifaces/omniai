@@ -570,13 +570,14 @@ public abstract class BaseAIService implements AIService {
      * Sends a POST request to the audio generation endpoint and streams the response body.
      * @param text The text to convert to audio.
      * @param options Audio generation options (voice, speed, output format, etc.).
-     * @param responseBodyHandler The handler to process the response body stream.
+     * @param responseStreamHandler The handler to process the response stream.
      * @param <R> The return type of the response body handler.
-     * @return A CompletableFuture containing the result of the response body handler.
+     * @return A CompletableFuture containing the result of the response stream handler.
      * @throws AIException if the request fails.
+     * @since 1.2
      */
-    protected <R> CompletableFuture<R> asyncPostAndStreamResponseBody(String text, GenerateAudioOptions options, Function<InputStream, R> responseBodyHandler) throws AIException {
-        return HTTP_CLIENT.stream(this, getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options)).thenApply(response -> responseBodyHandler.apply(response.body()));
+    protected <R> CompletableFuture<R> asyncPostAndStreamResponseBody(String text, GenerateAudioOptions options, Function<InputStream, R> responseStreamHandler) throws AIException {
+        return HTTP_CLIENT.stream(this, getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options)).thenApply(responseStreamHandler::apply);
     }
 
 

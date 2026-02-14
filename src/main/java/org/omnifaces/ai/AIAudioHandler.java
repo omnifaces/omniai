@@ -63,6 +63,7 @@ public interface AIAudioHandler extends Serializable {
      * @param text The text to convert to audio.
      * @param options The audio generation options.
      * @return The JSON request payload.
+     * @since 1.2
      */
     default JsonObject buildGenerateAudioPayload(AIService service, String text, GenerateAudioOptions options) {
         throw new UnsupportedOperationException("Please implement buildGenerateAudioPayload(AIService service, String text, GenerateAudioOptions options) method in class " + getClass().getSimpleName());
