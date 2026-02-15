@@ -19,6 +19,7 @@ import org.omnifaces.ai.modality.AnthropicAITextHandler;
 import org.omnifaces.ai.modality.DefaultAIAudioHandler;
 import org.omnifaces.ai.modality.DefaultAIImageHandler;
 import org.omnifaces.ai.modality.DefaultAITextHandler;
+import org.omnifaces.ai.modality.GoogleAIAudioHandler;
 import org.omnifaces.ai.modality.GoogleAIImageHandler;
 import org.omnifaces.ai.modality.GoogleAITextHandler;
 import org.omnifaces.ai.modality.MetaAITextHandler;
@@ -102,7 +103,7 @@ public enum AIProvider {
      * @see <a href="https://aistudio.google.com/app/api-keys">Manage Google AI API Keys</a>
      * @see <a href="https://ai.google.dev/gemini-api/docs/models">Available Google AI Models</a>
      */
-    GOOGLE("Google AI", GoogleAIService.class, true, "gemini-2.5-flash", "https://generativelanguage.googleapis.com/v1beta", GoogleAITextHandler.class, GoogleAIImageHandler.class, DefaultAIAudioHandler.class),
+    GOOGLE("Google AI", GoogleAIService.class, true, "gemini-2.5-flash", "https://generativelanguage.googleapis.com/v1beta", GoogleAITextHandler.class, GoogleAIImageHandler.class, GoogleAIAudioHandler.class),
 
     /**
      * xAI: Grok Fast Reasoning, Grok Non Reasoning, Grok Code, etc.

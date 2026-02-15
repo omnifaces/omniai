@@ -12,6 +12,8 @@
  */
 package org.omnifaces.ai.modality;
 
+import java.util.logging.Logger;
+
 import org.omnifaces.ai.AIAudioHandler;
 import org.omnifaces.ai.AIService;
 
@@ -29,6 +31,9 @@ import org.omnifaces.ai.AIService;
 public class DefaultAIAudioHandler implements AIAudioHandler {
 
     private static final long serialVersionUID = 1L;
+
+    /** Logger for current package. */
+    protected static final Logger logger = Logger.getLogger(DefaultAIAudioHandler.class.getPackageName());
 
     @Override
     public String buildTranscribePrompt() {
