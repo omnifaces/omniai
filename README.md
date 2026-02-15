@@ -349,7 +349,25 @@ byte[] audioBytes = Files.readAllBytes(audioPath);
 String transcription = service.transcribe(audioBytes);
 ```
 
-All methods have async variants returning `CompletableFuture` (e.g., `chatAsync`, `summarizeAsync`, `translateAsync`, `proofreadAsync`, `generateImageAsync`, `transcribeAsync`, etc.).
+### Audio Generation (Text-to-Speech)
+
+```java
+// Generate audio
+byte[] audio = service.generateAudio("Hello, welcome to OmniHai!");
+
+// Save directly to file (default format depends on AI provider)
+gpt.generateAudio("Hello, welcome to OmniHai!", Path.of("greeting.mp3"));
+
+// With options (allowable options depend on AI provider)
+byte[] audio = gpt.generateAudio("Hello!",
+    GenerateAudioOptions.newBuilder()
+        .voice("breeze")
+        .speed(1.5)
+        .outputFormat("wav")
+        .build());
+```
+
+All methods have async variants returning `CompletableFuture` (e.g., `chatAsync`, `summarizeAsync`, `translateAsync`, `proofreadAsync`, `generateImageAsync`, `transcribeAsync`, `generateAudioAsync`, etc.).
 
 ## Custom Providers
 
@@ -426,6 +444,7 @@ private AIService trackedService;
 | **Image Analysis** | ✅ | ✅ | ✅ | TBD |
 | **Image Generation** | ✅ | ✅ | ✅ | TBD |
 | **Audio Transcription** | ✅ (native + fallback) | ✅ | ✅ | TBD |
+| **Audio Generation (TTS)** | ✅ | ✅ | ✅ | TBD |
 | **Content Moderation** | ✅ (native + fallback) | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Translation** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Proofreading** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
@@ -490,7 +509,7 @@ OmniHai fills a different niche. For apps that need:
 - Multi-provider chat with easy switching
 - Text analysis (summarize, translate, proofread, moderate)
 - Image analysis (describe, generate alt text)
-- Audio analysis (transcribe)
+- Audio analysis (transcribe) and generation (text-to-speech)
 - Minimal dependencies
 - Pure Jakarta EE / MicroProfile
 
