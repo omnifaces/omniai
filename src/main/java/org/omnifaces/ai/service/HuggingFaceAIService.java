@@ -12,8 +12,7 @@
  */
 package org.omnifaces.ai.service;
 
-import static java.util.Collections.emptyMap;
-
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -117,12 +116,11 @@ public class HuggingFaceAIService extends OpenAIService {
     @Override
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
         var mimeType = MimeType.guessMimeType(audio);
+        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), new Attachment(audio, mimeType, "audio." + mimeType.extension())).thenApply(this::parseOpenAITranscribeResponse);
+    }
 
-        if (!mimeType.isAudio()) {
-            throw new UnsupportedOperationException("Unrecognized audio mime type.");
-        }
-
-        var attachment = new Attachment(audio, mimeType, "audio." + mimeType.extension(), emptyMap());
-        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), attachment).thenApply(this::parseOpenAITranscribeResponse);
+    @Override
+    public CompletableFuture<String> transcribeAsync(Path source) throws AIException {
+        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), new Attachment(source)).thenApply(this::parseOpenAITranscribeResponse);
     }
 }

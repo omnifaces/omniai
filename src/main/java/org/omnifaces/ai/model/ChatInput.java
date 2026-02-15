@@ -159,7 +159,7 @@ public class ChatInput implements Serializable {
          * @param metadata Additional provider-specific metadata to use in upload request, must not be {@code null}.
          */
         public Attachment(byte[] content, MimeType mimeType, String fileName, Map<String, String> metadata) {
-            this(requireNonNull(content, "content"), null, mimeType, fileName, metadata);
+            this(requireNonNull(content, "content"), null, mimeType, requireNonBlank(fileName, "fileName"), metadata);
         }
 
         /**
@@ -192,14 +192,14 @@ public class ChatInput implements Serializable {
          * @since 1.2
          */
         public Attachment(Path source, Map<String, String> metadata) {
-            this(null, requireNonNull(source, "source"), guessMimeType(readMagicBytes(source)), source.getFileName().toString(), metadata);
+            this(null, requireNonNull(source, "source"), guessMimeType(readMagicBytes(source)), null, metadata);
         }
 
         private Attachment(byte[] content, Path source, MimeType mimeType, String fileName, Map<String, String> metadata) {
             this.content = content;
             this.source = source;
             this.mimeType = requireNonNull(mimeType, "mimeType");
-            this.fileName = requireNonBlank(fileName, "fileName");
+            this.fileName = fileName != null ? fileName : ("file." + mimeType.extension());
             this.metadata = requireNonNull(metadata, "metadata").entrySet().stream()
                     .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
                     .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));

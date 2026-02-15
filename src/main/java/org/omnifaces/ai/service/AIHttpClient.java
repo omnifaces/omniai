@@ -149,7 +149,7 @@ final class AIHttpClient {
      * @since 1.1
      */
     public CompletableFuture<String> post(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
-        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, BodyPublishers.ofByteArray(attachment.content())));
+        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, toBody(attachment)));
     }
 
     /**
@@ -209,6 +209,15 @@ final class AIHttpClient {
      */
     public CompletableFuture<String> delete(BaseAIService service, String path) throws AIHttpException {
         return sendWithRetryAsync(service, path, DELETE, newRequest(service, path, DELETE, null, APPLICATION_JSON, BodyPublishers.noBody()));
+    }
+
+    private static BodyPublisher toBody(Attachment attachment) {
+        try {
+            return attachment.source() != null ? BodyPublishers.ofFile(attachment.source()) : BodyPublishers.ofByteArray(attachment.content());
+        }
+        catch (IOException e) {
+            throw new AIException("Cannot read attachment " + attachment, e);
+        }
     }
 
     private CompletableFuture<String> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request) {

@@ -25,8 +25,18 @@ import org.junit.jupiter.api.Test;
 abstract class BaseAIServiceAudioHandlerIT extends AIServiceIT {
 
     @Test
-    void transcribe() {
+    void transcribeFromBytes() {
         var response = service.transcribe(readAllBytes("/helloworld.wav"));
+        log(response);
+        assertAll(
+            () -> assertTrue(response.toLowerCase().contains("hello"), response),
+            () -> assertTrue(response.toLowerCase().contains("world"), response)
+        );
+    }
+
+    @Test
+    void transcribeFromPath() {
+        var response = service.transcribe(getPath("/helloworld.wav"));
         log(response);
         assertAll(
             () -> assertTrue(response.toLowerCase().contains("hello"), response),
