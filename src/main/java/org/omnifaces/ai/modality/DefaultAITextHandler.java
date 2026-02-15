@@ -66,6 +66,8 @@ public class DefaultAITextHandler implements AITextHandler {
     protected static final int DEFAULT_MAX_WORDS_PER_KEYPOINT = 25;
     /** Default words per moderate content category: {@value} */
     protected static final int DEFAULT_WORDS_PER_MODERATE_CONTENT_CATEGORY = 10;
+    /** Default error message paths: {@code "error.message"} and {@code "error"} */
+    protected static final List<String> DEFAULT_ERROR_MESSAGE_PATHS = List.of("error.message", "error");
 
     @Override
     public double getDefaultCreativeTemperature() {
@@ -201,11 +203,11 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(String)} or {@link #parseFileResponse(String)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
-     * @implNote The default implementation returns {@code error.message} and {@code error}.
+     * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
     public List<String> getTextResponseErrorMessagePaths() {
-        return List.of("error.message", "error");
+        return DEFAULT_ERROR_MESSAGE_PATHS;
     }
 
     /**

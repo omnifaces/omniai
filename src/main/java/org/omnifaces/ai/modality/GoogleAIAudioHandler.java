@@ -13,9 +13,10 @@
 package org.omnifaces.ai.modality;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.omnifaces.ai.helper.JsonHelper.findNonBlankByPath;
+import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.parseAndCheckErrors;
 import static org.omnifaces.ai.mime.MimeType.guessMimeType;
+import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -80,9 +81,14 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             throw new AIResponseException("Cannot parse response body as string", responseBody.toString(), e);
         }
 
-        var responseJson = parseAndCheckErrors(responseBodyAsString, List.of("errors"));
-        var audioContentPath = "candidates[0].content.parts[0].inlineData.data";
-        var audioContentBase64 = findNonBlankByPath(responseJson, audioContentPath).orElseThrow(() -> new AIResponseException("No audio content found at path " + audioContentPath, responseBodyAsString));
+        var audioContentPaths = getAudioResponseContentPaths();
+
+        if (audioContentPaths.isEmpty()) {
+            throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
+        }
+
+        var responseJson = parseAndCheckErrors(responseBodyAsString, getAudioResponseErrorMessagePaths());
+        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, audioContentPaths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + audioContentPaths, responseBodyAsString));
 
         try {
             var audioContent = Base64.getDecoder().decode(audioContentBase64);
@@ -99,14 +105,35 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         }
     }
 
+    /**
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseAudioContent(InputStream)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
+     * @return all possible paths to the error message in the JSON response.
+     */
+    protected List<String> getAudioResponseErrorMessagePaths() {
+        return DEFAULT_ERROR_MESSAGE_PATHS;
+    }
+
+    /**
+     * Returns all possible paths to the image content in the JSON response parsed by {@link #parseAudioContent(InputStream)}.
+     * May not be empty.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation returns {@code "candidates[0].content.parts[0].inlineData.data"}.
+     * @return all possible paths to the image content in the JSON response.
+     */
+    protected List<String> getAudioResponseContentPaths() {
+        return List.of("candidates[0].content.parts[0].inlineData.data");
+    }
+
     private static final int DEFAULT_GEMINI_AUDIO_WAV_SAMPLE_RATE = 24000;
     private static final int DEFAULT_GEMINI_AUDIO_WAV_CHANNELS = 1;
     private static final int DEFAULT_GEMINI_AUDIO_WAV_BITS_PER_SAMPLE = 16;
 
     /**
-     * Gemini returns a PCM file which is basically a WAV without 44-byte magic header. We need to manually add that header.
-     * Technical reason is, Gemini supports streaming JSON output, and therefore content length is unknown beforehand.
-     * OmniHai doesn't yet support parsing streaming JSON, OmniHai only supports SSE, so this could be a future improvement.
+     * Gemini TTS returns a PCM file which is basically a WAV without 44-byte magic header. We need to manually add that header.
+     * Technical reason is, Gemini supports streaming JSON responses, and therefore content length is unknown beforehand.
+     * OmniHai doesn't yet support parsing streaming JSON responses, OmniHai only supports SSE, so this could be a future improvement.
      * @see <a href="https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html">WAV spec</a>
      */
     private static byte[] createWavHeader(long pcmContentLength) {

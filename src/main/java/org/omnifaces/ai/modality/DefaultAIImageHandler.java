@@ -14,6 +14,7 @@ package org.omnifaces.ai.modality;
 
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.parseAndCheckErrors;
+import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.util.Base64;
 import java.util.List;
@@ -110,11 +111,11 @@ public class DefaultAIImageHandler implements AIImageHandler {
     /**
      * Returns all possible paths to the error message in the JSON response parsed by {@link #parseImageContent(String)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
-     * @implNote The default implementation returns {@code error.message} and {@code error}.
+     * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
     public List<String> getImageResponseErrorMessagePaths() {
-        return List.of("error.message", "error");
+        return DEFAULT_ERROR_MESSAGE_PATHS;
     }
 
     /**
