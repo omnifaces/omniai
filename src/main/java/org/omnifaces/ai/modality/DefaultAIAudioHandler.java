@@ -19,7 +19,7 @@ import org.omnifaces.ai.AIService;
 
 /**
  * Default AI audio handler implementation that provides general-purpose prompt templates suitable for most current
- * transcription-capable models.
+ * transcription-capable and audio-generation-capable models.
  * <p>
  * This class is intended as a fallback when no provider-specific implementation is available.
  *

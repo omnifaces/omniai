@@ -99,7 +99,7 @@ public enum AIProvider {
      * @see GoogleAIService
      * @see GoogleAITextHandler
      * @see GoogleAIImageHandler
-     * @see DefaultAIAudioHandler
+     * @see GoogleAIAudioHandler
      * @see <a href="https://aistudio.google.com/app/api-keys">Manage Google AI API Keys</a>
      * @see <a href="https://ai.google.dev/gemini-api/docs/models">Available Google AI Models</a>
      */

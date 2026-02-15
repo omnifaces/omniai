@@ -23,11 +23,12 @@ import org.omnifaces.ai.modality.DefaultAIAudioHandler;
 import org.omnifaces.ai.model.GenerateAudioOptions;
 
 /**
- * Handler for audio-based AI operations including transcription.
+ * Handler for audio-based AI operations including transcription and generation (text-to-speech).
  * <p>
  * Covers:
  * <ul>
- * <li>audio transcription</li>
+ * <li>audio transcription (speech-to-text)</li>
+ * <li>audio generation (text-to-speech)</li>
  * </ul>
  * <p>
  * The implementations must be stateless and able to be {@link ApplicationScoped}.
@@ -72,13 +73,13 @@ public interface AIAudioHandler extends Serializable {
 
     /**
      * Parses audio content from the API response body of generate audio operation.
-     * @implNote The default implementation throws UnsupportedOperationException.
+     * @implNote The default implementation returns the response body directly.
      * @param responseBody The API response body, usually either the raw audio file or a JSON object with an encoded audio file, along with some meta data.
      * @return The extracted audio content from the API response body.
-     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected image content.
+     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected audio content.
      * @since 1.2
      */
     default InputStream parseAudioContent(InputStream responseBody) throws AIResponseException {
-        throw new UnsupportedOperationException("Please implement parseAudioContent(InputStream responseBody) method in class " + getClass().getSimpleName());
+        return responseBody;
     }
 }

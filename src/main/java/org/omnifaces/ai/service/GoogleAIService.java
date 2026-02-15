@@ -75,6 +75,7 @@ public class GoogleAIService extends BaseAIService {
             case IMAGE_ANALYSIS -> true;
             case IMAGE_GENERATION -> currentModelVersion.gte(GEMINI_2) || fullModelName.contains("image");
             case AUDIO_ANALYSIS -> currentModelVersion.gte(GEMINI_1_5);
+            case AUDIO_GENERATION -> currentModelVersion.gte(GEMINI_1_5);
             default -> false;
         };
     }

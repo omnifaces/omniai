@@ -16,6 +16,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
 
+import org.omnifaces.ai.AIAudioHandler;
+
 /**
  * Options for AI audio generation.
  * <p>
@@ -57,13 +59,8 @@ public class GenerateAudioOptions implements Serializable {
     }
 
     /**
-     * Gets the voice of the generated audio. Defaults to {@value #DEFAULT_VOICE}.
-     * <p>
-     * Common values include:
-     * <ul>
-     * <li>{@code "auto"} - Let the model choose the best voice
-     * <li>{@code "alloy"}, {@code "ash"}, {@code "coral"}, {@code "echo"}, {@code "fable"}, {@code "onyx"}, {@code "nova"}, {@code "shimmer"} - OpenAI voices
-     * </ul>
+     * Gets the voice of the generated audio. Defaults to {@value #DEFAULT_VOICE}, which lets the {@link AIAudioHandler#buildGenerateAudioPayload(org.omnifaces.ai.AIService, String, GenerateAudioOptions)} choose its own default.
+     * The available values depend on the AI provider used.
      *
      * @return The voice name string.
      */
@@ -73,8 +70,9 @@ public class GenerateAudioOptions implements Serializable {
 
     /**
      * Gets the playback speed of the generated audio. Defaults to {@value #DEFAULT_SPEED}.
+     * The allowed values depend on the AI provider used.
      *
-     * @return The playback speed, between 0.25 and 4.0.
+     * @return The playback speed.
      */
     public double getSpeed() {
         return speed;
@@ -82,16 +80,7 @@ public class GenerateAudioOptions implements Serializable {
 
     /**
      * Gets the output format of the generated audio. Defaults to {@value #DEFAULT_OUTPUT_FORMAT}.
-     * <p>
-     * Common values include:
-     * <ul>
-     * <li>{@code "mp3"} - MP3 format
-     * <li>{@code "opus"} - Opus format
-     * <li>{@code "aac"} - AAC format
-     * <li>{@code "flac"} - FLAC format
-     * <li>{@code "wav"} - WAV format
-     * <li>{@code "pcm"} - PCM format
-     * </ul>
+     * The available values depend on the AI provider used, or it may even be ignored.
      *
      * @return The output format string.
      */
@@ -137,6 +126,7 @@ public class GenerateAudioOptions implements Serializable {
 
         /**
          * Sets the voice of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_VOICE}.
+         * The available values depend on the AI provider used.
          *
          * @param voice The voice name string.
          * @return This builder instance for chaining.
@@ -149,14 +139,15 @@ public class GenerateAudioOptions implements Serializable {
 
         /**
          * Sets the playback speed of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_SPEED}.
+         * The allowed values depend on the AI provider used.
          *
-         * @param speed The playback speed, must be between 0.25 and 4.0.
+         * @param speed The playback speed, must be positive.
          * @return This builder instance for chaining.
-         * @throws IllegalArgumentException when speed is not between 0.25 and 4.0.
+         * @throws IllegalArgumentException when speed is not positive.
          */
         public Builder speed(double speed) {
-            if (speed < 0.25 || speed > 4.0) {
-                throw new IllegalArgumentException("Speed must be between 0.25 and 4.0"); // OpenAI
+            if (speed <= 0) {
+                throw new IllegalArgumentException("Speed must be positive");
             }
             this.speed = speed;
             return this;
@@ -164,6 +155,7 @@ public class GenerateAudioOptions implements Serializable {
 
         /**
          * Sets the output format of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_OUTPUT_FORMAT}.
+         * The available values depend on the AI provider used, or it may even be ignored.
          *
          * @param outputFormat The output format string.
          * @return This builder instance for chaining.
