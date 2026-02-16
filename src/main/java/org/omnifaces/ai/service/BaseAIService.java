@@ -247,7 +247,7 @@ public abstract class BaseAIService implements AIService {
      * This is called as a fire-and-forget task after each upload. Failures are logged at WARNING level and never propagated.
      */
     @Override
-    public String upload(Attachment attachment) throws AIException {
+    public String upload(Attachment attachment, ChatOptions options) throws AIException {
         try {
             var fileId = asyncUploadAndParseFileIdResponse(getFilesPath(), attachment).join();
 
@@ -260,6 +260,10 @@ public abstract class BaseAIService implements AIService {
                         staleUploadedFilesCleanupRunning.set(false);
                     }
                 });
+            }
+
+            if (options.hasMemory()) {
+                options.recordUploadedFile(fileId, attachment.mimeType());
             }
 
             return fileId;

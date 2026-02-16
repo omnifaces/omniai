@@ -89,11 +89,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             checkSupportsFileAttachments(service);
 
             for (var file : input.getFiles()) {
-                var fileId = service.upload(file);
-
-                if (options.hasMemory()) {
-                    options.recordUploadedFile(fileId, file.mimeType());
-                }
+                var fileId = service.upload(file, options);
 
                 content.add(Json.createObjectBuilder()
                     .add("type", "document")

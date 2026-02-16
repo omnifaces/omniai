@@ -130,11 +130,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
             for (var file : remainingFiles) {
                 if (supportsFilesApi(service)) {
-                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)));
-
-                    if (options.hasMemory()) {
-                        options.recordUploadedFile(fileId, file.mimeType());
-                    }
+                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)), options);
 
                     content.add(Json.createObjectBuilder()
                         .add("type", supportsResponsesApi ? "input_file" : "file")

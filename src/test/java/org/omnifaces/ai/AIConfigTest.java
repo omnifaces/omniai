@@ -677,7 +677,7 @@ class AIConfigTest {
         @Override public boolean supportsModality(AIModality modality) throws AIException { return false; }
         @Override public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException { return null; }
         @Override public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) throws AIException { return null; }
-        @Override public String upload(Attachment attachment) throws AIException { return null; }
+        @Override public String upload(Attachment attachment, ChatOptions options) throws AIException { return null; }
         @Override public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException { return null; }
         @Override public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException { return null; }
         @Override public CompletableFuture<String> detectLanguageAsync(String text) throws AIException { return null; }

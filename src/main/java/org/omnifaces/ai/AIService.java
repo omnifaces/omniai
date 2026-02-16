@@ -592,11 +592,12 @@ public interface AIService extends Serializable {
      * not automatically do that or does not allow configuring that via file upload metadata.
      *
      * @param attachment The file attachment to upload.
+     * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
      * @return The file ID or URI that can be used to reference the uploaded file attachment in subsequent chat requests.
      * @throws UnsupportedOperationException if file upload is not supported by the implementation.
      * @throws AIException if the upload fails.
      */
-    String upload(Attachment attachment) throws AIException;
+    String upload(Attachment attachment, ChatOptions options) throws AIException;
 
 
     // Text Analysis Capabilities -------------------------------------------------------------------------------------

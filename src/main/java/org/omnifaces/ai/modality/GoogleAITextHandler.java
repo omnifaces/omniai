@@ -88,11 +88,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
             checkSupportsFileAttachments(service);
 
             for (var file : input.getFiles()) {
-                var fileId = service.upload(file);
-
-                if (options.hasMemory()) {
-                    options.recordUploadedFile(fileId, file.mimeType());
-                }
+                var fileId = service.upload(file, options);
 
                 parts.add(Json.createObjectBuilder()
                     .add("file_data", Json.createObjectBuilder()
