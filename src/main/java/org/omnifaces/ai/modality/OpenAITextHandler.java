@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
@@ -112,27 +113,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param service The visiting AI service.
      */
     protected void buildChatPayloadHistoryMessagesWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
-        for (var historyMessage : input.getHistory()) {
-            if (supportsFilesApi(service)) {
-                var content = Json.createArrayBuilder();
-                for (var uploadedFile : historyMessage.uploadedFiles()) {
-                    content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
-                        .add("file_id", uploadedFile.id()));
-                }
-                content.add(Json.createObjectBuilder()
-                    .add("type", (historyMessage.role() == Role.USER) ? "input_text" : "output_text")
-                    .add("text", historyMessage.content()));
-                messages.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", content));
-            }
-            else {
-                messages.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", historyMessage.content()));
-            }
-        }
+        addHistoryMessages(messages, input, service, true);
     }
 
     /**
@@ -142,16 +123,20 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param service The visiting AI service.
      */
     protected void buildChatPayloadHistoryMessagesWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
+        addHistoryMessages(messages, input, service, false);
+    }
+
+    private static void addHistoryMessages(JsonArrayBuilder messages, ChatInput input, AIService service, boolean supportsResponsesApi) {
         for (var historyMessage : input.getHistory()) {
             if (supportsFilesApi(service)) {
                 var content = Json.createArrayBuilder();
                 for (var uploadedFile : historyMessage.uploadedFiles()) {
                     content.add(Json.createObjectBuilder()
-                        .add("type", "file")
+                        .add("type", supportsResponsesApi ? "input_file" : "file")
                         .add("file_id", uploadedFile.id()));
                 }
                 content.add(Json.createObjectBuilder()
-                    .add("type", "text")
+                    .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
                     .add("text", historyMessage.content()));
                 messages.add(Json.createObjectBuilder()
                     .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
@@ -173,50 +158,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param options The chat options.
      */
     protected void buildChatPayloadUserContentWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
-        var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
-        var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
-        var content = Json.createArrayBuilder();
-
-        for (var image : input.getImages()) {
-            content.add(Json.createObjectBuilder()
-                .add("type", "input_image")
-                .add("image_url", image.toDataUri()));
-        }
-
-        for (var audioFile : audioFiles) {
-            content.add(Json.createObjectBuilder().add("type", "input_audio")
-                .add("input_audio", Json.createObjectBuilder()
-                    .add("audio_base64", audioFile.toBase64())
-                    .add("format", audioFile.mimeType().extension())));
-        }
-
-        if (!remainingFiles.isEmpty()) {
-            checkSupportsFileAttachments(service);
-
-            for (var file : remainingFiles) {
-                if (supportsFilesApi(service)) {
-                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)), options);
-
-                    content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
-                        .add("file_id", fileId));
-                }
-                else {
-                    content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
-                        .add("filename", file.fileName())
-                        .add("file_data", file.toDataUri()));
-                }
-            }
-        }
-
-        content.add(Json.createObjectBuilder()
-            .add("type", "input_text")
-            .add("text", input.getMessage()));
-
-        messages.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("content", content));
+        addUserContent(messages, input, service, options, file -> getFileUploadMetadata(service, file), true);
     }
 
     /**
@@ -227,20 +169,31 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param options The chat options.
      */
     protected void buildChatPayloadUserContentWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
+        addUserContent(messages, input, service, options, file -> getFileUploadMetadata(service, file), false);
+    }
+
+    private static void addUserContent(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options, Function<Attachment, Map<String, String>> getFileUploadMetadata, boolean supportsResponsesApi) {
         var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
         var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            content.add(Json.createObjectBuilder()
-                .add("type", "image_url")
-                .add("image_url", Json.createObjectBuilder().add("url", image.toDataUri())));
+            var img = Json.createObjectBuilder().add("type", supportsResponsesApi ? "input_image" : "image_url");
+
+            if (supportsResponsesApi) {
+                img.add("image_url", image.toDataUri());
+            }
+            else {
+                img.add("image_url", Json.createObjectBuilder().add("url", image.toDataUri()));
+            }
+
+            content.add(img);
         }
 
         for (var audioFile : audioFiles) {
             content.add(Json.createObjectBuilder().add("type", "input_audio")
                 .add("input_audio", Json.createObjectBuilder()
-                    .add("data", audioFile.toBase64())
+                    .add(supportsResponsesApi ? "audio_base64" : "data", audioFile.toBase64())
                     .add("format", audioFile.mimeType().extension())));
         }
 
@@ -249,11 +202,17 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
             for (var file : remainingFiles) {
                 if (supportsFilesApi(service)) {
-                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)), options);
+                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata.apply(file)), options);
 
                     content.add(Json.createObjectBuilder()
-                        .add("type", "file")
+                        .add("type", supportsResponsesApi ? "input_file" : "file")
                         .add("file_id", fileId));
+                }
+                else if (supportsResponsesApi) {
+                    content.add(Json.createObjectBuilder()
+                        .add("type", "input_file")
+                        .add("filename", file.fileName())
+                        .add("file_data", file.toDataUri()));
                 }
                 else {
                     content.add(Json.createObjectBuilder()
@@ -266,7 +225,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         }
 
         content.add(Json.createObjectBuilder()
-            .add("type", "text")
+            .add("type", supportsResponsesApi ? "input_text" : "text")
             .add("text", input.getMessage()));
 
         messages.add(Json.createObjectBuilder()
@@ -282,37 +241,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param streaming Whether streaming is enabled.
      */
     protected void buildChatPayloadGenerationConfigWithResponsesApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
-        var currentModelVersion = service.getModelVersion();
-
-        if (options.getMaxTokens() != null) {
-            payload.add("max_output_tokens", options.getMaxTokens());
-        }
-
-        if (streaming) {
-            checkSupportsStreaming(service);
-            payload.add("stream", true);
-        }
-
-        if (currentModelVersion.ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
-            payload.add("temperature", options.getTemperature());
-        }
-
-        if (options.getTopP() != 1.0) {
-            payload.add("top_p", options.getTopP());
-        }
-
-        if (options.getJsonSchema() != null) {
-            checkSupportsStructuredOutput(service);
-
-            var strictSchema = Json.createObjectBuilder()
-                .add("name", "response_schema")
-                .add("strict", true)
-                .add("schema", addStrictAdditionalProperties(options.getJsonSchema()));
-
-            var format = Json.createObjectBuilder().add("type", "json_schema");
-            strictSchema.build().forEach(format::add);
-            payload.add("text", Json.createObjectBuilder().add("format", format));
-        }
+        addGenerationConfig(payload, service, options, streaming, true);
     }
 
     /**
@@ -323,11 +252,18 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @param streaming Whether streaming is enabled.
      */
     protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
-        var currentModelVersion = service.getModelVersion();
+        addGenerationConfig(payload, service, options, streaming, false);
+    }
 
+    private static void addGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming, boolean supportsResponsesApi) {
         if (options.getMaxTokens() != null) {
-            var maxTokensField = currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens";
-            payload.add(maxTokensField, options.getMaxTokens());
+            if (supportsResponsesApi) {
+                payload.add("max_output_tokens", options.getMaxTokens());
+            }
+            else {
+                var maxTokensField = service.getModelVersion().gte(GPT_5) ? "max_completion_tokens" : "max_tokens";
+                payload.add(maxTokensField, options.getMaxTokens());
+            }
         }
 
         if (streaming) {
@@ -335,7 +271,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             payload.add("stream", true);
         }
 
-        if (currentModelVersion.ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
+        if (service.getModelVersion().ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
             payload.add("temperature", options.getTemperature());
         }
 
@@ -346,12 +282,24 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         if (options.getJsonSchema() != null) {
             checkSupportsStructuredOutput(service);
 
-            payload.add("response_format", Json.createObjectBuilder()
-                .add("type", "json_schema")
-                .add("json_schema", Json.createObjectBuilder()
+            if (supportsResponsesApi) {
+                var strictSchema = Json.createObjectBuilder()
                     .add("name", "response_schema")
                     .add("strict", true)
-                    .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))));
+                    .add("schema", addStrictAdditionalProperties(options.getJsonSchema()));
+
+                var format = Json.createObjectBuilder().add("type", "json_schema");
+                strictSchema.build().forEach(format::add);
+                payload.add("text", Json.createObjectBuilder().add("format", format));
+            }
+            else {
+                payload.add("response_format", Json.createObjectBuilder()
+                    .add("type", "json_schema")
+                    .add("json_schema", Json.createObjectBuilder()
+                        .add("name", "response_schema")
+                        .add("strict", true)
+                        .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))));
+            }
         }
     }
 
