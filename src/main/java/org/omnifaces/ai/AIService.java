@@ -68,12 +68,7 @@ public interface AIService extends Serializable {
      * @throws AIException if the chat request fails.
      */
     default String chat(String message) throws AIException {
-        try {
-            return chatAsync(message).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(message));
     }
 
     /**
@@ -94,12 +89,7 @@ public interface AIService extends Serializable {
      * @throws AIException if the chat request fails.
      */
     default String chat(ChatInput input) throws AIException {
-        try {
-            return chatAsync(input).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(input));
     }
 
     /**
@@ -126,12 +116,7 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      */
     default <T> T chat(String message, Class<T> type) throws AIException {
-        try {
-            return chatAsync(message, type).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(message, type));
     }
 
     /**
@@ -162,12 +147,7 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      */
     default <T> T chat(ChatInput input, Class<T> type) throws AIException {
-        try {
-            return chatAsync(input, type).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(input, type));
     }
 
     /**
@@ -187,12 +167,7 @@ public interface AIService extends Serializable {
      * @throws AIException if the chat request fails.
      */
     default String chat(String message, ChatOptions options) throws AIException {
-        try {
-            return chatAsync(message, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(message, options));
     }
 
     /**
@@ -216,12 +191,7 @@ public interface AIService extends Serializable {
      * @throws AIException if the chat request fails.
      */
     default String chat(ChatInput input, ChatOptions options) throws AIException {
-        try {
-            return chatAsync(input, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(input, options));
     }
 
     /**
@@ -252,12 +222,7 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      */
     default <T> T chat(String message, ChatOptions options, Class<T> type) throws AIException {
-        try {
-            return chatAsync(message, options, type).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(message, options, type));
     }
 
     /**
@@ -292,12 +257,7 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      */
     default <T> T chat(ChatInput input, ChatOptions options, Class<T> type) throws AIException {
-        try {
-            return chatAsync(input, options, type).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(chatAsync(input, options, type));
     }
 
     /**
@@ -652,12 +612,7 @@ public interface AIService extends Serializable {
      * @throws AIException if summarization fails.
      */
     default String summarize(String text, int maxWords) throws AIException {
-        try {
-            return summarizeAsync(text, maxWords).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(summarizeAsync(text, maxWords));
     }
 
     /**
@@ -684,12 +639,7 @@ public interface AIService extends Serializable {
      * @throws AIException if extraction fails.
      */
     default List<String> extractKeyPoints(String text, int maxPoints) throws AIException {
-        try {
-            return extractKeyPointsAsync(text, maxPoints).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(extractKeyPointsAsync(text, maxPoints));
     }
 
     /**
@@ -719,12 +669,7 @@ public interface AIService extends Serializable {
      * @throws AIException if language detection fails.
      */
     default String detectLanguage(String text) throws AIException {
-        try {
-            return detectLanguageAsync(text).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(detectLanguageAsync(text));
     }
 
     /**
@@ -752,12 +697,7 @@ public interface AIService extends Serializable {
      * @throws AIException if translation fails.
      */
     default String translate(String text, String sourceLang, String targetLang) throws AIException {
-        try {
-            return translateAsync(text, sourceLang, targetLang).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(translateAsync(text, sourceLang, targetLang));
     }
 
     /**
@@ -788,12 +728,7 @@ public interface AIService extends Serializable {
      * @throws AIException if proofreading fails.
      */
     default String proofread(String text) throws AIException {
-        try {
-            return proofreadAsync(text).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(proofreadAsync(text));
     }
 
     /**
@@ -822,12 +757,7 @@ public interface AIService extends Serializable {
      * @throws AIException if moderation fails.
      */
     default ModerationResult moderateContent(String content) throws AIException {
-        try {
-            return moderateContentAsync(content).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(moderateContentAsync(content));
     }
 
     /**
@@ -854,12 +784,7 @@ public interface AIService extends Serializable {
      * @throws AIException if moderation fails.
      */
     default ModerationResult moderateContent(String content, ModerationOptions options) throws AIException {
-        try {
-            return moderateContentAsync(content, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(moderateContentAsync(content, options));
     }
 
     /**
@@ -893,12 +818,7 @@ public interface AIService extends Serializable {
      * @throws AIException if image analysis fails.
      */
     default String analyzeImage(byte[] image, String prompt) throws AIException {
-        try {
-            return analyzeImageAsync(image, prompt).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(analyzeImageAsync(image, prompt));
     }
 
     /**
@@ -927,12 +847,7 @@ public interface AIService extends Serializable {
      * @throws AIException if image analysis fails.
      */
     default String generateAltText(byte[] image) throws AIException {
-        try {
-            return generateAltTextAsync(image).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(generateAltTextAsync(image));
     }
 
     /**
@@ -962,12 +877,7 @@ public interface AIService extends Serializable {
      * @see GenerateImageOptions#DEFAULT
      */
     default byte[] generateImage(String prompt) throws AIException {
-        try {
-            return generateImageAsync(prompt).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(generateImageAsync(prompt));
     }
 
     /**
@@ -994,12 +904,7 @@ public interface AIService extends Serializable {
      * @throws AIException if image generation fails.
      */
     default byte[] generateImage(String prompt, GenerateImageOptions options) throws AIException {
-        try {
-            return generateImageAsync(prompt, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(generateImageAsync(prompt, options));
     }
 
     /**
@@ -1029,12 +934,7 @@ public interface AIService extends Serializable {
      * @since 1.1
      */
     default String transcribe(byte[] audio) throws AIException {
-        try {
-            return transcribeAsync(audio).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(transcribeAsync(audio));
     }
 
     /**
@@ -1047,12 +947,7 @@ public interface AIService extends Serializable {
      * @since 1.2
      */
     default String transcribe(Path audio) throws AIException {
-        try {
-            return transcribeAsync(audio).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(transcribeAsync(audio));
     }
 
     /**
@@ -1095,12 +990,7 @@ public interface AIService extends Serializable {
      * @since 1.2
      */
     default byte[] generateAudio(String text) throws AIException {
-        try {
-            return generateAudioAsync(text).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(generateAudioAsync(text));
     }
 
     /**
@@ -1115,12 +1005,7 @@ public interface AIService extends Serializable {
      * @since 1.2
      */
     default byte[] generateAudio(String text, GenerateAudioOptions options) throws AIException {
-        try {
-            return generateAudioAsync(text, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        return joinAsync(generateAudioAsync(text, options));
     }
 
     /**
@@ -1134,12 +1019,7 @@ public interface AIService extends Serializable {
      * @since 1.2
      */
     default void generateAudio(String text, Path path) throws AIException {
-        try {
-            generateAudioAsync(text, path).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        joinAsync(generateAudioAsync(text, path));
     }
 
     /**
@@ -1154,12 +1034,7 @@ public interface AIService extends Serializable {
      * @since 1.2
      */
     default void generateAudio(String text, Path path, GenerateAudioOptions options) throws AIException {
-        try {
-            generateAudioAsync(text, path, options).join();
-        }
-        catch (CompletionException e) {
-            throw AIException.asyncRequestFailed(e);
-        }
+        joinAsync(generateAudioAsync(text, path, options));
     }
 
     /**
@@ -1315,4 +1190,20 @@ public interface AIService extends Serializable {
      * @see AIModality
      */
     boolean supportsModality(AIModality modality);
+
+
+    // Private Helpers ------------------------------------------------------------------------------------------------
+
+    /**
+     * Joins a {@link CompletableFuture}, unwrapping any {@link CompletionException} into the appropriate
+     * {@link AIException} subclass.
+     */
+    private static <T> T joinAsync(CompletableFuture<T> future) throws AIException {
+        try {
+            return future.join();
+        }
+        catch (CompletionException e) {
+            throw AIException.asyncRequestFailed(e);
+        }
+    }
 }
