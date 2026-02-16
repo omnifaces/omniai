@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AITokenLimitExceededException;
@@ -47,16 +49,35 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder();
+        var contents = Json.createArrayBuilder();
+        buildChatPayloadSystemPrompt(payload, options);
+        buildChatPayloadHistoryMessages(contents, input);
+        buildChatPayloadUserContent(contents, input, service, options);
+        payload.add("contents", contents);
+        buildChatPayloadGenerationConfig(payload, service, options, streaming);
+        return payload.build();
+    }
 
+    /**
+     * Add system prompt to the payload as a {@code system_instruction} field.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadSystemPrompt(JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system_instruction", Json.createObjectBuilder()
                 .add("parts", Json.createArrayBuilder()
                     .add(Json.createObjectBuilder()
                         .add("text", options.getSystemPrompt()))));
         }
+    }
 
-        var contents = Json.createArrayBuilder();
-
+    /**
+     * Add conversation history messages to the contents array.
+     * @param contents The contents array builder.
+     * @param input The chat input.
+     */
+    protected void buildChatPayloadHistoryMessages(JsonArrayBuilder contents, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
             var parts = Json.createArrayBuilder();
 
@@ -74,7 +95,16 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
                 .add("role", historyMessage.role() == Role.USER ? "user" : "model")
                 .add("parts", parts));
         }
+    }
 
+    /**
+     * Add user content (images, files, and text message) to the contents array.
+     * @param contents The contents array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadUserContent(JsonArrayBuilder contents, ChatInput input, AIService service, ChatOptions options) {
         var parts = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
@@ -103,9 +133,16 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         contents.add(Json.createObjectBuilder()
             .add("role", "user")
             .add("parts", parts));
+    }
 
-        payload.add("contents", contents);
-
+    /**
+     * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
+     * @param payload The payload builder.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @param streaming Whether streaming is enabled (unused for Google AI, streaming is URL-based).
+     */
+    protected void buildChatPayloadGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
         var generationConfig = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());
 
@@ -124,9 +161,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
                 .add("responseSchema", options.getJsonSchema());
         }
 
-        return payload
-            .add("generationConfig", generationConfig)
-            .build();
+        payload.add("generationConfig", generationConfig);
     }
 
     @Override

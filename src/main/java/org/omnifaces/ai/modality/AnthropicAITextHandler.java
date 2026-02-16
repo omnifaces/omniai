@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIService;
@@ -56,15 +58,34 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder()
-            .add("model", service.getModelName())
-            .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X));
+                .add("model", service.getModelName())
+                .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
+        var messages = Json.createArrayBuilder();
+        buildChatPayloadSystemPrompt(payload, options);
+        buildChatPayloadHistoryMessages(messages, input);
+        buildChatPayloadUserContent(messages, input, service, options);
+        payload.add("messages", messages);
+        buildChatPayloadGenerationConfig(payload, service, options, streaming);
+        return payload.build();
+    }
 
+    /**
+     * Add system prompt to the payload as a top-level {@code system} field.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadSystemPrompt(JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());
         }
+    }
 
-        var messages = Json.createArrayBuilder();
-
+    /**
+     * Add conversation history messages to the messages array.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     */
+    protected void buildChatPayloadHistoryMessages(JsonArrayBuilder messages, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
             messages.add(Json.createObjectBuilder()
                 .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
@@ -73,7 +94,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                         .add("type", "text")
                         .add("text", historyMessage.content()))));
         }
+    }
 
+    /**
+     * Add user content (images, files, and text message) to the messages array.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadUserContent(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
@@ -106,9 +136,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
         messages.add(Json.createObjectBuilder()
             .add("role", "user")
             .add("content", content));
+    }
 
-        payload.add("messages", messages);
-
+    /**
+     * Add generation config (streaming, temperature, topP, structured output) to the payload.
+     * @param payload The payload builder.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @param streaming Whether streaming is enabled.
+     */
+    protected void buildChatPayloadGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
         if (streaming) {
             checkSupportsStreaming(service);
             payload.add("stream", true);
@@ -128,8 +165,6 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                 .add("type", "json_schema")
                 .add("schema", addStrictAdditionalProperties(options.getJsonSchema())));
         }
-
-        return payload.build();
     }
 
     @Override

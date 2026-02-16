@@ -24,7 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import org.omnifaces.ai.AIModelVersion;
 import org.omnifaces.ai.AIService;
@@ -56,72 +58,135 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      */
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
-        var currentModelVersion = service.getModelVersion();
-        var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
-        var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
         var supportsResponsesApi = supportsResponsesApi(service);
+        var messages = Json.createArrayBuilder();
         var payload = Json.createObjectBuilder()
-            .add("model", service.getModelName());
+                .add("model", service.getModelName());
 
-        if (options.getMaxTokens() != null) {
-            var maxTokensField = supportsResponsesApi ? "max_output_tokens" : currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens";
-            payload.add(maxTokensField, options.getMaxTokens());
+        if (supportsResponsesApi) {
+            buildChatPayloadSystemPromptWithResponsesApi(payload, options);
+            buildChatPayloadHistoryMessagesWithResponsesApi(messages, input, service);
+            buildChatPayloadUserContentWithResponsesApi(messages, input, service, options);
+            payload.add("input", messages);
+            buildChatPayloadGenerationConfigWithResponsesApi(payload, service, options, streaming);
+        }
+        else {
+            buildChatPayloadSystemPromptWithChatCompletionsApi(messages, options);
+            buildChatPayloadHistoryMessagesWithChatCompletionsApi(messages, input, service);
+            buildChatPayloadUserContentWithChatCompletionsApi(messages, input, service, options);
+            payload.add("messages", messages);
+            buildChatPayloadGenerationConfigWithChatCompletionsApi(payload, service, options, streaming);
         }
 
-        var message = Json.createArrayBuilder();
+        return payload.build();
+    }
 
+    /**
+     * Add system prompt to payload as {@code instructions} for Responses API.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadSystemPromptWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
-            if (supportsResponsesApi) {
-                payload.add("instructions", options.getSystemPrompt());
-            }
-            else {
-                message.add(Json.createObjectBuilder()
-                    .add("role", "system")
-                    .add("content", options.getSystemPrompt()));
-            }
+            payload.add("instructions", options.getSystemPrompt());
         }
+    }
 
+    /**
+     * Add system prompt to messages array as {@code system} role for Chat Completions API.
+     * @param messages The messages array builder.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadSystemPromptWithChatCompletionsApi(JsonArrayBuilder messages, ChatOptions options) {
+        if (!isBlank(options.getSystemPrompt())) {
+            messages.add(Json.createObjectBuilder()
+                .add("role", "system")
+                .add("content", options.getSystemPrompt()));
+        }
+    }
+
+    /**
+     * Add conversation history messages to the input array for Responses API.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     */
+    protected void buildChatPayloadHistoryMessagesWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
         for (var historyMessage : input.getHistory()) {
             if (supportsFilesApi(service)) {
                 var content = Json.createArrayBuilder();
                 for (var uploadedFile : historyMessage.uploadedFiles()) {
                     content.add(Json.createObjectBuilder()
-                        .add("type", supportsResponsesApi ? "input_file" : "file")
+                        .add("type", "input_file")
                         .add("file_id", uploadedFile.id()));
                 }
                 content.add(Json.createObjectBuilder()
-                    .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
+                    .add("type", (historyMessage.role() == Role.USER) ? "input_text" : "output_text")
                     .add("text", historyMessage.content()));
-                message.add(Json.createObjectBuilder()
+                messages.add(Json.createObjectBuilder()
                     .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
                     .add("content", content));
             }
             else {
-                message.add(Json.createObjectBuilder()
+                messages.add(Json.createObjectBuilder()
                     .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
                     .add("content", historyMessage.content()));
             }
         }
+    }
 
+    /**
+     * Add conversation history messages to the messages array for Chat Completions API.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     */
+    protected void buildChatPayloadHistoryMessagesWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
+        for (var historyMessage : input.getHistory()) {
+            if (supportsFilesApi(service)) {
+                var content = Json.createArrayBuilder();
+                for (var uploadedFile : historyMessage.uploadedFiles()) {
+                    content.add(Json.createObjectBuilder()
+                        .add("type", "file")
+                        .add("file_id", uploadedFile.id()));
+                }
+                content.add(Json.createObjectBuilder()
+                    .add("type", "text")
+                    .add("text", historyMessage.content()));
+                messages.add(Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add("content", content));
+            }
+            else {
+                messages.add(Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add("content", historyMessage.content()));
+            }
+        }
+    }
+
+    /**
+     * Add user content (images, audio files, other files, and text message) to the input array for Responses API.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadUserContentWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
+        var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
+        var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            var img = Json.createObjectBuilder().add("type", supportsResponsesApi ? "input_image" : "image_url");
-
-            if (supportsResponsesApi) {
-                img.add("image_url", image.toDataUri());
-            }
-            else {
-                img.add("image_url", Json.createObjectBuilder().add("url", image.toDataUri()));
-            }
-
-            content.add(img);
+            content.add(Json.createObjectBuilder()
+                .add("type", "input_image")
+                .add("image_url", image.toDataUri()));
         }
 
         for (var audioFile : audioFiles) {
             content.add(Json.createObjectBuilder().add("type", "input_audio")
                 .add("input_audio", Json.createObjectBuilder()
-                    .add(supportsResponsesApi ? "audio_base64" : "data", audioFile.toBase64())
+                    .add("audio_base64", audioFile.toBase64())
                     .add("format", audioFile.mimeType().extension())));
         }
 
@@ -133,14 +198,62 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                     var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)), options);
 
                     content.add(Json.createObjectBuilder()
-                        .add("type", supportsResponsesApi ? "input_file" : "file")
+                        .add("type", "input_file")
                         .add("file_id", fileId));
                 }
-                else if (supportsResponsesApi) {
+                else {
                     content.add(Json.createObjectBuilder()
                         .add("type", "input_file")
                         .add("filename", file.fileName())
                         .add("file_data", file.toDataUri()));
+                }
+            }
+        }
+
+        content.add(Json.createObjectBuilder()
+            .add("type", "input_text")
+            .add("text", input.getMessage()));
+
+        messages.add(Json.createObjectBuilder()
+            .add("role", "user")
+            .add("content", content));
+    }
+
+    /**
+     * Add user content (images, audio files, other files, and text message) to the messages array for Chat Completions API.
+     * @param messages The messages array builder.
+     * @param input The chat input.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     */
+    protected void buildChatPayloadUserContentWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
+        var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
+        var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
+        var content = Json.createArrayBuilder();
+
+        for (var image : input.getImages()) {
+            content.add(Json.createObjectBuilder()
+                .add("type", "image_url")
+                .add("image_url", Json.createObjectBuilder().add("url", image.toDataUri())));
+        }
+
+        for (var audioFile : audioFiles) {
+            content.add(Json.createObjectBuilder().add("type", "input_audio")
+                .add("input_audio", Json.createObjectBuilder()
+                    .add("data", audioFile.toBase64())
+                    .add("format", audioFile.mimeType().extension())));
+        }
+
+        if (!remainingFiles.isEmpty()) {
+            checkSupportsFileAttachments(service);
+
+            for (var file : remainingFiles) {
+                if (supportsFilesApi(service)) {
+                    var fileId = service.upload(file.withMetadata(getFileUploadMetadata(service, file)), options);
+
+                    content.add(Json.createObjectBuilder()
+                        .add("type", "file")
+                        .add("file_id", fileId));
                 }
                 else {
                     content.add(Json.createObjectBuilder()
@@ -153,14 +266,27 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         }
 
         content.add(Json.createObjectBuilder()
-            .add("type", supportsResponsesApi ? "input_text" : "text")
+            .add("type", "text")
             .add("text", input.getMessage()));
 
-        message.add(Json.createObjectBuilder()
+        messages.add(Json.createObjectBuilder()
             .add("role", "user")
             .add("content", content));
+    }
 
-        payload.add(supportsResponsesApi ? "input" : "messages", message);
+    /**
+     * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Responses API.
+     * @param payload The payload builder.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @param streaming Whether streaming is enabled.
+     */
+    protected void buildChatPayloadGenerationConfigWithResponsesApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
+        var currentModelVersion = service.getModelVersion();
+
+        if (options.getMaxTokens() != null) {
+            payload.add("max_output_tokens", options.getMaxTokens());
+        }
 
         if (streaming) {
             checkSupportsStreaming(service);
@@ -183,19 +309,50 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 .add("strict", true)
                 .add("schema", addStrictAdditionalProperties(options.getJsonSchema()));
 
-            if (supportsResponsesApi) {
-                var format = Json.createObjectBuilder().add("type", "json_schema");
-                strictSchema.build().forEach(format::add);
-                payload.add("text", Json.createObjectBuilder().add("format", format));
-            }
-            else {
-                payload.add("response_format", Json.createObjectBuilder()
-                    .add("type", "json_schema")
-                    .add("json_schema", strictSchema));
-            }
+            var format = Json.createObjectBuilder().add("type", "json_schema");
+            strictSchema.build().forEach(format::add);
+            payload.add("text", Json.createObjectBuilder().add("format", format));
+        }
+    }
+
+    /**
+     * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Chat Completions API.
+     * @param payload The payload builder.
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @param streaming Whether streaming is enabled.
+     */
+    protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
+        var currentModelVersion = service.getModelVersion();
+
+        if (options.getMaxTokens() != null) {
+            var maxTokensField = currentModelVersion.gte(GPT_5) ? "max_completion_tokens" : "max_tokens";
+            payload.add(maxTokensField, options.getMaxTokens());
         }
 
-        return payload.build();
+        if (streaming) {
+            checkSupportsStreaming(service);
+            payload.add("stream", true);
+        }
+
+        if (currentModelVersion.ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
+            payload.add("temperature", options.getTemperature());
+        }
+
+        if (options.getTopP() != 1.0) {
+            payload.add("top_p", options.getTopP());
+        }
+
+        if (options.getJsonSchema() != null) {
+            checkSupportsStructuredOutput(service);
+
+            payload.add("response_format", Json.createObjectBuilder()
+                .add("type", "json_schema")
+                .add("json_schema", Json.createObjectBuilder()
+                    .add("name", "response_schema")
+                    .add("strict", true)
+                    .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))));
+        }
     }
 
     /**
