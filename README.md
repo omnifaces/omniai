@@ -552,6 +552,7 @@ Bottom line: If you need a lightweight utility for AI chat/text operations in Ja
 - [Blog post: One API, any AI](https://balusc.omnifaces.org/2026/01/one-api-any-ai.html)
 - [Blog post: Real-time AI, your way](https://balusc.omnifaces.org/2026/01/real-time-ai-your-way.html)
 - [Blog post: OmniHai 1.0 released!](https://balusc.omnifaces.org/2026/02/omnihai-10-released.html)
+- [Blog post: OmniHai 1.1 released!](https://balusc.omnifaces.org/2026/02/omnihai-grows-ears.html)
 
 ## Credits
 
