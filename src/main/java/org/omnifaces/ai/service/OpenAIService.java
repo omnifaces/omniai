@@ -141,15 +141,6 @@ public class OpenAIService extends BaseAIService {
         return supportsOpenAIResponsesApi();
     }
 
-//    /**
-//     * Returns whether this OpenAI based service implementation supports the OpenAI {@code audio} API for text-to-speech.
-//     * @implNote The default implementation returns true.
-//     * @return Whether this OpenAI based service implementation supports the OpenAI {@code audio} API for text-to-speech.
-//     */
-//    public boolean supportsOpenAIAudioApi() {
-//        return true;
-//    }
-//
     @Override
     public boolean supportsStreaming() {
         return supportsOpenAIResponsesApi();

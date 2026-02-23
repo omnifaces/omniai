@@ -101,7 +101,7 @@ public class GenerateAudioOptions implements Serializable {
      * Creates a new builder for constructing {@link GenerateAudioOptions} instances. For example:
      * <pre>
      * GenerateAudioOptions options = GenerateAudioOptions.newBuilder()
-     *     .voice("alloy")
+     *     .voice("breeze")
      *     .speed(1.5)
      *     .build();
      * </pre>
