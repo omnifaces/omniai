@@ -35,7 +35,7 @@ abstract class BaseAIServiceImageGeneratorIT extends AIServiceIT {
         var response = service.generateImage("Willemstad, Curacao");
         assertTrue(response.length > 0, "Image response should not be empty");
         var mimeType = MimeType.guessMimeType(response);
-        var targetDir = Path.of(System.getProperty("user.dir"), "target", "image-generator-test-results");
+        var targetDir = Path.of(System.getProperty("user.dir"), "target", "omnihai-image-generator-test-results");
         targetDir.toFile().mkdirs();
         var tempFilePath = Files.createTempFile(targetDir, getClass().getSimpleName() + "-", "." + mimeType.extension());
         Files.write(tempFilePath, response);

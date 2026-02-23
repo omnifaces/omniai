@@ -32,7 +32,7 @@ abstract class BaseAIServiceAudioGeneratorIT extends AIServiceIT {
         var response = service.generateAudio("Dayana, feliz dia del amor, te amo");
         assertTrue(response.length > 0, "Audio response should not be empty");
         var mimeType = MimeType.guessMimeType(response);
-        var targetDir = Path.of(System.getProperty("user.dir"), "target", "audio-generator-test-results");
+        var targetDir = Path.of(System.getProperty("user.dir"), "target", "omnihai-audio-generator-test-results");
         targetDir.toFile().mkdirs();
         var tempFilePath = Files.createTempFile(targetDir, getClass().getSimpleName() + "-", "." + mimeType.extension());
         Files.write(tempFilePath, response);
