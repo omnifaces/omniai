@@ -71,12 +71,13 @@ public interface AITextHandler extends Serializable {
      * Processes each stream event for {@link AIService#chatStream(String, ChatOptions, Consumer)}.
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
+     * @param options The chat options. Implementations should call {@link ChatOptions#recordUsage(ChatUsage)} when usage data is available in the stream.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
      * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
      */
-    default boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
-        throw new UnsupportedOperationException("Please implement processStreamEvent(AIService service, Event event, Consumer<String> onToken) for this AI provider");
+    default boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
+        throw new UnsupportedOperationException("Please implement processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) for this AI provider");
     }
 
     /**

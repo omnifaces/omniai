@@ -185,10 +185,11 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
-    public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
+    public boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
         if (event.type() == DATA) {
             return tryParseEventDataJson(event.value(), json -> {
                 findByPath(json, "candidates[0].content.parts[0].text").ifPresent(onToken);
+                options.recordUsage(parseChatUsage(json));
                 var finishReason = findByPath(json, "candidates[0].finishReason");
 
                 if (finishReason.filter("STOP"::equals).isPresent()) {

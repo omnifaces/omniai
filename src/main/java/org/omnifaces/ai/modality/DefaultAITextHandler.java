@@ -192,8 +192,19 @@ public class DefaultAITextHandler implements AITextHandler {
     @Override
     public ChatUsage parseChatUsage(JsonObject responseJson) {
         try {
-            var inputTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageInputTokensPaths());
-            var outputTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageOutputTokensPaths());
+            var chatUsageInputTokensPaths = getChatUsageInputTokensPaths();
+            var chatUsageOutputTokensPaths = getChatUsageOutputTokensPaths();
+
+            if (chatUsageInputTokensPaths.isEmpty()) {
+                throw new IllegalStateException("getChatUsageInputTokensPaths() may not return an empty list");
+            }
+
+            if (chatUsageOutputTokensPaths.isEmpty()) {
+                throw new IllegalStateException("getChatUsageOutputTokensPaths() may not return an empty list");
+            }
+
+            var inputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageInputTokensPaths);
+            var outputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageOutputTokensPaths);
 
             if (inputTokensString.isPresent() || outputTokensString.isPresent()) {
                 var inputTokens  = inputTokensString.map(Integer::parseInt).orElse(-1);
@@ -243,6 +254,7 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
+     * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the input token count in the JSON response.
@@ -254,6 +266,7 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
+     * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the output token count in the JSON response.

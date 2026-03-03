@@ -105,11 +105,19 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             throw new TestAbortedException("Not supported by " + getProvider());
         }
 
+        var options = ChatOptions.newBuilder().build();
         var responseBuffer = new StringBuilder();
-        service.chatStream("Reply with only: OK", responseBuffer::append).join();
+        service.chatStream("Reply with only: OK", options, responseBuffer::append).join();
         var response = responseBuffer.toString();
         log(response);
-        assertTrue(response.contains("OK"), response);
+        var lastUsage = options.getLastUsage();
+        assertAll(
+            () -> assertTrue(response.contains("OK"), response),
+            () -> assertNotNull(lastUsage),
+            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
+            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
+            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
+        );
     }
 
     @Test

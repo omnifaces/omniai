@@ -37,6 +37,7 @@ import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -269,6 +270,10 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         if (streaming) {
             checkSupportsStreaming(service);
             payload.add("stream", true);
+
+            if (!supportsResponsesApi) {
+                payload.add("stream_options", Json.createObjectBuilder().add("include_usage", true));
+            }
         }
 
         if (service.getModelVersion().ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
@@ -330,22 +335,23 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
-    public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
+    public boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
         if (supportsResponsesApi(service)) {
-            return processChatStreamEventWithResponsesApi(event, onToken);
+            return processChatStreamEventWithResponsesApi(options, event, onToken);
         }
         else {
-            return processChatStreamEventWithChatCompletionsApi(event, onToken);
+            return processChatStreamEventWithChatCompletionsApi(options, event, onToken);
         }
     }
 
     /**
      * Process chat stream event with {@code responses} API.
+     * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
      * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
      */
-    protected boolean processChatStreamEventWithResponsesApi(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEventWithResponsesApi(ChatOptions options, Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             if ("response.completed".equals(event.value())) {
                 return true;
@@ -355,7 +361,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 throw new AITokenLimitExceededException();
             }
         }
-        else if (event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed"))) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
+        else if (event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed") || event.value().contains("response.completed"))) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
             return tryParseEventDataJson(event.value(), json -> {
                 var type = json.getString("type", null);
 
@@ -365,6 +371,9 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                     if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
                         onToken.accept(token);
                     }
+                }
+                else if ("response.completed".equals(type)) {
+                    options.recordUsage(parseChatUsage(json.getJsonObject("response")));
                 }
                 else if ("response.failed".equals(type)) {
                     throw new AIResponseException("Error event returned", event.value());
@@ -379,11 +388,12 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Process chat stream event with {@code chat/completions} API.
+     * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
      * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
      */
-    protected boolean processChatStreamEventWithChatCompletionsApi(Event event, Consumer<String> onToken) {
+    protected boolean processChatStreamEventWithChatCompletionsApi(ChatOptions options, Event event, Consumer<String> onToken) {
         if (event.type() == DATA) {
             if ("DONE".equalsIgnoreCase(event.value())) {
                 return false;
@@ -393,6 +403,13 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                     if ("chat.completion.chunk".equals(json.getString("object", null))) {
                         findByPath(json, "choices[0].delta.content").ifPresent(onToken);
                         findByPath(json, "choices[0].finish_reason").filter("length"::equals).ifPresent(__ -> { throw new AITokenLimitExceededException(); });
+
+                        var inputTokens = findByPath(json, "usage.prompt_tokens");
+                        var outputTokens = findByPath(json, "usage.completion_tokens");
+
+                        if (inputTokens.isPresent() || outputTokens.isPresent()) {
+                            options.recordUsage(new ChatUsage(inputTokens.map(Integer::parseInt).orElse(-1), outputTokens.map(Integer::parseInt).orElse(-1)));
+                        }
                     }
 
                     return true;

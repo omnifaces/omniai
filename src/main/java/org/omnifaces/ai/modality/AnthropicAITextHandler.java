@@ -14,6 +14,7 @@ package org.omnifaces.ai.modality;
 
 import static java.util.Optional.ofNullable;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
+import static org.omnifaces.ai.helper.JsonHelper.findByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
 import static org.omnifaces.ai.model.Sse.Event.Type.EVENT;
@@ -33,6 +34,7 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.AnthropicAIService;
 
@@ -183,7 +185,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
-    public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
+    public boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             if ("max_tokens".equals(event.value())) {
                 throw new AITokenLimitExceededException();
@@ -201,6 +203,12 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                     if (!token.isEmpty()) { // Do not use isBlank! Whitespace can be a valid token.
                         onToken.accept(token);
                     }
+                }
+                else if ("message_start".equals(type)) {
+                    options.recordUsage(parseChatUsage(json.getJsonObject("message")));
+                }
+                else if ("message_delta".equals(type)) {
+                    findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(outputTokens -> options.recordUsage(new ChatUsage(options.getLastUsage() != null ? options.getLastUsage().inputTokens() : -1, Integer.parseInt(outputTokens))));
                 }
                 else if ("error".equals(type)) {
                     throw new AIResponseException("Error event returned", event.value());

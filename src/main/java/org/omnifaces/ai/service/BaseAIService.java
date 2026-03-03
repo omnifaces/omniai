@@ -66,6 +66,7 @@ import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.GenerateAudioOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -217,7 +218,7 @@ public abstract class BaseAIService implements AIService {
 
         var callerStackTrace = new Exception("Caller stack trace");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), payload, event -> textHandler.processChatStreamEvent(this, event, effectiveOnToken)).handle((result, exception) -> {
+        return asyncPostAndProcessStreamEvents(getChatPath(true), payload, event -> textHandler.processChatStreamEvent(this, options, event, effectiveOnToken)).handle((result, exception) -> {
             if (exception == null) {
                 if (responseAccumulator != null) {
                     options.recordMessage(Role.ASSISTANT, responseAccumulator.toString());
@@ -599,7 +600,7 @@ public abstract class BaseAIService implements AIService {
      * chat response from the POST response with help of {@link AITextHandler#parseChatResponse(JsonObject)}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
-     * @param options The user-supplied chat options, or {@code null} if there is none.
+     * @param options The user-supplied chat options, or {@code null} if there is none. Implementations should call {@link ChatOptions#recordUsage(ChatUsage)} when usage data is available in the response.
      * @return The message content of the POST request.
      * @throws AIException if anything fails during the process.
      */
