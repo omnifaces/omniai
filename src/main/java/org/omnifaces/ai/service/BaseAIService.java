@@ -576,10 +576,10 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Returns additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject)}, e.g. authorization or version headers.
+     * Returns additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject, ChatOptions)}, e.g. authorization or version headers.
      * These headers are added on top of the default request headers: {@code User-Agent}, {@code Content-Type} and {@code Accept}.
      * @implNote The default implementation returns an empty map.
-     * @return Additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject)}.
+     * @return Additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject, ChatOptions)}.
      */
     protected Map<String, String> getRequestHeaders() {
         return emptyMap();
@@ -628,7 +628,7 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(String)}.
+     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
      * @return The image content of the POST request.
@@ -653,7 +653,7 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(String)}.
+     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
      * @return The image content of the POST request.
