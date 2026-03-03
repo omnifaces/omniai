@@ -156,6 +156,11 @@ public class OpenAIService extends BaseAIService {
         return getModelVersion().gte(GPT_4);
     }
 
+    @Override
+    public boolean supportsWebSearch() {
+        return supportsOpenAIResponsesApi();
+    }
+
     /**
      * Returns only authorization bearer header with API key as value.
      */

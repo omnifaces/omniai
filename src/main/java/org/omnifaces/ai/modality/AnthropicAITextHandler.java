@@ -13,7 +13,10 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
 import static org.omnifaces.ai.helper.JsonHelper.addStrictAdditionalProperties;
+import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
+import static org.omnifaces.ai.helper.JsonHelper.findAllByPath;
 import static org.omnifaces.ai.helper.JsonHelper.findByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
@@ -50,6 +53,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     private static final long serialVersionUID = 1L;
 
     private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
+    private static final AIModelVersion CLAUDE_4_6 = AIModelVersion.of("claude", 4, 6);
 
     private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_0 = 4096;
     private static final int DEFAULT_MAX_TOKENS_CLAUDE_3_X = 8192;
@@ -63,12 +67,30 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                 .add("model", service.getModelName())
                 .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
         var messages = Json.createArrayBuilder();
+        buildChatPayloadTools(service, payload, options);
         buildChatPayloadSystemPrompt(payload, options);
         buildChatPayloadHistoryMessages(messages, input);
         buildChatPayloadUserContent(messages, input, service, options);
         payload.add("messages", messages);
         buildChatPayloadGenerationConfig(payload, service, options, streaming);
         return payload.build();
+    }
+
+    /**
+     * Add tools to the payload as a top-level {@code tools} field.
+     * @param service The current AI service.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     * @since 1.3
+     * @see <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool">Web Search Tool Reference</a>
+     */
+    protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
+        if (options.isWebSearch()) {
+            payload.add("tools", Json.createArrayBuilder()
+                .add(Json.createObjectBuilder()
+                    .add("type", service.getModelVersion().gte(CLAUDE_4_6) ? "web_search_20260209" : "web_search_20250305")
+                    .add("name", "web_search").build()));
+        }
     }
 
     /**
@@ -171,7 +193,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     @Override
     public List<String> getChatResponseContentPaths() {
-        return List.of("content[0].text");
+        return List.of("content[*].text");
     }
 
     @Override
@@ -182,6 +204,26 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     @Override
     public List<String> getChatUsageOutputTokensPaths() {
         return List.of("usage.output_tokens");
+    }
+
+    /**
+     * An override which joins potentially multiple chat response parts into a single string.
+     */
+    @Override
+    public String parseChatResponse(JsonObject responseJson) throws AIResponseException {
+        if ("server_tool_use".equals(findByPath(responseJson, "content[0].type").orElse(null))) {
+            checkErrors(responseJson, getTextResponseErrorMessagePaths());
+            var messageContentPaths = getChatResponseContentPaths();
+
+            if (messageContentPaths.isEmpty()) {
+                throw new IllegalStateException("getChatResponseContentPaths() may not return an empty list");
+            }
+
+            return findAllByPath(responseJson, getChatResponseContentPaths().get(0)).stream().collect(joining());
+        }
+        else {
+            return super.parseChatResponse(responseJson);
+        }
     }
 
     @Override

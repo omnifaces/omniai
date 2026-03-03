@@ -36,7 +36,7 @@ public record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens) 
     /**
      * Validates the record components.
      *
-     * @param inputTokensThe number of tokens consumed by the request (system prompt, conversation history, and user message combined), must be {@code -1} or a non-negative value.
+     * @param inputTokens The number of tokens consumed by the request (system prompt, conversation history, and user message combined), must be {@code -1} or a non-negative value.
      * @param outputTokens The number of tokens generated in the response, including any internal reasoning/thinking tokens, must be {@code -1} or a non-negative value.
      * @param reasoningTokens The number of tokens used for internal reasoning/thinking, must be {@code -1} or a non-negative value. Always a subset of {@code outputTokens} when known.
      */

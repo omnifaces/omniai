@@ -58,6 +58,7 @@ public class AnthropicAIService extends BaseAIService {
     private static final String ANTHROPIC_BETA_STRUCTURED_OUTPUTS = "structured-outputs-2025-11-13";
 
     private static final AIModelVersion CLAUDE_3 = AIModelVersion.of("claude", 3);
+    private static final AIModelVersion CLAUDE_4 = AIModelVersion.of("claude", 4);
     private static final AIModelVersion CLAUDE_OPUS_4_1 = AIModelVersion.of("claude-opus", 4, 1);
     private static final AIModelVersion CLAUDE_SONNET_4_5 = AIModelVersion.of("claude-sonnet", 4, 5);
 
@@ -92,6 +93,11 @@ public class AnthropicAIService extends BaseAIService {
     @Override
     public boolean supportsStructuredOutput() {
         return getModelVersion().gte(CLAUDE_OPUS_4_1, CLAUDE_SONNET_4_5);
+    }
+
+    @Override
+    public boolean supportsWebSearch() {
+        return getModelVersion().gte(CLAUDE_4);
     }
 
     @Override

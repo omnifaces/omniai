@@ -803,6 +803,39 @@ public interface AIService extends Serializable {
     CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException;
 
 
+    // Web Search Capabilities ----------------------------------------------------------------------------------------
+
+    /**
+     * Sends a web search query to the AI and returns a response.
+     * <p>
+     * Useful if you need the model to access up-to-date information from the internet.
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String)}.
+     * @param query The user's web search query to send to the AI.
+     * @return The AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws AIException if the web search request fails.
+     * @since 1.3
+     */
+    default String webSearch(String query) throws AIException {
+        return joinAsync(webSearchAsync(query));
+    }
+
+    /**
+     * Asynchronously sends a web search query to the AI and returns a response.
+     * <p>
+     * Useful if you need the model to access up-to-date information from the internet.
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch()} on {@link ChatOptions#DEFAULT}.
+     * @param query The user's web search query to send to the AI.
+     * @return A CompletableFuture that will contain the AI's response, never {@code null}.
+     * @throws IllegalArgumentException if message is blank.
+     * @throws AIException if the web search request fails.
+     * @since 1.3
+     */
+    default CompletableFuture<String> webSearchAsync(String query) throws AIException {
+        return chatAsync(query, ChatOptions.DEFAULT.withWebSearch());
+    }
+
+
     // Image Analysis Capabilities ------------------------------------------------------------------------------------
 
     /**
@@ -1163,6 +1196,16 @@ public interface AIService extends Serializable {
      * @return Whether this AI service implementation supports structured (JSON schema) outputs.
      */
     default boolean supportsStructuredOutput() {
+        return false;
+    }
+
+    /**
+     * Returns whether this AI service implementation supports web search.
+     * @implNote The default implementation returns false.
+     * @return Whether this AI service implementation supports web search.
+     * @since 1.3
+     */
+    default boolean supportsWebSearch() {
         return false;
     }
 

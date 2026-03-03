@@ -363,4 +363,17 @@ public class DefaultAITextHandler implements AITextHandler {
             throw new UnsupportedOperationException("Structured output is not supported by " + service.getName());
         }
     }
+
+    /**
+     * Validates that the given service supports web search.
+     *
+     * @param service The AI service to check.
+     * @throws UnsupportedOperationException if web search is not supported.
+     * @since 1.3
+     */
+    static void checkSupportsWebSearch(AIService service) {
+        if (!service.supportsWebSearch()) {
+            throw new UnsupportedOperationException("Web search is not supported by " + service.getName());
+        }
+    }
 }

@@ -87,6 +87,8 @@ public class ChatOptions implements Serializable {
     private final Integer maxTokens;
     /** The Top-P value. */
     private final double topP;
+    /** The Top-P value. */
+    private final boolean webSearch;
     /** The conversation history for memory-enabled chat sessions. */
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
@@ -102,6 +104,7 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
+        this.webSearch = builder.webSearch;
 
         var memoryEnabled = builder.maxHistory > 0 || builder.history != null;
         this.maxHistory = builder.maxHistory > 0 ? builder.maxHistory : (memoryEnabled ? DEFAULT_MAX_HISTORY : 0);
@@ -116,24 +119,15 @@ public class ChatOptions implements Serializable {
         }
     }
 
-    private ChatOptions(ChatOptions source, JsonObject jsonSchema) {
-        this.systemPrompt = source.systemPrompt;
-        this.jsonSchema = jsonSchema;
-        this.temperature = source.temperature;
-        this.maxTokens = source.maxTokens;
-        this.topP = source.topP;
-        this.history = source.history;
-        this.maxHistory = source.maxHistory;
-    }
-
-    private ChatOptions(ChatOptions source, String systemPrompt) {
+    private ChatOptions(String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, boolean webSearch, List<Message> history, int maxHistory) {
         this.systemPrompt = systemPrompt;
-        this.jsonSchema = source.jsonSchema;
-        this.temperature = source.temperature;
-        this.maxTokens = source.maxTokens;
-        this.topP = source.topP;
-        this.history = source.history;
-        this.maxHistory = source.maxHistory;
+        this.jsonSchema = jsonSchema;
+        this.temperature = temperature;
+        this.maxTokens = maxTokens;
+        this.topP = topP;
+        this.webSearch = webSearch;
+        this.history = history;
+        this.maxHistory = maxHistory;
     }
 
     private ChatOptions(ChatOptions source) {
@@ -142,6 +136,7 @@ public class ChatOptions implements Serializable {
         this.temperature = source.temperature;
         this.maxTokens = source.maxTokens;
         this.topP = source.topP;
+        this.webSearch = source.webSearch;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
     }
@@ -224,7 +219,7 @@ public class ChatOptions implements Serializable {
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
-        return new ChatOptions(this, jsonSchema);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
     }
 
     /**
@@ -236,7 +231,18 @@ public class ChatOptions implements Serializable {
      * @since 1.1
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
-        return new ChatOptions(this, systemPrompt);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
+    }
+
+    /**
+     * Returns a copy of this instance with web search enabled, preserving all other options including
+     * any shared {@link #hasMemory() memory} state.
+     *
+     * @return A new {@code ChatOptions} instance with web search enabled.
+     * @since 1.3
+     */
+    public ChatOptions withWebSearch() {
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, true, history, maxHistory);
     }
 
     /**
@@ -308,6 +314,18 @@ public class ChatOptions implements Serializable {
      */
     public double getTopP() {
         return topP;
+    }
+
+    /**
+     * Returns whether web search is enabled for this instance.
+     * <p>
+     * When {@code true}, the AI service will allow the model to access up-to-date information from the internet and provide answers with sourced citations.
+     *
+     * @return {@code true} if web search is enabled, {@code false} otherwise.
+     * @since 1.3
+     */
+    public boolean isWebSearch() {
+        return webSearch;
     }
 
     /**
@@ -488,6 +506,7 @@ public class ChatOptions implements Serializable {
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
         private Integer maxTokens;
         private double topP = ChatOptions.DEFAULT_TOP_P;
+        private boolean webSearch;
         private int maxHistory;
         private List<Message> history;
 
@@ -614,6 +633,20 @@ public class ChatOptions implements Serializable {
             }
 
             this.topP = topP;
+            return this;
+        }
+
+        /**
+         * Enables web search for this {@link ChatOptions} instance.
+         * <p>
+         * When enabled, the AI service will allow the model to access up-to-date information from the internet and
+         * provide answers with sourced citations.
+         *
+         * @return This builder instance for chaining.
+         * @since 1.3
+         */
+        public Builder withWebSearch() {
+            this.webSearch = true;
             return this;
         }
 

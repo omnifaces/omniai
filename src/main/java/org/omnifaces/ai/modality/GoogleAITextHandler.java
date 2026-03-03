@@ -51,12 +51,28 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder();
         var contents = Json.createArrayBuilder();
+        buildChatPayloadTools(payload, options);
         buildChatPayloadSystemPrompt(payload, options);
         buildChatPayloadHistoryMessages(contents, input);
         buildChatPayloadUserContent(contents, input, service, options);
         payload.add("contents", contents);
         buildChatPayloadGenerationConfig(payload, service, options, streaming);
         return payload.build();
+    }
+
+    /**
+     * Add tools to the payload as a top-level {@code tools} field.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     * @since 1.3
+     * @see <a href="https://ai.google.dev/gemini-api/docs/google-search">Web Search Tool Reference</a>
+     */
+    protected void buildChatPayloadTools(JsonObjectBuilder payload, ChatOptions options) {
+        if (options.isWebSearch()) {
+            payload.add("tools", Json.createArrayBuilder()
+                .add(Json.createObjectBuilder()
+                    .add("google_search", Json.createObjectBuilder().build()).build()));
+        }
     }
 
     /**

@@ -27,6 +27,7 @@ import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
@@ -208,6 +209,21 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertTrue(response.capitals().get(0).country().toLowerCase().contains("cura")),
             () -> assertTrue(response.capitals().get(1).city().toLowerCase().contains("amsterdam")),
             () -> assertTrue(response.capitals().get(1).country().toLowerCase().contains("netherlands"))
+        );
+    }
+
+    @Test
+    void webSearch() {
+        if (!service.supportsWebSearch()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var response = service.webSearch("What is the current stock price of Tesla?");
+        log(response);
+        assertAll(
+            () -> assertTrue(response.contains("Tesla") || response.contains("TSLA"), "response contains 'Tesla' or 'TSLA'"),
+            () -> assertTrue(response.contains("$") || response.contains("USD"), "response contains '$' or 'USD'"),
+            () -> assertTrue(Pattern.compile("\\d+\\.\\d{2}").matcher(response).find(), "response contains #0.00")
         );
     }
 

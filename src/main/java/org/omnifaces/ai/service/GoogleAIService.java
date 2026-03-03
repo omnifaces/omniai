@@ -101,6 +101,11 @@ public class GoogleAIService extends BaseAIService {
     }
 
     @Override
+    public boolean supportsWebSearch() {
+        return true; // Not version-bound, support is API-bound.
+    }
+
+    @Override
     protected URI resolveURI(String path) {
         if (path.equals(getFilesPath())) {
             return super.resolveURI("../upload/v1beta/"+ format(getFilesPath() + "?key=%s", apiKey));

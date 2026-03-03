@@ -65,6 +65,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 .add("model", service.getModelName());
 
         if (supportsResponsesApi) {
+            buildChatPayloadToolsWithResponsesApi(payload, options);
             buildChatPayloadSystemPromptWithResponsesApi(payload, options);
             buildChatPayloadHistoryMessagesWithResponsesApi(messages, input, service);
             buildChatPayloadUserContentWithResponsesApi(messages, input, service, options);
@@ -72,6 +73,10 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             buildChatPayloadGenerationConfigWithResponsesApi(payload, service, options, streaming);
         }
         else {
+            if (options.isWebSearch()) {
+                checkSupportsWebSearch(service);
+            }
+
             buildChatPayloadSystemPromptWithChatCompletionsApi(messages, options);
             buildChatPayloadHistoryMessagesWithChatCompletionsApi(messages, input, service);
             buildChatPayloadUserContentWithChatCompletionsApi(messages, input, service, options);
@@ -83,7 +88,22 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     /**
-     * Add system prompt to payload as {@code instructions} for Responses API.
+     * Add tools to payload as top-level {@code tools} field for Responses API.
+     * @param payload The payload builder.
+     * @param options The chat options.
+     * @since 1.3
+     * @see <a href="https://developers.openai.com/api/docs/guides/tools-web-search/">Web Search Tool Reference</a>
+     */
+    protected void buildChatPayloadToolsWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
+        if (options.isWebSearch()) {
+            payload.add("tools", Json.createArrayBuilder()
+                .add(Json.createObjectBuilder()
+                    .add("type", "web_search").build()));
+        }
+    }
+
+    /**
+     * Add system prompt to payload as top-level {@code instructions} field for Responses API.
      * @param payload The payload builder.
      * @param options The chat options.
      */
