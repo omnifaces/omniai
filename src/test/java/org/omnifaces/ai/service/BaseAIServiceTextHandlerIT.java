@@ -15,6 +15,7 @@ package org.omnifaces.ai.service;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -55,6 +56,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         log("response2: " + response2);
 
         var history = options.getHistory();
+        var lastUsage = options.getLastUsage();
 
         assertAll(
             () -> assertTrue(response2.contains("Bob"), response2),
@@ -64,7 +66,11 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertEquals(Role.ASSISTANT, history.get(1).role()),
             () -> assertEquals(Role.USER, history.get(2).role()),
             () -> assertEquals("What is my name?", history.get(2).content()),
-            () -> assertEquals(Role.ASSISTANT, history.get(3).role())
+            () -> assertEquals(Role.ASSISTANT, history.get(3).role()),
+            () -> assertNotNull(lastUsage),
+            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
+            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
+            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
         );
     }
 
@@ -80,10 +86,16 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response2 = service.chat("What is my name?", options);
         log("response2: " + response2);
 
+        var lastUsage = options.getLastUsage();
+
         assertAll(
             () -> assertFalse(response2.contains("Bob"), response2),
             () -> assertFalse(options.hasMemory()),
-            () -> assertThrows(IllegalStateException.class, options::getHistory)
+            () -> assertThrows(IllegalStateException.class, options::getHistory),
+            () -> assertNotNull(lastUsage),
+            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
+            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
+            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
         );
     }
 

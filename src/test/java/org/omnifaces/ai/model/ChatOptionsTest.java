@@ -703,6 +703,49 @@ class ChatOptionsTest {
     }
 
     // =================================================================================================================
+    // recordUsage / getLastUsage
+    // =================================================================================================================
+
+    @Test
+    void getLastUsage_initial_returnsNull() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertNull(options.getLastUsage());
+    }
+
+    @Test
+    void recordUsage_validUsage_setsLastUsage() {
+        var options = ChatOptions.newBuilder().build();
+        var usage = new ChatUsage(100, 50);
+
+        options.recordUsage(usage);
+
+        assertEquals(usage, options.getLastUsage());
+    }
+
+    @Test
+    void recordUsage_null_clearsLastUsage() {
+        var options = ChatOptions.newBuilder().build();
+        options.recordUsage(new ChatUsage(100, 50));
+
+        options.recordUsage(null);
+
+        assertNull(options.getLastUsage());
+    }
+
+    @Test
+    void recordUsage_staleScenario_latestCallWins() {
+        var options = ChatOptions.newBuilder().build();
+        var first = new ChatUsage(100, 50);
+        var second = new ChatUsage(200, 75);
+
+        options.recordUsage(first);
+        options.recordUsage(second);
+
+        assertEquals(second, options.getLastUsage());
+    }
+
+    // =================================================================================================================
     // Sliding window - uploaded file cleanup
     // =================================================================================================================
 

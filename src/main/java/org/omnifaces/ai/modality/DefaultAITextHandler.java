@@ -242,23 +242,25 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns the dot-separated JSON paths to try (in order) for the input token count.
-     * Covers OpenAI Responses API ({@code usage.input_tokens}), Anthropic, and
-     * Chat Completions-compatible providers ({@code usage.prompt_tokens}).
-     * @return Paths to try for input token count.
+     * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseUsage(JsonObject)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation throws UnsupportedOperationException.
+     * @return all possible paths to the input token count in the JSON response.
      * @since 1.3
      */
     public List<String> getChatUsageInputTokensPaths() {
-        return List.of("usage.input_tokens", "usage.prompt_tokens");
+        throw new UnsupportedOperationException("Please implement getChatUsageInputTokensPaths() method in class " + getClass().getSimpleName());
     }
 
     /**
-     * Returns the dot-separated JSON paths to try (in order) for the output token count.
-     * @return Paths to try for output token count.
+     * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseUsage(JsonObject)}.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation throws UnsupportedOperationException.
+     * @return all possible paths to the output token count in the JSON response.
      * @since 1.3
      */
     public List<String> getChatUsageOutputTokensPaths() {
-        return List.of("usage.output_tokens", "usage.completion_tokens");
+        throw new UnsupportedOperationException("Please implement getChatUsageOutputTokensPaths() method in class " + getClass().getSimpleName());
     }
 
     /**

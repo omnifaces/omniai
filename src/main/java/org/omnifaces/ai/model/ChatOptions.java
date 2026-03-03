@@ -14,7 +14,6 @@ package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Objects.requireNonNull;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
@@ -394,13 +393,15 @@ public class ChatOptions implements Serializable {
 
     /**
      * Records token usage for the most recent chat call.
-     * This is automatically called by the AI service after each successful chat response.
+     * This is automatically called by the AI service after each chat response, even when the provider did not report
+     * usage. A {@code null} value indicates that the last call did not report any usage, which clears any previously
+     * recorded usage.
      *
-     * @param usage The usage to record, must not be {@code null}.
+     * @param usage The usage to record, or {@code null} if the provider did not report any usage.
      * @since 1.3
      */
     public void recordUsage(ChatUsage usage) {
-        this.lastUsage = requireNonNull(usage, "usage");
+        this.lastUsage = usage;
     }
 
     /**

@@ -174,12 +174,12 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     @Override
     public List<String> getChatUsageInputTokensPaths() {
-        return List.of("usage.prompt_tokens");
+        return List.of("usage.input_tokens");
     }
 
     @Override
     public List<String> getChatUsageOutputTokensPaths() {
-        return List.of("usage.completion_tokens");
+        return List.of("usage.output_tokens");
     }
 
     @Override

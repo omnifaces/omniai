@@ -49,6 +49,6 @@ public class OpenAIImageHandler extends DefaultAIImageHandler {
 
     @Override
     public List<String> getImageResponseContentPaths() {
-        return List.of("output[*].content[*].image_base64", "data[0].b64_json");
+        return List.of("output[*].content[*].image_base64", "data[0].b64_json"); // Responses API; Images API
     }
 }

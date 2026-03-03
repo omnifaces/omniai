@@ -19,10 +19,30 @@ import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ExecutorServiceHelperTest {
+
+    private static final Logger SERVICE_LOGGER = Logger.getLogger(ExecutorServiceHelper.class.getPackageName());
+
+    private Level savedLevel;
+
+    @BeforeEach
+    void suppressLogs() {
+        savedLevel = SERVICE_LOGGER.getLevel();
+        SERVICE_LOGGER.setLevel(Level.OFF);
+    }
+
+    @AfterEach
+    void restoreLogs() {
+        SERVICE_LOGGER.setLevel(savedLevel);
+    }
+
 
     // =================================================================================================================
     // runAsync - successful task

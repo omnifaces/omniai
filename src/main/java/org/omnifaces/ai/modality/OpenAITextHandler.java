@@ -316,17 +316,17 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     @Override
     public List<String> getChatResponseContentPaths() {
-        return List.of("output[*].content[*].text", "choices[0].message.content");
+        return List.of("output[*].content[*].text", "choices[0].message.content"); // Responses API; Completions API
     }
 
     @Override
     public List<String> getChatUsageInputTokensPaths() {
-        return List.of("usage.input_tokens", "usage.prompt_tokens"); // responses, completions
+        return List.of("usage.input_tokens", "usage.prompt_tokens"); // Responses API; Completions API
     }
 
     @Override
     public List<String> getChatUsageOutputTokensPaths() {
-        return List.of("usage.output_tokens", "usage.completion_tokens"); // responses, completions
+        return List.of("usage.output_tokens", "usage.completion_tokens"); // Responses API; Completions API
     }
 
     @Override
