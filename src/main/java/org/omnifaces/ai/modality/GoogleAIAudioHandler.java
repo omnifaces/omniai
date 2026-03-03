@@ -13,8 +13,9 @@
 package org.omnifaces.ai.modality;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
-import static org.omnifaces.ai.helper.JsonHelper.parseAndCheckErrors;
+import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.mime.MimeType.guessMimeType;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
@@ -71,14 +72,14 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
      * In Google AI, the response body represents a JSON with audio content as Base64-encoded PCM file.
      */
     @Override
-    public InputStream parseAudioContent(InputStream responseBody) throws AIResponseException {
-        String responseBodyAsString;
+    public InputStream parseAudioContent(InputStream responseStream) throws AIResponseException {
+        String responseBody;
 
         try {
-            responseBodyAsString = new String(responseBody.readAllBytes(), UTF_8);
+            responseBody = new String(responseStream.readAllBytes(), UTF_8);
         }
         catch (IOException e) {
-            throw new AIResponseException("Cannot parse response body as string", responseBody.toString(), e);
+            throw new AIResponseException("Cannot parse response body as string", responseStream, e);
         }
 
         var audioContentPaths = getAudioResponseContentPaths();
@@ -87,8 +88,9 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
         }
 
-        var responseJson = parseAndCheckErrors(responseBodyAsString, getAudioResponseErrorMessagePaths());
-        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, audioContentPaths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + audioContentPaths, responseBodyAsString));
+        var responseJson = parseJson(responseBody);
+        checkErrors(responseJson, getAudioResponseErrorMessagePaths());
+        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, audioContentPaths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + audioContentPaths, responseBody));
 
         try {
             var audioContent = Base64.getDecoder().decode(audioContentBase64);
@@ -101,7 +103,7 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             }
         }
         catch (Exception e) {
-            throw new AIResponseException("Cannot Base64-decode audio", responseBodyAsString, e);
+            throw new AIResponseException("Cannot Base64-decode audio", responseBody, e);
         }
     }
 

@@ -48,14 +48,14 @@ public interface AIAudioHandler extends Serializable {
     String buildTranscribePrompt();
 
     /**
-     * Parses transcription text from the API response body of a transcribe operation.
+     * Parses transcription text from the API response JSON of a transcribe operation.
      * @implNote The default implementation throws UnsupportedOperationException.
-     * @param responseBody The API response body, usually a JSON object with the AI response, along with some meta data.
-     * @return The extracted transcription text from the API response body.
-     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected transcription text.
+     * @param responseJson The API response JSON.
+     * @return The extracted transcription text from the API response JSON.
+     * @throws AIResponseException If the response JSON contains an error object, or is missing expected transcription text.
      */
-    default String parseTranscribeResponse(String responseBody) throws AIResponseException {
-        throw new UnsupportedOperationException("Please implement parseTranscribeResponse(String responseBody) for this AI provider");
+    default String parseTranscribeResponse(JsonObject responseJson) throws AIResponseException {
+        throw new UnsupportedOperationException("Please implement parseTranscribeResponse(JsonObject responseJson) for this AI provider");
     }
 
     /**

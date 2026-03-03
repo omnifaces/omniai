@@ -54,6 +54,8 @@ import org.omnifaces.ai.OmniHai;
 import org.omnifaces.ai.exception.AIBadRequestException;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIHttpException;
+import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.helper.JsonHelper;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.model.Sse.Event.Type;
@@ -115,12 +117,13 @@ final class AIHttpClient {
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
-     * @return The response body as a string
+     * @return The response body as a JSON
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      * @since 1.1
      */
-    public CompletableFuture<String> get(BaseAIService service, String path) throws AIHttpException {
-        return sendWithRetryAsync(service, path, GET, newRequest(service, path, GET, null, APPLICATION_JSON, BodyPublishers.noBody()));
+    public CompletableFuture<JsonObject> get(BaseAIService service, String path) throws AIHttpException {
+        return sendWithRetryAsync(service, path, GET, newRequest(service, path, GET, null, APPLICATION_JSON, BodyPublishers.noBody())).thenApply(JsonHelper::parseJson);
     }
 
     /**
@@ -130,11 +133,12 @@ final class AIHttpClient {
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
      * @param payload The JSON payload
-     * @return The response body as a string
+     * @return The response body as a JSON
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      */
-    public CompletableFuture<String> post(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
-        return sendWithRetryAsync(service, path, payload, newJsonRequest(service, path, payload, APPLICATION_JSON));
+    public CompletableFuture<JsonObject> post(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
+        return sendWithRetryAsync(service, path, payload, newJsonRequest(service, path, payload, APPLICATION_JSON)).thenApply(JsonHelper::parseJson);
     }
 
     /**
@@ -144,12 +148,13 @@ final class AIHttpClient {
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
      * @param attachment The raw payload
-     * @return The response body as a string
+     * @return The response body as a JSON
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      * @since 1.1
      */
-    public CompletableFuture<String> post(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
-        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, toBody(attachment)));
+    public CompletableFuture<JsonObject> post(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
+        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, toBody(attachment))).thenApply(JsonHelper::parseJson);
     }
 
     /**
@@ -161,6 +166,7 @@ final class AIHttpClient {
      * @param payload The JSON payload
      * @return The response as a {@link HttpResponse} with an {@link InputStream} body.
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      * @since 1.2
      */
     public CompletableFuture<InputStream> stream(BaseAIService service, String path, JsonObject payload) throws AIHttpException {
@@ -177,6 +183,7 @@ final class AIHttpClient {
      * @param eventProcessor The stream event processor.
      * @return A future that completes when stream ends or fails.
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      */
     public CompletableFuture<Void> stream(BaseAIService service, String path, JsonObject payload, Predicate<Event> eventProcessor) throws AIHttpException {
         final int requestId = logRequest(service, path, payload);
@@ -190,11 +197,12 @@ final class AIHttpClient {
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
      * @param attachment The file attachment to upload
-     * @return The response body as a string
+     * @return The response body as JSON
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      */
-    public CompletableFuture<String> upload(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
-        return sendWithRetryAsync(service, path, attachment, newUploadRequest(service, path, attachment, APPLICATION_JSON));
+    public CompletableFuture<JsonObject> upload(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
+        return sendWithRetryAsync(service, path, attachment, newUploadRequest(service, path, attachment, APPLICATION_JSON)).thenApply(JsonHelper::parseJson);
     }
 
     /**
@@ -205,10 +213,11 @@ final class AIHttpClient {
      * @param path the API path
      * @return The response body as a string
      * @throws AIHttpException if the request fails
+     * @throws AIResponseException if the response JSON parsing fails
      * @since 1.1
      */
-    public CompletableFuture<String> delete(BaseAIService service, String path) throws AIHttpException {
-        return sendWithRetryAsync(service, path, DELETE, newRequest(service, path, DELETE, null, APPLICATION_JSON, BodyPublishers.noBody()));
+    public CompletableFuture<JsonObject> delete(BaseAIService service, String path) throws AIHttpException {
+        return sendWithRetryAsync(service, path, DELETE, newRequest(service, path, DELETE, null, APPLICATION_JSON, BodyPublishers.noBody())).thenApply(JsonHelper::parseJson);
     }
 
     private static BodyPublisher toBody(Attachment attachment) {

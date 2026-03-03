@@ -41,7 +41,7 @@ public class AIResponseException extends AIException {
      * @param message The detail message.
      * @param responseBody The HTTP response body.
      */
-    public AIResponseException(String message, String responseBody) {
+    public AIResponseException(String message, Object responseBody) {
         this(message, responseBody, null);
     }
 
@@ -52,9 +52,9 @@ public class AIResponseException extends AIException {
      * @param responseBody The HTTP response body.
      * @param cause The cause of this exception.
      */
-    public AIResponseException(String message, String responseBody, Throwable cause) {
+    public AIResponseException(String message, Object responseBody, Throwable cause) {
         super(message + ": " + responseBody, cause);
-        this.responseBody = responseBody;
+        this.responseBody = responseBody == null ? null : responseBody.toString();
     }
 
     /**

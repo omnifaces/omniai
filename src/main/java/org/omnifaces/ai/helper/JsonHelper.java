@@ -86,21 +86,19 @@ public final class JsonHelper {
     }
 
     /**
-     * Parses the response body as JSON and checks for error messages at the specified paths.
+     * Checks for error messages at the specified paths.
      * <p>
      * If an error message is found at any of the paths, an {@link AIResponseException} is thrown.
      *
-     * @param responseBody The API response body to parse.
+     * @param responseJson The API response JSON.
      * @param errorMessagePaths Paths to check for error messages (e.g., {@code "error.message"}, {@code "error"}).
-     * @return The parsed JSON object if no errors were found.
      * @throws AIResponseException If parsing fails or an error message is found.
+     * @since 1.3
      */
-    public static JsonObject parseAndCheckErrors(String responseBody, List<String> errorMessagePaths) throws AIResponseException {
-        var responseJson = parseJson(responseBody);
+    public static void checkErrors(JsonObject responseJson, List<String> errorMessagePaths) throws AIResponseException {
         findFirstNonBlankByPaths(responseJson, errorMessagePaths).ifPresent(errorMessage -> {
-            throw new AIResponseException(errorMessage, responseBody);
+            throw new AIResponseException(errorMessage, responseJson);
         });
-        return responseJson;
     }
 
     /**

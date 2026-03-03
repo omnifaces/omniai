@@ -22,7 +22,6 @@ import static org.omnifaces.ai.AIConfig.PROPERTY_API_KEY;
 import static org.omnifaces.ai.AIConfig.PROPERTY_ENDPOINT;
 import static org.omnifaces.ai.AIConfig.PROPERTY_MODEL;
 import static org.omnifaces.ai.helper.JsonHelper.findNonBlankByPath;
-import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
@@ -61,6 +60,7 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.helper.JsonHelper;
 import org.omnifaces.ai.helper.TextHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
@@ -317,8 +317,8 @@ public abstract class BaseAIService implements AIService {
         }
 
         try {
-            var responseBody = HTTP_CLIENT.get(this, getFilesPath()).join();
-            var files = parseJson(responseBody).getJsonArray(jsonStructure.filesArrayProperty);
+            var responseJson = HTTP_CLIENT.get(this, getFilesPath()).join();
+            var files = responseJson.getJsonArray(jsonStructure.filesArrayProperty);
 
             if (files == null || files.isEmpty()) {
                 return;
@@ -434,7 +434,7 @@ public abstract class BaseAIService implements AIService {
             .temperature(DETERMINISTIC_TEMPERATURE)
             .build();
 
-        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(response -> parseModerationResult(response, options));
+        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(JsonHelper::parseJson).thenApply(response -> parseModerationResult(response, options));
     }
 
     private static JsonObject buildModerationJsonSchema(ModerationOptions options) {
@@ -458,8 +458,7 @@ public abstract class BaseAIService implements AIService {
             .build();
     }
 
-    private static ModerationResult parseModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
-        var responseJson = parseJson(responseBody);
+    private static ModerationResult parseModerationResult(JsonObject responseJson, ModerationOptions options) throws AIResponseException {
         var scores = new TreeMap<String, Double>();
         var flagged = false;
 
@@ -597,7 +596,7 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * chat response from the POST response with help of {@link AITextHandler#parseChatResponse(String)}.
+     * chat response from the POST response with help of {@link AITextHandler#parseChatResponse(JsonObject)}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
      * @return The message content of the POST request.
@@ -609,7 +608,7 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Upload file attachment to API at given path along with request headers obtained from {@link #getRequestHeaders()},
-     * and parse file ID from the response with help of {@link AITextHandler#parseFileResponse(String)}.
+     * and parse file ID from the response with help of {@link AITextHandler#parseFileResponse(JsonObject)}.
      *
      * @param path API path, relative to {@link #endpoint}.
      * @param attachment The file attachment to upload.

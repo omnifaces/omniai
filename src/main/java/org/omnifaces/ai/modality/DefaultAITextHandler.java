@@ -13,8 +13,8 @@
 package org.omnifaces.ai.modality;
 
 import static java.util.logging.Level.WARNING;
+import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
-import static org.omnifaces.ai.helper.JsonHelper.parseAndCheckErrors;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.util.List;
@@ -177,31 +177,31 @@ public class DefaultAITextHandler implements AITextHandler {
     // Response parsing -----------------------------------------------------------------------------------------------
 
     @Override
-    public String parseChatResponse(String responseBody) throws AIResponseException {
-        var responseJson = parseAndCheckErrors(responseBody, getTextResponseErrorMessagePaths());
+    public String parseChatResponse(JsonObject responseJson) throws AIResponseException {
+        checkErrors(responseJson, getTextResponseErrorMessagePaths());
         var messageContentPaths = getChatResponseContentPaths();
 
         if (messageContentPaths.isEmpty()) {
             throw new IllegalStateException("getChatResponseContentPaths() may not return an empty list");
         }
 
-        return findFirstNonBlankByPaths(responseJson, messageContentPaths).orElseThrow(() -> new AIResponseException("No message content found at paths " + messageContentPaths, responseBody));
+        return findFirstNonBlankByPaths(responseJson, messageContentPaths).orElseThrow(() -> new AIResponseException("No message content found at paths " + messageContentPaths, responseJson));
     }
 
     @Override
-    public String parseFileResponse(String responseBody) throws AIResponseException {
-        var responseJson = parseAndCheckErrors(responseBody, getTextResponseErrorMessagePaths());
+    public String parseFileResponse(JsonObject responseJson) throws AIResponseException {
+        checkErrors(responseJson, getTextResponseErrorMessagePaths());
         var fileIdPaths = getFileResponseIdPaths();
 
         if (fileIdPaths.isEmpty()) {
             throw new IllegalStateException("getFileResponseIdPaths() may not return an empty list");
         }
 
-        return findFirstNonBlankByPaths(responseJson, fileIdPaths).orElseThrow(() -> new AIResponseException("No file ID found at paths " + fileIdPaths, responseBody));
+        return findFirstNonBlankByPaths(responseJson, fileIdPaths).orElseThrow(() -> new AIResponseException("No file ID found at paths " + fileIdPaths, responseJson));
     }
 
     /**
-     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(String)} or {@link #parseFileResponse(String)}.
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(JsonObject)} or {@link #parseFileResponse(JsonObject)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
@@ -211,7 +211,7 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(String)}.
+     * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(JsonObject)}.
      * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation throws UnsupportedOperationException.
@@ -222,7 +222,7 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(String)}.
+     * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(JsonObject)}.
      * May not be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation returns {@code id}.

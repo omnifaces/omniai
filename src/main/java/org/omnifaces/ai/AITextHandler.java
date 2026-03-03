@@ -142,23 +142,23 @@ public interface AITextHandler extends Serializable {
     String buildProofreadPrompt();
 
     /**
-     * Parses message content from the API response body returned by chat operation.
+     * Parses message content from the API response JSON returned by chat operation.
      *
-     * @param responseBody The API response body, usually a JSON object with the AI response, along with some meta data.
-     * @return The extracted message content from the API response body.
-     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected message content.
+     * @param responseJson The API response JSON.
+     * @return The extracted message content from the API response JSON.
+     * @throws AIResponseException If the response JSON contains an error object, or is missing expected message content.
      */
-    String parseChatResponse(String responseBody) throws AIResponseException;
+    String parseChatResponse(JsonObject responseJson) throws AIResponseException;
 
     /**
-     * Parses file ID from the API response body of file upload operation.
+     * Parses file ID from the API response JSON of file upload operation.
      * @implNote The default implementation throws UnsupportedOperationException.
-     * @param responseBody The API response body, usually a JSON object with the file ID.
-     * @return The extracted file ID from the API response body.
-     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected file ID.
+     * @param responseJson The API response JSON.
+     * @return The extracted file ID from the API response JSON.
+     * @throws AIResponseException If the response JSON contains an error object, or is missing expected file ID.
      */
-    default String parseFileResponse(String responseBody) throws AIResponseException {
-        throw new UnsupportedOperationException("Please implement parseFileResponse(String responseBody) for this AI provider");
+    default String parseFileResponse(JsonObject responseJson) throws AIResponseException {
+        throw new UnsupportedOperationException("Please implement parseFileResponse(JsonObject responseJson) for this AI provider");
     }
 
     /**

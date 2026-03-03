@@ -14,7 +14,6 @@ package org.omnifaces.ai.service;
 
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.isEmpty;
-import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -24,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIConfig;
 import org.omnifaces.ai.AIModality;
@@ -207,17 +207,16 @@ public class OpenAIService extends BaseAIService {
     /**
      * Parses the moderation result from OpenAI's moderation API response.
      *
-     * @param responseBody The JSON response from OpenAI's moderation API.
+     * @param responseJson The JSON response from OpenAI's moderation API.
      * @param options The moderation options containing categories and threshold.
      * @return The parsed moderation result.
      * @throws AIResponseException If the response cannot be parsed as JSON or is missing moderation results.
      */
-    protected ModerationResult parseOpenAIModerationResult(String responseBody, ModerationOptions options) throws AIResponseException {
-        var responseJson = parseJson(responseBody);
+    protected ModerationResult parseOpenAIModerationResult(JsonObject responseJson, ModerationOptions options) throws AIResponseException {
         var results = responseJson.getJsonArray("results");
 
         if (isEmpty(results)) {
-            throw new AIResponseException("Response is empty", responseBody);
+            throw new AIResponseException("Response is empty", responseJson);
         }
 
         var result = results.getJsonObject(0);
@@ -270,14 +269,13 @@ public class OpenAIService extends BaseAIService {
     /**
      * Parses the transcription result from OpenAI's transcription API response.
      *
-     * @param responseBody The JSON response from OpenAI's transcription API.
+     * @param responseJson The JSON response from OpenAI's transcription API.
      * @return The transcription result.
      * @throws AIResponseException If the response cannot be parsed as JSON or is missing transcription text.
      * @since 1.1
      */
-    protected String parseOpenAITranscribeResponse(String responseBody) throws AIResponseException {
-        var responseJson = parseJson(responseBody);
-        return findFirstNonBlankByPaths(responseJson, List.of("text")).orElseThrow(() -> new AIResponseException("No transcription text found", responseBody));
+    protected String parseOpenAITranscribeResponse(JsonObject responseJson) throws AIResponseException {
+        return findFirstNonBlankByPaths(responseJson, List.of("text")).orElseThrow(() -> new AIResponseException("No transcription text found", responseJson));
     }
 
     /**

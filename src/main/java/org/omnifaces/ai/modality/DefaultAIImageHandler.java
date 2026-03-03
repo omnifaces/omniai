@@ -12,13 +12,15 @@
  */
 package org.omnifaces.ai.modality;
 
+import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
-import static org.omnifaces.ai.helper.JsonHelper.parseAndCheckErrors;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.util.Base64;
 import java.util.List;
 import java.util.logging.Logger;
+
+import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIImageHandler;
 import org.omnifaces.ai.AIService;
@@ -90,21 +92,21 @@ public class DefaultAIImageHandler implements AIImageHandler {
     // Response parsing -----------------------------------------------------------------------------------------------
 
     @Override
-    public byte[] parseImageContent(String responseBody) throws AIResponseException {
-        var responseJson = parseAndCheckErrors(responseBody, getImageResponseErrorMessagePaths());
+    public byte[] parseImageContent(JsonObject responseJson) throws AIResponseException {
+        checkErrors(responseJson, getImageResponseErrorMessagePaths());
         var imageContentPaths = getImageResponseContentPaths();
 
         if (imageContentPaths.isEmpty()) {
             throw new IllegalStateException("getImageResponseContentPaths() may not return an empty list");
         }
 
-        var imageContent = findFirstNonBlankByPaths(responseJson, imageContentPaths).orElseThrow(() -> new AIResponseException("No image content found at paths " + imageContentPaths, responseBody));
+        var imageContent = findFirstNonBlankByPaths(responseJson, imageContentPaths).orElseThrow(() -> new AIResponseException("No image content found at paths " + imageContentPaths, responseJson));
 
         try {
             return Base64.getDecoder().decode(imageContent);
         }
         catch (Exception e) {
-            throw new AIResponseException("Cannot Base64-decode image", responseBody, e);
+            throw new AIResponseException("Cannot Base64-decode image", responseJson, e);
         }
     }
 

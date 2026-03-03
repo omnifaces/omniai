@@ -298,42 +298,34 @@ class JsonHelperTest {
     }
 
     // =================================================================================================================
-    // parseAndCheckErrors tests
+    // checkErrors tests
     // =================================================================================================================
 
     @Test
-    void parseAndCheckErrors_noError_returnsJson() {
-        var responseBody = "{\"result\":\"success\"}";
+    void checkErrors_noError_doesNotThrow() {
+        var responseJson = Json.createObjectBuilder().add("result", "success").build();
 
-        var result = JsonHelper.parseAndCheckErrors(responseBody, List.of("error.message", "error"));
-
-        assertEquals("success", result.getString("result"));
+        JsonHelper.checkErrors(responseJson, List.of("error.message", "error"));
     }
 
     @Test
-    void parseAndCheckErrors_errorAtFirstPath_throwsException() {
-        var responseBody = "{\"error\":{\"message\":\"Something went wrong\"}}";
+    void checkErrors_errorAtFirstPath_throwsException() {
+        var responseJson = JsonHelper.parseJson("{\"error\":{\"message\":\"Something went wrong\"}}");
 
         var exception = assertThrows(AIResponseException.class,
-                () -> JsonHelper.parseAndCheckErrors(responseBody, List.of("error.message", "error")));
+                () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error")));
 
         assertTrue(exception.getMessage().contains("Something went wrong"));
     }
 
     @Test
-    void parseAndCheckErrors_errorAtSecondPath_throwsException() {
-        var responseBody = "{\"error\":\"Simple error\"}";
+    void checkErrors_errorAtSecondPath_throwsException() {
+        var responseJson = Json.createObjectBuilder().add("error", "Simple error").build();
 
         var exception = assertThrows(AIResponseException.class,
-                () -> JsonHelper.parseAndCheckErrors(responseBody, List.of("error.message", "error")));
+                () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error")));
 
         assertTrue(exception.getMessage().contains("Simple error"));
-    }
-
-    @Test
-    void parseAndCheckErrors_invalidJson_throwsException() {
-        assertThrows(AIResponseException.class,
-                () -> JsonHelper.parseAndCheckErrors("not json", List.of("error")));
     }
 
     // =================================================================================================================

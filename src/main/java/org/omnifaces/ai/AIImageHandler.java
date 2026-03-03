@@ -68,13 +68,13 @@ public interface AIImageHandler extends Serializable {
     }
 
     /**
-     * Parses image content from the API response body of generate image operation.
+     * Parses image content from the API response JSON of generate image operation.
      * @implNote The default implementation throws UnsupportedOperationException.
-     * @param responseBody The API response body, usually a JSON object with an encoded image file, along with some meta data.
-     * @return The extracted image content from the API response body.
-     * @throws AIResponseException If the response cannot be parsed as JSON, contains an error object, or is missing expected image content.
+     * @param responseJson The API response JSON.
+     * @return The extracted image content from the API response JSON.
+     * @throws AIResponseException If the response JSON contains an error object, or is missing expected image content.
      */
-    default byte[] parseImageContent(String responseBody) throws AIResponseException {
-        throw new UnsupportedOperationException("Please implement parseImageContent(String responseBody) for this AI provider");
+    default byte[] parseImageContent(JsonObject responseJson) throws AIResponseException {
+        throw new UnsupportedOperationException("Please implement parseImageContent(JsonObject responseJson) for this AI provider");
     }
 }
