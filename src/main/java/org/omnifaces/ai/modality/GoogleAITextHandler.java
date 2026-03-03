@@ -193,7 +193,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
             return usage;
         }
 
-        // outputTokens must include reasoningTokens so that totalTokens() = promptTokenCount + candidatesTokenCount + thoughtsTokenCount
+        // In contrary to e.g. OpenAI, Google AI doesn't include reasoning tokens in output (candidates) tokens, so we need to recalculate.
         var adjustedOutput = usage.outputTokens() == -1 ? usage.reasoningTokens() : usage.outputTokens() + usage.reasoningTokens();
         return new ChatUsage(usage.inputTokens(), adjustedOutput, usage.reasoningTokens());
     }
