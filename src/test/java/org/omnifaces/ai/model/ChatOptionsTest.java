@@ -716,7 +716,7 @@ class ChatOptionsTest {
     @Test
     void recordUsage_validUsage_setsLastUsage() {
         var options = ChatOptions.newBuilder().build();
-        var usage = new ChatUsage(100, 50);
+        var usage = new ChatUsage(100, 50, -1);
 
         options.recordUsage(usage);
 
@@ -726,7 +726,7 @@ class ChatOptionsTest {
     @Test
     void recordUsage_null_clearsLastUsage() {
         var options = ChatOptions.newBuilder().build();
-        options.recordUsage(new ChatUsage(100, 50));
+        options.recordUsage(new ChatUsage(100, 50, -1));
 
         options.recordUsage(null);
 
@@ -736,8 +736,8 @@ class ChatOptionsTest {
     @Test
     void recordUsage_staleScenario_latestCallWins() {
         var options = ChatOptions.newBuilder().build();
-        var first = new ChatUsage(100, 50);
-        var second = new ChatUsage(200, 75);
+        var first = new ChatUsage(100, 50, -1);
+        var second = new ChatUsage(200, 75, -1);
 
         options.recordUsage(first);
         options.recordUsage(second);
@@ -768,7 +768,7 @@ class ChatOptionsTest {
 
     @Test
     void recordUsage_onDefault_throwsISE() {
-        assertThrows(IllegalStateException.class, () -> ChatOptions.DEFAULT.recordUsage(new ChatUsage(1, 1)));
+        assertThrows(IllegalStateException.class, () -> ChatOptions.DEFAULT.recordUsage(new ChatUsage(1, 1, -1)));
     }
 
     @Test
@@ -784,7 +784,7 @@ class ChatOptionsTest {
     @Test
     void copy_isMutable() {
         var copy = ChatOptions.DEFAULT.copy();
-        var usage = new ChatUsage(100, 50);
+        var usage = new ChatUsage(100, 50, -1);
 
         copy.recordUsage(usage);
 

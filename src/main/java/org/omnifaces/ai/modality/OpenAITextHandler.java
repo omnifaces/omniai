@@ -37,7 +37,6 @@ import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
-import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -335,6 +334,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageReasoningTokensPaths() {
+        return List.of("usage.output_tokens_details.reasoning_tokens", "usage.completion_tokens_details.reasoning_tokens"); // Responses API; Completions API
+    }
+
+    @Override
     public boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
         if (supportsResponsesApi(service)) {
             return processChatStreamEventWithResponsesApi(options, event, onToken);
@@ -372,7 +376,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                         onToken.accept(token);
                     }
                 }
-                else if ("response.completed".equals(type) && !options.isDefault()) {
+                else if (!options.isDefault() && "response.completed".equals(type)) {
                     options.recordUsage(parseChatUsage(json.getJsonObject("response")));
                 }
                 else if ("response.failed".equals(type)) {
@@ -404,13 +408,8 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                         findByPath(json, "choices[0].delta.content").ifPresent(onToken);
                         findByPath(json, "choices[0].finish_reason").filter("length"::equals).ifPresent(__ -> { throw new AITokenLimitExceededException(); });
 
-                        if (!options.isDefault()) {
-                            var inputTokens = findByPath(json, "usage.prompt_tokens");
-                            var outputTokens = findByPath(json, "usage.completion_tokens");
-
-                            if (inputTokens.isPresent() || outputTokens.isPresent()) {
-                                options.recordUsage(new ChatUsage(inputTokens.map(Integer::parseInt).orElse(-1), outputTokens.map(Integer::parseInt).orElse(-1)));
-                            }
+                        if (!options.isDefault() && json.containsKey("usage")) {
+                            options.recordUsage(parseChatUsage(json));
                         }
                     }
 

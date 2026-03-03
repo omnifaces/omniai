@@ -19,14 +19,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.omnifaces.ai.AIProvider.GOOGLE;
+import static org.omnifaces.ai.AIProvider.OPENAI;
+import static org.omnifaces.ai.AIProvider.OPENROUTER;
+import static org.omnifaces.ai.AIProvider.XAI;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.opentest4j.TestAbortedException;
 
@@ -50,13 +56,16 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             .build();
 
         var response1 = service.chat("My name is Bob.", options);
+        var usage1 = options.getLastUsage();
         log("response1: " + response1);
+        log("usage1: " + usage1);
 
         var response2 = service.chat("What is my name?", options);
+        var usage2 = options.getLastUsage();
         log("response2: " + response2);
+        log("usage1: " + usage2);
 
         var history = options.getHistory();
-        var lastUsage = options.getLastUsage();
 
         assertAll(
             () -> assertTrue(response2.contains("Bob"), response2),
@@ -67,10 +76,8 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertEquals(Role.USER, history.get(2).role()),
             () -> assertEquals("What is my name?", history.get(2).content()),
             () -> assertEquals(Role.ASSISTANT, history.get(3).role()),
-            () -> assertNotNull(lastUsage),
-            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
-            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
-            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
+            () -> assertUsage(usage1),
+            () -> assertUsage(usage2)
         );
     }
 
@@ -81,21 +88,21 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             .build();
 
         var response1 = service.chat("My name is Bob.", options);
+        var usage1 = options.getLastUsage();
         log("response1: " + response1);
+        log("usage1: " + usage1);
 
         var response2 = service.chat("What is my name?", options);
+        var usage2 = options.getLastUsage();
         log("response2: " + response2);
-
-        var lastUsage = options.getLastUsage();
+        log("usage1: " + usage2);
 
         assertAll(
             () -> assertFalse(response2.contains("Bob"), response2),
             () -> assertFalse(options.hasMemory()),
             () -> assertThrows(IllegalStateException.class, options::getHistory),
-            () -> assertNotNull(lastUsage),
-            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
-            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
-            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
+            () -> assertUsage(usage1),
+            () -> assertUsage(usage2)
         );
     }
 
@@ -107,17 +114,35 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
         var options = ChatOptions.newBuilder().build();
         var responseBuffer = new StringBuilder();
+
         service.chatStream("Reply with only: OK", options, responseBuffer::append).join();
         var response = responseBuffer.toString();
-        log(response);
-        var lastUsage = options.getLastUsage();
+        var usage = options.getLastUsage();
+        log("response: " + response);
+        log("usage: " + usage);
+
         assertAll(
             () -> assertTrue(response.contains("OK"), response),
-            () -> assertNotNull(lastUsage),
-            () -> assertTrue(lastUsage.inputTokens() > 0, "inputTokens: " + lastUsage.inputTokens()),
-            () -> assertTrue(lastUsage.outputTokens() > 0, "outputTokens: " + lastUsage.outputTokens()),
-            () -> assertTrue(lastUsage.totalTokens() > 0, "totalTokens: " + lastUsage.totalTokens())
+            () -> assertUsage(usage)
         );
+    }
+
+    private void assertUsage(ChatUsage usage) {
+        assertAll(
+            () -> assertNotNull(usage),
+            () -> assertTrue(usage.inputTokens() > 0, "inputTokens: " + usage.inputTokens()),
+            () -> assertTrue(usage.outputTokens() > 0, "outputTokens: " + usage.outputTokens()),
+            () -> assertTrue(usage.totalTokens() > 0, "totalTokens: " + usage.totalTokens()),
+            () -> assertTrue(usage.totalTokens() == usage.inputTokens() + usage.outputTokens(), "totalTokens = inputTokens + outputTokens")
+        );
+
+        if (Set.of(OPENAI, GOOGLE, XAI, OPENROUTER).contains(getProvider())) {
+            assertTrue(usage.reasoningTokens() > -1, "reasoningTokens: " + usage.reasoningTokens());
+            assertTrue(usage.reasoningTokens() <= usage.outputTokens(), "reasoningTokens <= outputTokens");
+        }
+        else {
+            assertTrue(usage.reasoningTokens() == -1, "reasoningTokens: " + usage.reasoningTokens());
+        }
     }
 
     @Test

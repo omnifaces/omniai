@@ -12,6 +12,7 @@
  */
 package org.omnifaces.ai.modality;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
@@ -193,11 +194,12 @@ public class DefaultAITextHandler implements AITextHandler {
     public ChatUsage parseChatUsage(JsonObject responseJson) {
         try {
             var chatUsageInputTokensPaths = getChatUsageInputTokensPaths();
-            var chatUsageOutputTokensPaths = getChatUsageOutputTokensPaths();
 
             if (chatUsageInputTokensPaths.isEmpty()) {
                 throw new IllegalStateException("getChatUsageInputTokensPaths() may not return an empty list");
             }
+
+            var chatUsageOutputTokensPaths = getChatUsageOutputTokensPaths();
 
             if (chatUsageOutputTokensPaths.isEmpty()) {
                 throw new IllegalStateException("getChatUsageOutputTokensPaths() may not return an empty list");
@@ -205,11 +207,13 @@ public class DefaultAITextHandler implements AITextHandler {
 
             var inputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageInputTokensPaths);
             var outputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageOutputTokensPaths);
+            var reasoningTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageReasoningTokensPaths());
 
             if (inputTokensString.isPresent() || outputTokensString.isPresent()) {
                 var inputTokens  = inputTokensString.map(Integer::parseInt).orElse(-1);
                 var outputTokens = outputTokensString.map(Integer::parseInt).orElse(-1);
-                return new ChatUsage(inputTokens, outputTokens);
+                var reasoningTokens = reasoningTokensString.map(Integer::parseInt).orElse(-1);
+                return new ChatUsage(inputTokens, outputTokens, reasoningTokens);
             }
         }
         catch (Exception e) {
@@ -233,6 +237,7 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(JsonObject)} or {@link #parseFileResponse(JsonObject)}.
+     * May be empty.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
@@ -274,6 +279,18 @@ public class DefaultAITextHandler implements AITextHandler {
      */
     public List<String> getChatUsageOutputTokensPaths() {
         throw new UnsupportedOperationException("Please implement getChatUsageOutputTokensPaths() method in class " + getClass().getSimpleName());
+    }
+
+    /**
+     * Returns all possible paths to the reasoning token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
+     * May be empty.
+     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * @implNote The default implementation returns an empty list.
+     * @return all possible paths to the reasoning token count in the JSON response.
+     * @since 1.3
+     */
+    public List<String> getChatUsageReasoningTokensPaths() {
+        return emptyList();
     }
 
     /**

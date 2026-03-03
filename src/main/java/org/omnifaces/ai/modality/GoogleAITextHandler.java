@@ -29,6 +29,7 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.GoogleAIService;
 
@@ -180,6 +181,24 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageReasoningTokensPaths() {
+        return List.of("usageMetadata.thoughtsTokenCount");
+    }
+
+    @Override
+    public ChatUsage parseChatUsage(JsonObject responseJson) {
+        var usage = super.parseChatUsage(responseJson);
+
+        if (usage == null || usage.reasoningTokens() == -1) {
+            return usage;
+        }
+
+        // outputTokens must include reasoningTokens so that totalTokens() = promptTokenCount + candidatesTokenCount + thoughtsTokenCount
+        var adjustedOutput = usage.outputTokens() == -1 ? usage.reasoningTokens() : usage.outputTokens() + usage.reasoningTokens();
+        return new ChatUsage(usage.inputTokens(), adjustedOutput, usage.reasoningTokens());
+    }
+
+    @Override
     public List<String> getFileResponseIdPaths() {
         return List.of("file.uri");
     }
@@ -190,7 +209,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
             return tryParseEventDataJson(event.value(), json -> {
                 findByPath(json, "candidates[0].content.parts[0].text").ifPresent(onToken);
 
-                if (!options.isDefault()) {
+                if (!options.isDefault() && json.containsKey("usageMetadata")) {
                     options.recordUsage(parseChatUsage(json));
                 }
                 var finishReason = findByPath(json, "candidates[0].finishReason");
