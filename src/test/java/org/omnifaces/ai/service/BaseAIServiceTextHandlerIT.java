@@ -46,7 +46,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     void chat() {
         var response = service.chat("Reply with only: OK");
         log(response);
-        assertTrue(response.contains("OK"), response);
+        assertTrue(response.contains("OK"), "response must contain 'OK'");
     }
 
     @Test
@@ -69,7 +69,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var history = options.getHistory();
 
         assertAll(
-            () -> assertTrue(response2.contains("Bob"), response2),
+            () -> assertTrue(response2.contains("Bob"), "response must contain 'Bob'"),
             () -> assertEquals(4, history.size()),
             () -> assertEquals(Role.USER, history.get(0).role()),
             () -> assertEquals("My name is Bob.", history.get(0).content()),
@@ -99,8 +99,8 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         log("usage1: " + usage2);
 
         assertAll(
-            () -> assertFalse(response2.contains("Bob"), response2),
-            () -> assertFalse(options.hasMemory()),
+            () -> assertFalse(response2.contains("Bob"), "response should not contain 'Bob'"),
+            () -> assertFalse(options.hasMemory(), "options should not have memory"),
             () -> assertThrows(IllegalStateException.class, options::getHistory),
             () -> assertUsage(usage1),
             () -> assertUsage(usage2)
@@ -131,18 +131,18 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     private void assertUsage(ChatUsage usage) {
         assertAll(
             () -> assertNotNull(usage),
-            () -> assertTrue(usage.inputTokens() > 0, "inputTokens: " + usage.inputTokens()),
-            () -> assertTrue(usage.outputTokens() > 0, "outputTokens: " + usage.outputTokens()),
-            () -> assertTrue(usage.totalTokens() > 0, "totalTokens: " + usage.totalTokens()),
+            () -> assertTrue(usage.inputTokens() > 0, "inputTokens must be positive: " + usage.inputTokens()),
+            () -> assertTrue(usage.outputTokens() > 0, "outputTokens must be positive: " + usage.outputTokens()),
+            () -> assertTrue(usage.totalTokens() > 0, "totalTokens must be positive: " + usage.totalTokens()),
             () -> assertTrue(usage.totalTokens() == usage.inputTokens() + usage.outputTokens(), "totalTokens = inputTokens + outputTokens")
         );
 
         if (Set.of(OPENAI, GOOGLE, XAI, OPENROUTER).contains(getProvider())) {
-            assertTrue(usage.reasoningTokens() > -1, "reasoningTokens: " + usage.reasoningTokens());
+            assertTrue(usage.reasoningTokens() > -1, "reasoningTokens must be set: " + usage.reasoningTokens());
             assertTrue(usage.reasoningTokens() <= usage.outputTokens(), "reasoningTokens <= outputTokens");
         }
         else {
-            assertTrue(usage.reasoningTokens() == -1, "reasoningTokens: " + usage.reasoningTokens());
+            assertTrue(usage.reasoningTokens() == -1, "reasoningTokens must be -1: " + usage.reasoningTokens());
         }
     }
 
@@ -158,7 +158,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             .build();
         var response = service.chat(input, DETERMINISTIC);
         log(response);
-        assertTrue(response.contains("Dummy PDF file"), response);
+        assertTrue(response.contains("Dummy PDF file"), "response must contain 'Dummy PDF file'");
     }
 
     @Test
@@ -185,11 +185,11 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         }
 
         log(response1);
-        assertTrue(response1.contains("Dummy PDF file"), response1);
+        assertTrue(response1.contains("Dummy PDF file"), "response must contain 'Dummy PDF file'");
 
         var response2 = service.chat("How many pages does this PDF have?", options);
         log(response2);
-        assertTrue(response2.toLowerCase().contains("1") || response2.toLowerCase().contains("one"), response2);
+        assertTrue(response2.toLowerCase().contains("1") || response2.toLowerCase().contains("one"), "response must contain '1' or 'one'");
     }
 
     public record Capital(String city, String country) {}
@@ -204,11 +204,11 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response = service.chat("What are the capitals of Curacao and The Netherlands?", Capitals.class);
         log(response.toString());
         assertAll(
-            () -> assertEquals(2, response.capitals().size()),
-            () -> assertTrue(response.capitals().get(0).city().toLowerCase().contains("willemstad")),
-            () -> assertTrue(response.capitals().get(0).country().toLowerCase().contains("cura")),
-            () -> assertTrue(response.capitals().get(1).city().toLowerCase().contains("amsterdam")),
-            () -> assertTrue(response.capitals().get(1).country().toLowerCase().contains("netherlands"))
+            () -> assertEquals(2, response.capitals().size(), "response must have 2 capitals"),
+            () -> assertTrue(response.capitals().get(0).city().toLowerCase().contains("willemstad"), "first city must contain 'willemstad'"),
+            () -> assertTrue(response.capitals().get(0).country().toLowerCase().contains("cura"), "first country must contain 'cura'"),
+            () -> assertTrue(response.capitals().get(1).city().toLowerCase().contains("amsterdam"), "second city must contain 'amsterdam'"),
+            () -> assertTrue(response.capitals().get(1).country().toLowerCase().contains("netherlands"), "second country must contain 'netherlands'")
         );
     }
 
@@ -231,7 +231,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     void summarize() {
         var response = service.summarize("The quick brown fox jumps over the lazy dog near the river.", 5);
         log(response);
-        assertFalse(response.isBlank(), response);
+        assertFalse(response.isBlank(), "response should not be blank");
         assertAll(
             () -> assertTrue(response.split("\\s+").length <= 6, "max 6 words (slack of 1)"),
             () -> assertTrue(response.toLowerCase().contains("fox")),
@@ -245,9 +245,9 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     void extractKeyPoints() {
         var response = service.extractKeyPoints("Willemstad is the capital of Curacao and Amsterdam is the capital of The Netherlands.", 2);
         log(response.toString());
-        assertFalse(response.isEmpty(), response.toString());
+        assertFalse(response.isEmpty(), "response should not be empty");
         assertAll(
-            () -> assertEquals(2, response.size(), response.toString()),
+            () -> assertEquals(2, response.size(), "response must have 2 keypoints"),
             () -> assertTrue(response.get(0).split("\\s+").length <= 30, "max 30 words (slack of 5)"),
             () -> assertTrue(response.get(0).toLowerCase().contains("willemstad")),
             () -> assertTrue(response.get(0).toLowerCase().contains("cura")),

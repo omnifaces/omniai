@@ -29,8 +29,8 @@ abstract class BaseAIServiceAudioHandlerIT extends AIServiceIT {
         var response = service.transcribe(readAllBytes("/helloworld.wav"));
         log(response);
         assertAll(
-            () -> assertTrue(response.toLowerCase().contains("hello"), response),
-            () -> assertTrue(response.toLowerCase().contains("world"), response)
+            () -> assertTrue(response.toLowerCase().contains("hello"), "response must contain 'hello'"),
+            () -> assertTrue(response.toLowerCase().contains("world"), "response must contain 'world'")
         );
     }
 
@@ -39,8 +39,8 @@ abstract class BaseAIServiceAudioHandlerIT extends AIServiceIT {
         var response = service.transcribe(getPath("/helloworld.wav"));
         log(response);
         assertAll(
-            () -> assertTrue(response.toLowerCase().contains("hello"), response),
-            () -> assertTrue(response.toLowerCase().contains("world"), response)
+            () -> assertTrue(response.toLowerCase().contains("hello"), "response must contain 'hello'"),
+            () -> assertTrue(response.toLowerCase().contains("world"), "response must contain 'world'")
         );
     }
 }

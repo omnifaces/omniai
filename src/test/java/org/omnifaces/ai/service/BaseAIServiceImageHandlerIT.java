@@ -33,7 +33,7 @@ abstract class BaseAIServiceImageHandlerIT extends AIServiceIT {
     void analyzeImage() {
         var response = service.analyzeImage(readAllBytes("/omnifaces.png"), "What shape is this?");
         log(response);
-        assertTrue(ACCEPTABLE_SHAPES.stream().anyMatch(response.toLowerCase()::contains), response);
+        assertTrue(ACCEPTABLE_SHAPES.stream().anyMatch(response.toLowerCase()::contains), "response must contain acceptable shapes: " + ACCEPTABLE_SHAPES);
     }
 
     @Test
@@ -42,7 +42,7 @@ abstract class BaseAIServiceImageHandlerIT extends AIServiceIT {
         log(response);
         var sentences = response.split("\\.");
         assertAll(
-            () -> assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains), response),
+            () -> assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains), "response must contain acceptable descriptions: " + ACCEPTABLE_DESCRIPTIONS),
             () -> assertTrue(sentences.length <= 2, "max 2 sentences"),
             () -> assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5) in 1st sentence"),
             () -> assertTrue(sentences.length < 2 || sentences[1].split("\\s+").length <= 30, "max 30 words (slack of 5) in 2nd sentence")
