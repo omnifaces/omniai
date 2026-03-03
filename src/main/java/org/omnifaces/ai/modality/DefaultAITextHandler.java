@@ -242,7 +242,7 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseUsage(JsonObject)}.
+     * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the input token count in the JSON response.
@@ -253,7 +253,7 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseUsage(JsonObject)}.
+     * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
      * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the output token count in the JSON response.
