@@ -339,7 +339,7 @@ public class ChatOptions implements Serializable {
      */
     public int getMaxHistory() {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot get max history from non-memory ChatOptions");
+            throw new IllegalStateException("Cannot get max history from non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
         }
 
         return maxHistory;
@@ -353,7 +353,7 @@ public class ChatOptions implements Serializable {
      */
     public List<Message> getHistory() {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot get message history from non-memory ChatOptions");
+            throw new IllegalStateException("Cannot get message history from non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
         }
 
         return unmodifiableList(history);
@@ -401,7 +401,7 @@ public class ChatOptions implements Serializable {
      */
     public void recordMessage(Role role, String message) {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot record message on non-memory ChatOptions");
+            throw new IllegalStateException("Cannot record message on non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
         }
 
         history.add(new Message(role, message, emptyList()));
@@ -426,7 +426,7 @@ public class ChatOptions implements Serializable {
      */
     public void recordUploadedFile(String fileId, MimeType mimeType) {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot record uploaded file on non-memory ChatOptions");
+            throw new IllegalStateException("Cannot record uploaded file on non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
         }
 
         for (var i = history.size() - 1; i >= 0; i--) {
@@ -454,14 +454,11 @@ public class ChatOptions implements Serializable {
      * @since 1.3
      */
     public void recordUsage(ChatUsage usage) {
-        checkNotDefault();
-        this.lastUsage = usage;
-    }
-
-    private void checkNotDefault() {
         if (immutable) {
-            throw new IllegalStateException("Cannot record on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
+            throw new IllegalStateException("Cannot record usage on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
         }
+
+        this.lastUsage = usage;
     }
 
     /**
