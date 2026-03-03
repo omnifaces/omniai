@@ -14,6 +14,7 @@ package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Objects.requireNonNull;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
@@ -85,6 +86,8 @@ public class ChatOptions implements Serializable {
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
     private final int maxHistory;
+    /** The token usage recorded for the most recent chat call made with this instance. */
+    private transient ChatUsage lastUsage;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -321,6 +324,17 @@ public class ChatOptions implements Serializable {
     }
 
     /**
+     * Returns the token usage recorded for the most recent chat call made with this instance,
+     * or {@code null} if no call has been made yet or if the provider does not report usage.
+     *
+     * @return The last recorded {@link ChatUsage}, or {@code null}.
+     * @since 1.3
+     */
+    public ChatUsage getLastUsage() {
+        return lastUsage;
+    }
+
+    /**
      * Records a message in the conversation history for this memory-enabled instance.
      * <p>
      * This is automatically called by the AI service to record user messages before the API call
@@ -376,6 +390,17 @@ public class ChatOptions implements Serializable {
         }
 
         throw new IllegalStateException("Cannot record uploaded file without a preceding user message");
+    }
+
+    /**
+     * Records token usage for the most recent chat call.
+     * This is automatically called by the AI service after each successful chat response.
+     *
+     * @param usage The usage to record, must not be {@code null}.
+     * @since 1.3
+     */
+    public void recordUsage(ChatUsage usage) {
+        this.lastUsage = requireNonNull(usage, "usage");
     }
 
     /**

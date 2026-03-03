@@ -132,4 +132,14 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
     public List<String> getChatResponseContentPaths() {
         return List.of("message.content", "response");
     }
+
+    @Override
+    public List<String> getChatUsageInputTokensPaths() {
+        return List.of("prompt_eval_count");
+    }
+
+    @Override
+    public List<String> getChatUsageOutputTokensPaths() {
+        return List.of("eval_count");
+    }
 }

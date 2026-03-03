@@ -26,6 +26,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions;
 
 /**
@@ -189,6 +190,25 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     @Override
+    public ChatUsage parseChatUsage(JsonObject responseJson) {
+        try {
+            var inputTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageInputTokensPaths());
+            var outputTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageOutputTokensPaths());
+
+            if (inputTokensString.isPresent() || outputTokensString.isPresent()) {
+                var inputTokens  = inputTokensString.map(Integer::parseInt).orElse(-1);
+                var outputTokens = outputTokensString.map(Integer::parseInt).orElse(-1);
+                return new ChatUsage(inputTokens, outputTokens);
+            }
+        }
+        catch (Exception e) {
+            logger.log(WARNING, e, () -> "Skipping unparseable chat usage data: " + responseJson);
+        }
+
+        return null;
+    }
+
+    @Override
     public String parseFileResponse(JsonObject responseJson) throws AIResponseException {
         checkErrors(responseJson, getTextResponseErrorMessagePaths());
         var fileIdPaths = getFileResponseIdPaths();
@@ -219,6 +239,26 @@ public class DefaultAITextHandler implements AITextHandler {
      */
     public List<String> getChatResponseContentPaths() {
         throw new UnsupportedOperationException("Please implement getChatResponseContentPaths() method in class " + getClass().getSimpleName());
+    }
+
+    /**
+     * Returns the dot-separated JSON paths to try (in order) for the input token count.
+     * Covers OpenAI Responses API ({@code usage.input_tokens}), Anthropic, and
+     * Chat Completions-compatible providers ({@code usage.prompt_tokens}).
+     * @return Paths to try for input token count.
+     * @since 1.3
+     */
+    public List<String> getChatUsageInputTokensPaths() {
+        return List.of("usage.input_tokens", "usage.prompt_tokens");
+    }
+
+    /**
+     * Returns the dot-separated JSON paths to try (in order) for the output token count.
+     * @return Paths to try for output token count.
+     * @since 1.3
+     */
+    public List<String> getChatUsageOutputTokensPaths() {
+        return List.of("usage.output_tokens", "usage.completion_tokens");
     }
 
     /**

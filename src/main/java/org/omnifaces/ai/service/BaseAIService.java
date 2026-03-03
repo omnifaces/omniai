@@ -184,7 +184,7 @@ public abstract class BaseAIService implements AIService {
         }
 
         var payload = textHandler.buildChatPayload(this, effectiveInput, options, false);
-        var future = asyncPostAndParseChatResponse(getChatPath(false), payload);
+        var future = asyncPostAndParseChatResponse(getChatPath(false), payload, options);
 
         if (options.hasMemory()) {
             future = future.thenApply(response -> {
@@ -485,7 +485,7 @@ public abstract class BaseAIService implements AIService {
     public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
         var input = ChatInput.newBuilder().message(isBlank(prompt) ? "Analyze image" : prompt).attach(image).build();
         var options = DETERMINISTIC.withSystemPrompt(isBlank(prompt) ? imageHandler.buildAnalyzeImagePrompt() : null);
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false));
+        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input, options, false), null);
     }
 
     @Override
@@ -527,7 +527,7 @@ public abstract class BaseAIService implements AIService {
         var input = ChatInput.newBuilder().message("Transcribe audio");
         inputBuilder.accept(input);
         var options = DETERMINISTIC.withSystemPrompt(audioHandler.buildTranscribePrompt());
-        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input.build(), options, false));
+        return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input.build(), options, false), null);
     }
 
 
@@ -599,11 +599,18 @@ public abstract class BaseAIService implements AIService {
      * chat response from the POST response with help of {@link AITextHandler#parseChatResponse(JsonObject)}.
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
+     * @param options The user-supplied chat options, or {@code null} if there is none.
      * @return The message content of the POST request.
      * @throws AIException if anything fails during the process.
      */
-    protected CompletableFuture<String> asyncPostAndParseChatResponse(String path, JsonObject payload) throws AIException {
-        return HTTP_CLIENT.post(this, path, payload).thenApply(textHandler::parseChatResponse);
+    protected CompletableFuture<String> asyncPostAndParseChatResponse(String path, JsonObject payload, ChatOptions options) throws AIException {
+        return HTTP_CLIENT.post(this, path, payload).thenApply(response -> {
+            if (options != null) {
+                options.recordUsage(textHandler.parseChatUsage(response));
+            }
+
+            return textHandler.parseChatResponse(response);
+        });
     }
 
     /**

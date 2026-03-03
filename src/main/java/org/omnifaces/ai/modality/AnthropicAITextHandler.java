@@ -173,6 +173,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageInputTokensPaths() {
+        return List.of("usage.prompt_tokens");
+    }
+
+    @Override
+    public List<String> getChatUsageOutputTokensPaths() {
+        return List.of("usage.completion_tokens");
+    }
+
+    @Override
     public boolean processChatStreamEvent(AIService service, Event event, Consumer<String> onToken) {
         if (event.type() == EVENT) {
             if ("max_tokens".equals(event.value())) {

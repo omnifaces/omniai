@@ -22,6 +22,7 @@ import org.omnifaces.ai.exception.AIResponseException;
 import org.omnifaces.ai.modality.DefaultAITextHandler;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.Sse.Event;
 
@@ -149,6 +150,17 @@ public interface AITextHandler extends Serializable {
      * @throws AIResponseException If the response JSON contains an error object, or is missing expected message content.
      */
     String parseChatResponse(JsonObject responseJson) throws AIResponseException;
+
+    /**
+     * Parses token usage from the API response body returned by chat operation.
+     * @implNote The default implementation returns {@code null} (usage unknown/unsupported).
+     * @param responseJson The API response JSON.
+     * @return The parsed {@link ChatUsage}, or {@code null} if not available or unparseable.
+     * @since 1.3
+     */
+    default ChatUsage parseChatUsage(JsonObject responseJson) {
+        return null;
+    }
 
     /**
      * Parses file ID from the API response JSON of file upload operation.

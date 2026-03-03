@@ -170,6 +170,16 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageInputTokensPaths() {
+        return List.of("usageMetadata.promptTokenCount");
+    }
+
+    @Override
+    public List<String> getChatUsageOutputTokensPaths() {
+        return List.of("usageMetadata.candidatesTokenCount");
+    }
+
+    @Override
     public List<String> getFileResponseIdPaths() {
         return List.of("file.uri");
     }
