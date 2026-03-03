@@ -189,7 +189,10 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         if (event.type() == DATA) {
             return tryParseEventDataJson(event.value(), json -> {
                 findByPath(json, "candidates[0].content.parts[0].text").ifPresent(onToken);
-                options.recordUsage(parseChatUsage(json));
+
+                if (!options.isDefault()) {
+                    options.recordUsage(parseChatUsage(json));
+                }
                 var finishReason = findByPath(json, "candidates[0].finishReason");
 
                 if (finishReason.filter("STOP"::equals).isPresent()) {

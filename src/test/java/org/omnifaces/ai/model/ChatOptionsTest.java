@@ -746,6 +746,60 @@ class ChatOptionsTest {
     }
 
     // =================================================================================================================
+    // isDefault / copy
+    // =================================================================================================================
+
+    @Test
+    void isDefault_sharedConstants_returnsTrue() {
+        assertTrue(ChatOptions.DEFAULT.isDefault());
+        assertTrue(ChatOptions.CREATIVE.isDefault());
+        assertTrue(ChatOptions.DETERMINISTIC.isDefault());
+    }
+
+    @Test
+    void isDefault_builderInstance_returnsFalse() {
+        assertFalse(ChatOptions.newBuilder().build().isDefault());
+    }
+
+    @Test
+    void isDefault_withXxxCopy_returnsFalse() {
+        assertFalse(ChatOptions.DEFAULT.withSystemPrompt("test").isDefault());
+    }
+
+    @Test
+    void recordUsage_onDefault_throwsISE() {
+        assertThrows(IllegalStateException.class, () -> ChatOptions.DEFAULT.recordUsage(new ChatUsage(1, 1)));
+    }
+
+    @Test
+    void copy_preservesSettings() {
+        var copy = ChatOptions.DEFAULT.copy();
+
+        assertFalse(copy.isDefault());
+        assertEquals(ChatOptions.DEFAULT_TEMPERATURE, copy.getTemperature());
+        assertNull(copy.getSystemPrompt());
+        assertNull(copy.getLastUsage());
+    }
+
+    @Test
+    void copy_isMutable() {
+        var copy = ChatOptions.DEFAULT.copy();
+        var usage = new ChatUsage(100, 50);
+
+        copy.recordUsage(usage);
+
+        assertEquals(usage, copy.getLastUsage());
+    }
+
+    @Test
+    void copy_ofCreative_preservesTemperature() {
+        var copy = ChatOptions.CREATIVE.copy();
+
+        assertFalse(copy.isDefault());
+        assertEquals(ChatOptions.CREATIVE_TEMPERATURE, copy.getTemperature());
+    }
+
+    // =================================================================================================================
     // Sliding window - uploaded file cleanup
     // =================================================================================================================
 

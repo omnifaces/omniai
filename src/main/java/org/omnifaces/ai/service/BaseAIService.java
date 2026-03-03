@@ -606,7 +606,7 @@ public abstract class BaseAIService implements AIService {
      */
     protected CompletableFuture<String> asyncPostAndParseChatResponse(String path, JsonObject payload, ChatOptions options) throws AIException {
         return HTTP_CLIENT.post(this, path, payload).thenApply(response -> {
-            if (options != null) {
+            if (options != null && !options.isDefault()) {
                 options.recordUsage(textHandler.parseChatUsage(response));
             }
 

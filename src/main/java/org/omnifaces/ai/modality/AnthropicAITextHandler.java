@@ -204,10 +204,10 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                         onToken.accept(token);
                     }
                 }
-                else if ("message_start".equals(type)) {
+                else if ("message_start".equals(type) && !options.isDefault()) {
                     options.recordUsage(parseChatUsage(json.getJsonObject("message")));
                 }
-                else if ("message_delta".equals(type)) {
+                else if ("message_delta".equals(type) && !options.isDefault()) {
                     findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(outputTokens -> options.recordUsage(new ChatUsage(options.getLastUsage() != null ? options.getLastUsage().inputTokens() : -1, Integer.parseInt(outputTokens))));
                 }
                 else if ("error".equals(type)) {

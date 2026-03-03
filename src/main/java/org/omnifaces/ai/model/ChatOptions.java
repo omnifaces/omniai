@@ -71,6 +71,12 @@ public class ChatOptions implements Serializable {
     /** Deterministic chat with zero temperature. */
     public static final ChatOptions DETERMINISTIC = ChatOptions.newBuilder().temperature(DETERMINISTIC_TEMPERATURE).build();
 
+    static {
+        DEFAULT.immutable = true;
+        CREATIVE.immutable = true;
+        DETERMINISTIC.immutable = true;
+    }
+
     /** The system prompt. */
     private final String systemPrompt;
     /** The JSON schema for structured output. */
@@ -87,6 +93,8 @@ public class ChatOptions implements Serializable {
     private final int maxHistory;
     /** The token usage recorded for the most recent chat call made with this instance. */
     private transient ChatUsage lastUsage;
+    /** Whether this instance is a shared default constant and therefore immutable. */
+    private boolean immutable;
 
     private ChatOptions(Builder builder) {
         this.systemPrompt = builder.systemPrompt;
@@ -120,6 +128,16 @@ public class ChatOptions implements Serializable {
 
     private ChatOptions(ChatOptions source, String systemPrompt) {
         this.systemPrompt = systemPrompt;
+        this.jsonSchema = source.jsonSchema;
+        this.temperature = source.temperature;
+        this.maxTokens = source.maxTokens;
+        this.topP = source.topP;
+        this.history = source.history;
+        this.maxHistory = source.maxHistory;
+    }
+
+    private ChatOptions(ChatOptions source) {
+        this.systemPrompt = source.systemPrompt;
         this.jsonSchema = source.jsonSchema;
         this.temperature = source.temperature;
         this.maxTokens = source.maxTokens;
@@ -219,6 +237,25 @@ public class ChatOptions implements Serializable {
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
         return new ChatOptions(this, systemPrompt);
+    }
+
+    /**
+     * Returns a mutable copy of this instance, preserving all options and any shared {@link #hasMemory() memory} state,
+     * but starting with no {@link #getLastUsage() last usage} recorded.
+     * <p>
+     * This is the recommended way to obtain a dedicated, mutable instance from one of the shared constants
+     * ({@link #DEFAULT}, {@link #CREATIVE}, {@link #DETERMINISTIC}) when you want to track token usage:
+     * <pre>
+     * ChatOptions options = ChatOptions.DEFAULT.copy();
+     * service.chat("Hello", options);
+     * ChatUsage usage = options.getLastUsage();
+     * </pre>
+     *
+     * @return A new mutable {@code ChatOptions} instance with the same settings.
+     * @since 1.3
+     */
+    public ChatOptions copy() {
+        return new ChatOptions(this);
     }
 
     /**
@@ -334,6 +371,21 @@ public class ChatOptions implements Serializable {
     }
 
     /**
+     * Returns whether this instance is one of the shared default constants ({@link #DEFAULT}, {@link #CREATIVE},
+     * {@link #DETERMINISTIC}) and therefore immutable. Calling any {@code recordXxx} method on a default instance
+     * throws {@link IllegalStateException}.
+     * <p>
+     * Use {@link #copy()} to obtain a mutable copy with the same settings, or {@link #newBuilder()} to build
+     * a new instance from scratch.
+     *
+     * @return {@code true} if this is a shared default instance, {@code false} otherwise.
+     * @since 1.3
+     */
+    public boolean isDefault() {
+        return immutable;
+    }
+
+    /**
      * Records a message in the conversation history for this memory-enabled instance.
      * <p>
      * This is automatically called by the AI service to record user messages before the API call
@@ -398,10 +450,18 @@ public class ChatOptions implements Serializable {
      * recorded usage.
      *
      * @param usage The usage to record, or {@code null} if the provider did not report any usage.
+     * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
      * @since 1.3
      */
     public void recordUsage(ChatUsage usage) {
+        checkNotDefault();
         this.lastUsage = usage;
+    }
+
+    private void checkNotDefault() {
+        if (immutable) {
+            throw new IllegalStateException("Cannot record on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
+        }
     }
 
     /**

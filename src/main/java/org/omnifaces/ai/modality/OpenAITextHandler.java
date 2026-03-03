@@ -372,7 +372,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                         onToken.accept(token);
                     }
                 }
-                else if ("response.completed".equals(type)) {
+                else if ("response.completed".equals(type) && !options.isDefault()) {
                     options.recordUsage(parseChatUsage(json.getJsonObject("response")));
                 }
                 else if ("response.failed".equals(type)) {
@@ -404,11 +404,13 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                         findByPath(json, "choices[0].delta.content").ifPresent(onToken);
                         findByPath(json, "choices[0].finish_reason").filter("length"::equals).ifPresent(__ -> { throw new AITokenLimitExceededException(); });
 
-                        var inputTokens = findByPath(json, "usage.prompt_tokens");
-                        var outputTokens = findByPath(json, "usage.completion_tokens");
+                        if (!options.isDefault()) {
+                            var inputTokens = findByPath(json, "usage.prompt_tokens");
+                            var outputTokens = findByPath(json, "usage.completion_tokens");
 
-                        if (inputTokens.isPresent() || outputTokens.isPresent()) {
-                            options.recordUsage(new ChatUsage(inputTokens.map(Integer::parseInt).orElse(-1), outputTokens.map(Integer::parseInt).orElse(-1)));
+                            if (inputTokens.isPresent() || outputTokens.isPresent()) {
+                                options.recordUsage(new ChatUsage(inputTokens.map(Integer::parseInt).orElse(-1), outputTokens.map(Integer::parseInt).orElse(-1)));
+                            }
                         }
                     }
 
