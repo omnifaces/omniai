@@ -22,6 +22,7 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINEST;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
@@ -117,6 +118,25 @@ public final class FileHelper {
         }
     }
 
+    /**
+     * Closes the given stream, silently ignoring any {@link IOException}.
+     * <p>
+     * Intended for use in cleanup paths where a close failure should not mask an earlier exception.
+     * {@code null} is silently ignored.
+     *
+     * @param stream The stream to close.
+     */
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            }
+            catch (Exception e) {
+                logger.log(FINEST, e, () -> "Cannot close " + closeable);
+            }
+        }
+    }
+
     private static class TempFiles {
         private static final boolean SUPPORTED = checkTempFileSupport();
 
@@ -162,13 +182,7 @@ public final class FileHelper {
                 this.endOffset = endOffset;
             }
             catch (IOException e) {
-                try {
-                    channel.close();
-                }
-                catch (Exception f) {
-                    logger.log(FINEST, f, () -> "Cannot close channel on file " + source);
-                }
-
+                closeQuietly(channel);
                 throw e;
             }
         }

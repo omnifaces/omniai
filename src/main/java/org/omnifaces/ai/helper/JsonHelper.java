@@ -24,6 +24,7 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toCollection;
+import static org.omnifaces.ai.helper.FileHelper.closeQuietly;
 import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
@@ -31,10 +32,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Function;
@@ -119,6 +123,22 @@ public final class JsonHelper {
     public static void checkErrors(JsonObject responseJson, List<String> errorMessagePaths) throws AIResponseException {
         findFirstNonBlankByPaths(responseJson, errorMessagePaths).ifPresent(errorMessage -> {
             throw new AIResponseException(errorMessage, responseJson);
+        });
+    }
+
+    /**
+     * Checks for error messages at the specified paths.
+     * <p>
+     * If an error message is found at any of the paths, an {@link AIResponseException} is thrown.
+     *
+     * @param jsonFile The JSON file to read from, must not be {@code null}.
+     * @param errorMessagePaths Paths to check for error messages (e.g., {@code "error.message"}, {@code "error"}).
+     * @throws AIResponseException If parsing fails or an error message is found.
+     * @since 1.3
+     */
+    public static void checkErrors(Path jsonFile, List<String> errorMessagePaths) throws AIResponseException {
+        errorMessagePaths.stream().map(path -> streamByPath(jsonFile, path)).filter(Objects::nonNull).map(JsonHelper::toString).findFirst().ifPresent(errorMessage -> {
+            throw new AIResponseException(errorMessage, jsonFile);
         });
     }
 
@@ -318,20 +338,20 @@ public final class JsonHelper {
      * For string values, the surrounding double-quotes are stripped so the caller receives only the value content.
      * The caller is responsible for closing the returned stream.
      *
-     * @param source The JSON file to read from, must not be {@code null}.
+     * @param jsonFile The JSON file to read from, must not be {@code null}.
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
      * @return An {@link InputStream} over the raw bytes of the located value, or {@code null} if the path does not match.
      * @throws AIResponseException If the source cannot be read or parsed.
      * @since 1.3
      */
-    public static InputStream streamByPath(Path source, String path) {
-        return findByPath(source, path, parser -> {
+    public static InputStream streamByPath(Path jsonFile, String path) {
+        return findByPath(jsonFile, path, parser -> {
             long startOffset = parser.getLocation().getStreamOffset(); // after key
             var event = parser.next();
             long endOffset = parser.getLocation().getStreamOffset(); // after value
 
             try {
-                try (var tempStream = newOffsetInputStream(source, startOffset, min(size(source), startOffset + FILE_PROBE_MAX_BUFFER_LENGTH))) {
+                try (var tempStream = newOffsetInputStream(jsonFile, startOffset, min(size(jsonFile), startOffset + FILE_PROBE_MAX_BUFFER_LENGTH))) {
                     int ch;
 
                     while ((ch = tempStream.read()) != -1) {
@@ -349,16 +369,16 @@ public final class JsonHelper {
                     endOffset--; // doublequote after string value
                 }
 
-                return newOffsetInputStream(source, startOffset, endOffset);
+                return newOffsetInputStream(jsonFile, startOffset, endOffset);
             }
             catch (IOException e) {
-                throw new AIResponseException("Cannot read source", source, e);
+                throw new AIResponseException("Cannot read JSON file", jsonFile, e);
             }
         });
     }
 
-    private static <R> R findByPath(Path source, String path, Function<JsonParser, R> processor) {
-        try (var inputStream = new FileInputStream(source.toFile())) {
+    private static <R> R findByPath(Path jsonFile, String path, Function<JsonParser, R> processor) {
+        try (var inputStream = new FileInputStream(jsonFile.toFile())) {
             try (var jsonStream = Json.createParser(inputStream)) {
                 var segments = stream(path.split("[\\.\\[\\]]")).filter(not(String::isBlank)).collect(toCollection(LinkedList::new));
                 return findByPath(jsonStream, segments, processor);
@@ -368,7 +388,7 @@ public final class JsonHelper {
             throw e;
         }
         catch (Exception e) {
-            throw new AIResponseException("Cannot parse json", source, e);
+            throw new AIResponseException("Cannot parse JSON file", jsonFile, e);
         }
     }
 
@@ -424,5 +444,17 @@ public final class JsonHelper {
         }
 
         return null;
+    }
+
+    private static String toString(InputStream stream) {
+        try {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        finally {
+            closeQuietly(stream);
+        }
     }
 }

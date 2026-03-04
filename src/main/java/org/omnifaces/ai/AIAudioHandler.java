@@ -73,6 +73,8 @@ public interface AIAudioHandler extends Serializable {
 
     /**
      * Parses audio content from the API response body of generate audio operation.
+     * <p>
+     * The returned stream must be closed by the caller.
      * @implNote The default implementation returns the response body directly.
      * @param responseBody The API response body, usually either the raw audio file or a JSON object with an encoded audio file, along with some meta data.
      * @return The extracted audio content from the API response body.

@@ -14,13 +14,14 @@ package org.omnifaces.ai.modality;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.omnifaces.ai.helper.FileHelper.cleanupFiles;
+import static org.omnifaces.ai.helper.FileHelper.closeQuietly;
+import static org.omnifaces.ai.helper.FileHelper.newDeleteOnCloseInputStream;
+import static org.omnifaces.ai.helper.FileHelper.tempFilesSupported;
 import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 import static org.omnifaces.ai.helper.JsonHelper.streamByPath;
-import static org.omnifaces.ai.helper.FileHelper.cleanupFiles;
-import static org.omnifaces.ai.helper.FileHelper.newDeleteOnCloseInputStream;
-import static org.omnifaces.ai.helper.FileHelper.tempFilesSupported;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.io.ByteArrayInputStream;
@@ -83,11 +84,16 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
      */
     @Override
     public InputStream parseAudioContent(InputStream responseStream) throws AIResponseException {
-        if (getAudioResponseContentPaths().isEmpty()) {
-            throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
-        }
+        try {
+            if (getAudioResponseContentPaths().isEmpty()) {
+                throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
+            }
 
-        return tempFilesSupported() ? parseAudioContentViaTempFiles(responseStream) : parseAudioContentInMemory(responseStream);
+            return tempFilesSupported() ? parseAudioContentViaTempFiles(responseStream) : parseAudioContentInMemory(responseStream);
+        }
+        finally {
+            closeQuietly(responseStream);
+        }
     }
 
     private InputStream parseAudioContentInMemory(InputStream responseStream) throws AIResponseException {
@@ -103,45 +109,48 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         var responseJson = parseJson(responseBody);
         checkErrors(responseJson, getAudioResponseErrorMessagePaths());
         var paths = getAudioResponseContentPaths();
-        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, paths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseBody));
+        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, paths)
+                .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseBody));
 
         try {
             var audioContent = Base64.getDecoder().decode(audioContentBase64);
             return new SequenceInputStream(new ByteArrayInputStream(createWavHeader(audioContent.length)), new ByteArrayInputStream(audioContent));
         }
         catch (Exception e) {
-            throw new AIResponseException("Cannot Base64-decode audio", responseBody, e);
+            throw new AIResponseException("Cannot parse audio content", responseBody, e);
         }
     }
 
     private InputStream parseAudioContentViaTempFiles(InputStream responseStream) throws AIResponseException {
-        Path tempResponseJsonFile = null;
-        Path tempAudioContentFile = null;
+        Path responseJsonTempFile = null;
+        Path audioContentTempFile = null;
 
         try {
-            var source = tempResponseJsonFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-response-", ".json");
-            Files.copy(responseStream, tempResponseJsonFile, REPLACE_EXISTING);
+            var source = responseJsonTempFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-response-", ".json");
+            Files.copy(responseStream, responseJsonTempFile, REPLACE_EXISTING);
+            checkErrors(responseJsonTempFile, getAudioResponseErrorMessagePaths());
             var paths = getAudioResponseContentPaths();
 
-            try (var base64stream = paths.stream()
+            try (var audioContent = Base64.getDecoder().wrap(paths.stream()
                     .map(path -> streamByPath(source, path))
                     .filter(Objects::nonNull).findFirst()
-                    .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseStream)))
+                    .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, source))))
             {
-                try (var audioContentStream = Base64.getDecoder().wrap(base64stream)) {
-                    tempAudioContentFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-content-", ".pcm");
-                    Files.copy(audioContentStream, tempAudioContentFile, REPLACE_EXISTING);
-                }
+                audioContentTempFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-content-", ".pcm");
+                Files.copy(audioContent, audioContentTempFile, REPLACE_EXISTING);
             }
 
-            return new SequenceInputStream(new ByteArrayInputStream(createWavHeader(Files.size(tempAudioContentFile))), newDeleteOnCloseInputStream(tempAudioContentFile));
+            var stream = new SequenceInputStream(new ByteArrayInputStream(createWavHeader(Files.size(audioContentTempFile))), newDeleteOnCloseInputStream(audioContentTempFile));
+            cleanupFiles(responseJsonTempFile);
+            return stream;
         }
-        catch (IOException e) {
-            cleanupFiles(tempAudioContentFile);
-            throw new AIResponseException("Failed to stream audio to disk", e);
+        catch (AIResponseException e) {
+            cleanupFiles(responseJsonTempFile, audioContentTempFile);
+            throw e;
         }
-        finally {
-            cleanupFiles(tempResponseJsonFile);
+        catch (Exception e) {
+            cleanupFiles(audioContentTempFile);
+            throw new AIResponseException("Cannot parse audio content; temp file left", responseJsonTempFile, e);
         }
     }
 
