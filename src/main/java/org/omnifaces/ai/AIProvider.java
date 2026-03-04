@@ -82,7 +82,7 @@ public enum AIProvider {
     /**
      * Anthropic: Claude Opus, Claude Sonnet, Claude Haiku, etc.
      * <p>
-     * Defaults currently to model {@code claude-sonnet-4-5-20250929} at endpoint {@code https://api.anthropic.com/v1}.
+     * Defaults currently to model {@code claude-sonnet-4-6} at endpoint {@code https://api.anthropic.com/v1}.
      * @see AnthropicAIService
      * @see AnthropicAITextHandler
      * @see DefaultAIImageHandler
@@ -90,12 +90,12 @@ public enum AIProvider {
      * @see <a href="https://platform.claude.com/settings/keys">Manage Anthropic API Keys</a>
      * @see <a href="https://platform.claude.com/docs/en/about-claude/models/overview">Available Anthropic AI Models</a>
      */
-    ANTHROPIC("Anthropic", AnthropicAIService.class, true, "claude-sonnet-4-5-20250929", "https://api.anthropic.com/v1", AnthropicAITextHandler.class, DefaultAIImageHandler.class, DefaultAIAudioHandler.class),
+    ANTHROPIC("Anthropic", AnthropicAIService.class, true, "claude-sonnet-4-6", "https://api.anthropic.com/v1", AnthropicAITextHandler.class, DefaultAIImageHandler.class, DefaultAIAudioHandler.class),
 
     /**
      * Google AI: Gemini Pro, Gemini Flash, Gemini Flash Lite, etc.
      * <p>
-     * Defaults currently to model {@code gemini-2.5-flash} at endpoint {@code https://generativelanguage.googleapis.com/v1beta}.
+     * Defaults currently to model {@code gemini-3-flash-preview} at endpoint {@code https://generativelanguage.googleapis.com/v1beta}.
      * @see GoogleAIService
      * @see GoogleAITextHandler
      * @see GoogleAIImageHandler
@@ -103,7 +103,7 @@ public enum AIProvider {
      * @see <a href="https://aistudio.google.com/app/api-keys">Manage Google AI API Keys</a>
      * @see <a href="https://ai.google.dev/gemini-api/docs/models">Available Google AI Models</a>
      */
-    GOOGLE("Google AI", GoogleAIService.class, true, "gemini-2.5-flash", "https://generativelanguage.googleapis.com/v1beta", GoogleAITextHandler.class, GoogleAIImageHandler.class, GoogleAIAudioHandler.class),
+    GOOGLE("Google AI", GoogleAIService.class, true, "gemini-3-flash-preview", "https://generativelanguage.googleapis.com/v1beta", GoogleAITextHandler.class, GoogleAIImageHandler.class, GoogleAIAudioHandler.class),
 
     /**
      * xAI: Grok Fast Reasoning, Grok Non Reasoning, Grok Code, etc.

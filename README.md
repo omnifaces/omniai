@@ -60,8 +60,8 @@ You can technically also use it on plain Java SE, you'll still need the JSON-P i
 | Provider | Default Model | API Key Required | Available Models |
 |----------|---------------|------------------|------------------|
 | OpenAI | gpt-5.2-2025-12-11 | [Yes](https://platform.openai.com/api-keys) | [List](https://platform.openai.com/docs/models) |
-| Anthropic | claude-sonnet-4-5-20250929 | [Yes](https://platform.claude.com/settings/keys) | [List](https://platform.claude.com/docs/en/about-claude/models/overview) |
-| Google AI | gemini-2.5-flash | [Yes](https://aistudio.google.com/app/api-keys) | [List](https://ai.google.dev/gemini-api/docs/models) |
+| Anthropic | claude-sonnet-4-6 | [Yes](https://platform.claude.com/settings/keys) | [List](https://platform.claude.com/docs/en/about-claude/models/overview) |
+| Google AI | gemini-3-flash-preview | [Yes](https://aistudio.google.com/app/api-keys) | [List](https://ai.google.dev/gemini-api/docs/models) |
 | xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) | [List](https://docs.x.ai/developers/models) |
 | Mistral | mistral-medium-2508 | [Yes](https://console.mistral.ai/home?workspace_dialog=apiKeys) | [List](https://docs.mistral.ai/getting-started/models) |
 | Meta AI | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) | [List](https://llama.developer.meta.com/docs/models/) |
