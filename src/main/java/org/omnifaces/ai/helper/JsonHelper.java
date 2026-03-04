@@ -12,14 +12,32 @@
  */
 package org.omnifaces.ai.helper;
 
+import static jakarta.json.stream.JsonParser.Event.END_ARRAY;
+import static jakarta.json.stream.JsonParser.Event.END_OBJECT;
+import static jakarta.json.stream.JsonParser.Event.KEY_NAME;
+import static jakarta.json.stream.JsonParser.Event.START_ARRAY;
+import static jakarta.json.stream.JsonParser.Event.START_OBJECT;
+import static jakarta.json.stream.JsonParser.Event.VALUE_STRING;
+import static java.lang.Math.min;
+import static java.nio.file.Files.size;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toCollection;
+import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.function.Function;
 
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
@@ -27,6 +45,7 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
+import jakarta.json.stream.JsonParser;
 
 import org.omnifaces.ai.exception.AIResponseException;
 
@@ -37,6 +56,8 @@ import org.omnifaces.ai.exception.AIResponseException;
  * @since 1.0
  */
 public final class JsonHelper {
+
+    private static final int FILE_PROBE_MAX_BUFFER_LENGTH = 1024;
 
     private JsonHelper() {
         throw new AssertionError();
@@ -284,5 +305,124 @@ public final class JsonHelper {
         }
 
         return builder;
+    }
+
+    /**
+     * Opens an {@link InputStream} over the raw bytes of the JSON value found at the given dot-separated path
+     * within the file at {@code source}, without loading the whole file into memory.
+     * <p>
+     * Finds the string value from a JSON object found at the given dot-separated path.
+     * <p>
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
+     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     * For string values, the surrounding double-quotes are stripped so the caller receives only the value content.
+     * The caller is responsible for closing the returned stream.
+     *
+     * @param source The JSON file to read from, must not be {@code null}.
+     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
+     * @return An {@link InputStream} over the raw bytes of the located value, or {@code null} if the path does not match.
+     * @throws AIResponseException If the source cannot be read or parsed.
+     * @since 1.3
+     */
+    public static InputStream streamByPath(Path source, String path) {
+        return findByPath(source, path, parser -> {
+            long startOffset = parser.getLocation().getStreamOffset(); // after key
+            var event = parser.next();
+            long endOffset = parser.getLocation().getStreamOffset(); // after value
+
+            try {
+                try (var tempStream = newOffsetInputStream(source, startOffset, min(size(source), startOffset + FILE_PROBE_MAX_BUFFER_LENGTH))) {
+                    int ch;
+
+                    while ((ch = tempStream.read()) != -1) {
+                        if (ch == ':' || Character.isWhitespace(ch)) {
+                            startOffset++; // skip any semicolon and whitespace between key and value
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+
+                if (event == VALUE_STRING) {
+                    startOffset++; // doublequote before string value
+                    endOffset--; // doublequote after string value
+                }
+
+                return newOffsetInputStream(source, startOffset, endOffset);
+            }
+            catch (IOException e) {
+                throw new AIResponseException("Cannot read source", source, e);
+            }
+        });
+    }
+
+    private static <R> R findByPath(Path source, String path, Function<JsonParser, R> processor) {
+        try (var inputStream = new FileInputStream(source.toFile())) {
+            try (var jsonStream = Json.createParser(inputStream)) {
+                var segments = stream(path.split("[\\.\\[\\]]")).filter(not(String::isBlank)).collect(toCollection(LinkedList::new));
+                return findByPath(jsonStream, segments, processor);
+            }
+        }
+        catch (AIResponseException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new AIResponseException("Cannot parse json", source, e);
+        }
+    }
+
+    private static <R> R findByPath(JsonParser parser, Queue<String> segments, Function<JsonParser, R> processor) {
+        if (segments.isEmpty()) {
+            return null;
+        }
+
+        var segment = segments.poll();
+        var isWildcard = "*".equals(segment);
+        var isNumeric = !isWildcard && segment.matches("\\d+");
+        int targetIndex = isNumeric ? Integer.parseInt(segment) : -1;
+        int currentIndex = -1;
+
+        while (parser.hasNext()) {
+            var event = parser.next();
+            if (isNumeric || isWildcard) {
+                if (event == START_OBJECT || event == START_ARRAY) {
+                    currentIndex++;
+
+                    if (isWildcard || currentIndex == targetIndex) {
+                        if (segments.isEmpty()) {
+                            throw new IllegalArgumentException("Path must point to a value, not to an object or array.");
+                        }
+
+                        var result = findByPath(parser, isWildcard ? new LinkedList<>(segments) : segments, processor);
+
+                        if (result != null || !isWildcard) {
+                            return result;
+                        }
+                    }
+                    else if (event == START_OBJECT) {
+                        parser.skipObject();
+                    }
+                    else {
+                        parser.skipArray();
+                    }
+                }
+                else if (event == END_ARRAY) {
+                    return null;
+                }
+            }
+            else if (event == KEY_NAME && segment.equals(parser.getString())) {
+                if (segments.isEmpty()) {
+                    return processor.apply(parser);
+                }
+
+                return findByPath(parser, segments, processor);
+            }
+            else if (event == END_OBJECT) {
+                return null;
+            }
+        }
+
+        return null;
     }
 }

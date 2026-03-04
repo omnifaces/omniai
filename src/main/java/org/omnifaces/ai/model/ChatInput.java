@@ -12,11 +12,14 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.lang.Math.min;
+import static java.nio.file.Files.size;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toUnmodifiableMap;
+import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.helper.ImageHelper.isSupportedAsImageAttachment;
 import static org.omnifaces.ai.helper.ImageHelper.sanitizeImageAttachment;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
@@ -26,7 +29,6 @@ import static org.omnifaces.ai.mime.MimeType.guessMimeType;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -490,7 +492,8 @@ public class ChatInput implements Serializable {
             if (isImage) {
                 finalContent = sanitizeImageAttachment(content != null ? content : readAllBytes(source));
                 finalSource = null;
-            } else {
+            }
+            else {
                 finalContent = content;
                 finalSource = source;
             }
@@ -510,10 +513,8 @@ public class ChatInput implements Serializable {
     }
 
     private static byte[] readMagicBytes(Path source) {
-        try (var raf = new RandomAccessFile(source.toFile(), "r")) {
-            var bytes = new byte[(int) Math.min(raf.length(), MAGIC_BYTES_LENGTH)];
-            raf.readFully(bytes);
-            return bytes;
+        try (var stream = newOffsetInputStream(source, 0L, min(size(source), MAGIC_BYTES_LENGTH))) {
+            return stream.readAllBytes();
         }
         catch (IOException e) {
             throw new UncheckedIOException("Cannot read magic bytes from " + source, e);

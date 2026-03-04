@@ -13,24 +13,33 @@
 package org.omnifaces.ai.modality;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findFirstNonBlankByPaths;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
-import static org.omnifaces.ai.mime.MimeType.guessMimeType;
+import static org.omnifaces.ai.helper.JsonHelper.streamByPath;
+import static org.omnifaces.ai.helper.FileHelper.cleanupFiles;
+import static org.omnifaces.ai.helper.FileHelper.newDeleteOnCloseInputStream;
+import static org.omnifaces.ai.helper.FileHelper.tempFilesSupported;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.AIService;
+import org.omnifaces.ai.OmniHai;
 import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.helper.FileHelper;
 import org.omnifaces.ai.model.GenerateAudioOptions;
 import org.omnifaces.ai.service.GoogleAIService;
 
@@ -70,9 +79,18 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
 
     /**
      * In Google AI, the response body represents a JSON with audio content as Base64-encoded PCM file.
+     * If {@link FileHelper#tempFilesSupported()} returns {@code true}, then the current implementation will parse via temp files it will parse fully in memory.
      */
     @Override
     public InputStream parseAudioContent(InputStream responseStream) throws AIResponseException {
+        if (getAudioResponseContentPaths().isEmpty()) {
+            throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
+        }
+
+        return tempFilesSupported() ? parseAudioContentViaTempFiles(responseStream) : parseAudioContentInMemory(responseStream);
+    }
+
+    private InputStream parseAudioContentInMemory(InputStream responseStream) throws AIResponseException {
         String responseBody;
 
         try {
@@ -82,28 +100,48 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             throw new AIResponseException("Cannot parse response body as string", responseStream, e);
         }
 
-        var audioContentPaths = getAudioResponseContentPaths();
-
-        if (audioContentPaths.isEmpty()) {
-            throw new IllegalStateException("getAudioResponseContentPaths() may not return an empty list");
-        }
-
         var responseJson = parseJson(responseBody);
         checkErrors(responseJson, getAudioResponseErrorMessagePaths());
-        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, audioContentPaths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + audioContentPaths, responseBody));
+        var paths = getAudioResponseContentPaths();
+        var audioContentBase64 = findFirstNonBlankByPaths(responseJson, paths).orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseBody));
 
         try {
             var audioContent = Base64.getDecoder().decode(audioContentBase64);
-
-            if (!guessMimeType(audioContent).isAudio()) {
-                return new SequenceInputStream(new ByteArrayInputStream(createWavHeader(audioContent.length)), new ByteArrayInputStream(audioContent));
-            }
-            else {
-                return new ByteArrayInputStream(audioContent);
-            }
+            return new SequenceInputStream(new ByteArrayInputStream(createWavHeader(audioContent.length)), new ByteArrayInputStream(audioContent));
         }
         catch (Exception e) {
             throw new AIResponseException("Cannot Base64-decode audio", responseBody, e);
+        }
+    }
+
+    private InputStream parseAudioContentViaTempFiles(InputStream responseStream) throws AIResponseException {
+        Path tempResponseJsonFile = null;
+        Path tempAudioContentFile = null;
+
+        try {
+            var source = tempResponseJsonFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-response-", ".json");
+            Files.copy(responseStream, tempResponseJsonFile, REPLACE_EXISTING);
+            var paths = getAudioResponseContentPaths();
+
+            try (var base64stream = paths.stream()
+                    .map(path -> streamByPath(source, path))
+                    .filter(Objects::nonNull).findFirst()
+                    .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseStream)))
+            {
+                try (var audioContentStream = Base64.getDecoder().wrap(base64stream)) {
+                    tempAudioContentFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-content-", ".pcm");
+                    Files.copy(audioContentStream, tempAudioContentFile, REPLACE_EXISTING);
+                }
+            }
+
+            return new SequenceInputStream(new ByteArrayInputStream(createWavHeader(Files.size(tempAudioContentFile))), newDeleteOnCloseInputStream(tempAudioContentFile));
+        }
+        catch (IOException e) {
+            cleanupFiles(tempAudioContentFile);
+            throw new AIResponseException("Failed to stream audio to disk", e);
+        }
+        finally {
+            cleanupFiles(tempResponseJsonFile);
         }
     }
 
