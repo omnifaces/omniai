@@ -119,12 +119,12 @@ public final class FileHelper {
     }
 
     /**
-     * Closes the given stream, silently ignoring any {@link IOException}.
+     * Closes the given {@link Closeable} resource, silently ignoring any {@link IOException}.
      * <p>
-     * Intended for use in cleanup paths where a close failure should not mask an earlier exception.
-     * {@code null} is silently ignored.
+     * This is intended for use in cleanup blocks (like {@code finally}) where a failure to close should not suppress
+     * or mask a primary exception. If the argument is {@code null}, this method does nothing.
      *
-     * @param stream The stream to close.
+     * @param closeable The resource to close, may be {@code null}.
      */
     public static void closeQuietly(Closeable closeable) {
         if (closeable != null) {

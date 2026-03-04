@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 
 import org.junit.jupiter.api.Test;
@@ -174,7 +175,7 @@ class JsonHelperTest {
     void findByPath_nullInputs_returnsEmpty() {
         var json = Json.createObjectBuilder().add("key", "value").build();
 
-        assertTrue(JsonHelper.findByPath(null, "key").isEmpty());
+        assertTrue(JsonHelper.findByPath((JsonObject) null, "key").isEmpty());
         assertTrue(JsonHelper.findByPath(json, null).isEmpty());
     }
 
