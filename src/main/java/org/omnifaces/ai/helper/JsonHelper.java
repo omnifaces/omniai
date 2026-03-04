@@ -22,9 +22,9 @@ import static java.lang.Math.min;
 import static java.nio.file.Files.size;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toCollection;
-import static org.omnifaces.ai.helper.FileHelper.closeQuietly;
 import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
 
@@ -32,8 +32,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -66,6 +64,8 @@ public final class JsonHelper {
     private JsonHelper() {
         throw new AssertionError();
     }
+
+    // In-memory -------------------------------------------------------------------------------------------------------
 
     /**
      * Returns whether the given JSON value is empty. Supports currently only {@link JsonObject}, {@link JsonArray} and {@link JsonString}.
@@ -127,65 +127,6 @@ public final class JsonHelper {
     }
 
     /**
-     * Checks for error messages at the specified paths.
-     * <p>
-     * If an error message is found at any of the paths, an {@link AIResponseException} is thrown.
-     *
-     * @param jsonFile The JSON file to read from, must not be {@code null}.
-     * @param errorMessagePaths Paths to check for error messages (e.g., {@code "error.message"}, {@code "error"}).
-     * @throws AIResponseException If parsing fails or an error message is found.
-     * @since 1.3
-     */
-    public static void checkErrors(Path jsonFile, List<String> errorMessagePaths) throws AIResponseException {
-        errorMessagePaths.stream().map(path -> streamByPath(jsonFile, path)).filter(Objects::nonNull).map(JsonHelper::toString).findFirst().ifPresent(errorMessage -> {
-            throw new AIResponseException(errorMessage, jsonFile);
-        });
-    }
-
-    /**
-     * Finds the string value from a JSON object found at the given dot-separated path.
-     * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
-     *
-     * @param root JSON root value (usually a {@link JsonObject})
-     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
-     * @return an {@link Optional} containing the string value, or empty if not found
-     */
-    public static Optional<String> findByPath(JsonObject root, String path) {
-        return findAllByPath(root, path).stream().findFirst();
-    }
-
-    /**
-     * Finds the non-blank string value from a JSON object found at the given dot-separated path.
-     * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
-     *
-     * @param root JSON root value (usually a {@link JsonObject})
-     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
-     * @return an {@link Optional} containing the non-blank string value, or empty if not found
-     * @since 1.1
-     */
-    public static Optional<String> findNonBlankByPath(JsonObject root, String path) {
-        return findByPath(root, path).map(String::strip).filter(not(String::isEmpty));
-    }
-
-    /**
-     * Finds the first non-blank string value from a JSON object by trying multiple paths in order.
-     * <p>
-     * This is useful when different API versions or providers return data at different paths.
-     *
-     * @param root JSON root object to search.
-     * @param paths list of dot-separated paths to try, in order of preference.
-     * @return an {@link Optional} containing the first non-blank value found, or empty if no path matches.
-     * @see #findByPath(JsonObject, String)
-     */
-    public static Optional<String> findFirstNonBlankByPaths(JsonObject root, List<String> paths) {
-        return paths.stream().map(path -> findNonBlankByPath(root, path)).flatMap(Optional::stream).findFirst();
-    }
-
-    /**
      * Finds all string values from a JSON object found at the given dot-separated path.
      * <p>
      * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
@@ -233,44 +174,47 @@ public final class JsonHelper {
         return result;
     }
 
-    private static void collectNextLevelValues(JsonValue current, String segment, List<JsonValue> collector) {
-        if ((current == null) || (!(current instanceof JsonObject) && !(current instanceof JsonArray))) {
-            return;
-        }
+    /**
+     * Finds the string value from a JSON object found at the given dot-separated path.
+     * <p>
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
+     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     *
+     * @param root JSON root value (usually a {@link JsonObject})
+     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
+     * @return an {@link Optional} containing the string value, or empty if not found
+     */
+    public static Optional<String> findByPath(JsonObject root, String path) {
+        return findAllByPath(root, path).stream().findFirst();
+    }
 
-        int startBracket = segment.indexOf('[');
+    /**
+     * Finds the non-blank string value from a JSON object found at the given dot-separated path.
+     * <p>
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
+     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     *
+     * @param root JSON root value (usually a {@link JsonObject})
+     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
+     * @return an {@link Optional} containing the non-blank string value, or empty if not found
+     * @since 1.1
+     */
+    public static Optional<String> findNonBlankByPath(JsonObject root, String path) {
+        return findByPath(root, path).map(TextHelper::stripToNull).filter(Objects::nonNull);
+    }
 
-        if (startBracket < 0) {
-            if (current instanceof JsonObject obj && obj.containsKey(segment) && !obj.isNull(segment)) {
-                collector.add(obj.get(segment));
-            }
-
-            return;
-        }
-
-        var propertyName = segment.substring(0, startBracket);
-        var indexPart = segment.substring(startBracket + 1, segment.indexOf(']', startBracket));
-
-        if (!(current instanceof JsonObject object) || !object.containsKey(propertyName) || object.isNull(propertyName)) {
-            return;
-        }
-
-        var array = object.getJsonArray(propertyName);
-
-        if (array == null) {
-            return;
-        }
-
-        if ("*".equals(indexPart)) {
-            collector.addAll(array);
-        }
-        else {
-            int index = Integer.parseInt(indexPart);
-
-            if (index < array.size()) {
-                collector.add(array.get(index));
-            }
-        }
+    /**
+     * Finds the first non-blank string value from a JSON object by trying multiple paths in order.
+     * <p>
+     * This is useful when different API versions or providers return data at different paths.
+     *
+     * @param root JSON root object to search.
+     * @param paths list of dot-separated paths to try, in order of preference.
+     * @return an {@link Optional} containing the first non-blank value found, or empty if no path matches.
+     * @see #findByPath(JsonObject, String)
+     */
+    public static Optional<String> findFirstNonBlankByPaths(JsonObject root, List<String> paths) {
+        return paths.stream().map(path -> findNonBlankByPath(root, path)).flatMap(Optional::stream).findFirst();
     }
 
     /**
@@ -327,11 +271,47 @@ public final class JsonHelper {
         return builder;
     }
 
+    // Streaming -------------------------------------------------------------------------------------------------------
+
+    /**
+     * Checks for error messages at the specified paths.
+     * <p>
+     * If an error message is found at any of the paths, an {@link AIResponseException} is thrown.
+     *
+     * @param jsonFile The JSON file to read from, must not be {@code null}.
+     * @param errorMessagePaths Paths to check for error messages (e.g., {@code "error.message"}, {@code "error"}).
+     * @throws AIResponseException If parsing fails or an error message is found.
+     * @since 1.3
+     */
+    public static void checkErrors(Path jsonFile, List<String> errorMessagePaths) throws AIResponseException {
+        errorMessagePaths.stream().map(path -> findByPath(jsonFile, path).map(TextHelper::stripToNull).orElse(null)).filter(Objects::nonNull).findFirst().ifPresent(errorMessage -> {
+            throw new AIResponseException(errorMessage, jsonFile);
+        });
+    }
+
+    /**
+     * Finds the string value from a JSON file at the given dot-separated path within the file at {@code source},
+     * without loading the whole file into memory.
+     * <p>
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
+     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     *
+     * @param jsonFile The JSON file to read from, must not be {@code null}.
+     * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
+     * @return an {@link Optional} containing the string value, or empty if not found
+     * @throws AIResponseException If the file cannot be read or parsed.
+     * @since 1.3
+     */
+    public static Optional<String> findByPath(Path jsonFile, String path) {
+        return ofNullable(findByPath(jsonFile, path, parser -> {
+            parser.next();
+            return parser.getString();
+        }));
+    }
+
     /**
      * Opens an {@link InputStream} over the raw bytes of the JSON value found at the given dot-separated path
      * within the file at {@code source}, without loading the whole file into memory.
-     * <p>
-     * Finds the string value from a JSON object found at the given dot-separated path.
      * <p>
      * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
      * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
@@ -341,7 +321,7 @@ public final class JsonHelper {
      * @param jsonFile The JSON file to read from, must not be {@code null}.
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
      * @return An {@link InputStream} over the raw bytes of the located value, or {@code null} if the path does not match.
-     * @throws AIResponseException If the source cannot be read or parsed.
+     * @throws AIResponseException If the file cannot be read or parsed.
      * @since 1.3
      */
     public static InputStream streamByPath(Path jsonFile, String path) {
@@ -375,6 +355,48 @@ public final class JsonHelper {
                 throw new AIResponseException("Cannot read JSON file", jsonFile, e);
             }
         });
+    }
+
+    // Internal --------------------------------------------------------------------------------------------------------
+
+    private static void collectNextLevelValues(JsonValue current, String segment, List<JsonValue> collector) {
+        if ((current == null) || (!(current instanceof JsonObject) && !(current instanceof JsonArray))) {
+            return;
+        }
+
+        int startBracket = segment.indexOf('[');
+
+        if (startBracket < 0) {
+            if (current instanceof JsonObject obj && obj.containsKey(segment) && !obj.isNull(segment)) {
+                collector.add(obj.get(segment));
+            }
+
+            return;
+        }
+
+        var propertyName = segment.substring(0, startBracket);
+        var indexPart = segment.substring(startBracket + 1, segment.indexOf(']', startBracket));
+
+        if (!(current instanceof JsonObject object) || !object.containsKey(propertyName) || object.isNull(propertyName)) {
+            return;
+        }
+
+        var array = object.getJsonArray(propertyName);
+
+        if (array == null) {
+            return;
+        }
+
+        if ("*".equals(indexPart)) {
+            collector.addAll(array);
+        }
+        else {
+            int index = Integer.parseInt(indexPart);
+
+            if (index < array.size()) {
+                collector.add(array.get(index));
+            }
+        }
     }
 
     private static <R> R findByPath(Path jsonFile, String path, Function<JsonParser, R> processor) {
@@ -444,17 +466,5 @@ public final class JsonHelper {
         }
 
         return null;
-    }
-
-    private static String toString(InputStream stream) {
-        try {
-            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        finally {
-            closeQuietly(stream);
-        }
     }
 }
