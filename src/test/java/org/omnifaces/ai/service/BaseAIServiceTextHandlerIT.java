@@ -64,7 +64,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response2 = service.chat("What is my name?", options);
         var usage2 = options.getLastUsage();
         log("response2: " + response2);
-        log("usage1: " + usage2);
+        log("usage2: " + usage2);
 
         var history = options.getHistory();
 
@@ -96,7 +96,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response2 = service.chat("What is my name?", options);
         var usage2 = options.getLastUsage();
         log("response2: " + response2);
-        log("usage1: " + usage2);
+        log("usage2: " + usage2);
 
         assertAll(
             () -> assertFalse(response2.contains("Bob"), "response should not contain 'Bob'"),
@@ -189,7 +189,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
         var response2 = service.chat("How many pages does this PDF have?", options);
         log(response2);
-        assertTrue(response2.toLowerCase().contains("1") || response2.toLowerCase().contains("one"), "response must contain '1' or 'one'");
+        assertTrue(response2.contains("1") || response2.toLowerCase().contains("one"), "response must contain '1' or 'one'");
     }
 
     public record Capital(String city, String country) {}
@@ -221,7 +221,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var response = service.webSearch("What is the current stock price of Tesla?");
         log(response);
         assertAll(
-            () -> assertTrue(response.contains("Tesla") || response.contains("TSLA"), "response contains 'Tesla' or 'TSLA'"),
+            () -> assertTrue(response.contains("TSLA"), "response contains 'TSLA'"),
             () -> assertTrue(response.contains("$") || response.contains("USD"), "response contains '$' or 'USD'"),
             () -> assertTrue(Pattern.compile("\\d+\\.\\d{2}").matcher(response).find(), "response contains #0.00")
         );
@@ -234,9 +234,9 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         assertFalse(response.isBlank(), "response should not be blank");
         assertAll(
             () -> assertTrue(response.split("\\s+").length <= 6, "max 6 words (slack of 1)"),
-            () -> assertTrue(response.toLowerCase().contains("fox")),
-            () -> assertTrue(response.toLowerCase().contains("jump") || response.toLowerCase().contains("leap")),
-            () -> assertTrue(response.toLowerCase().contains("dog"))
+            () -> assertTrue(response.toLowerCase().contains("fox"), "response contains 'fox'"),
+            () -> assertTrue(response.toLowerCase().contains("jump") || response.toLowerCase().contains("leap"), "response contains 'jump' or 'leap'"),
+            () -> assertTrue(response.toLowerCase().contains("dog"), "response contains 'dog'")
         );
 
     }
@@ -289,7 +289,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
     void moderateContentSafe() {
         var response = service.moderateContent("The quick brown fox jumps over the lazy dog near the river.");
         log(response.toString());
-        assertFalse(response.isFlagged());
+        assertFalse(response.isFlagged(), "content should not be flagged");
     }
 
     @Test
@@ -299,11 +299,11 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         var violenceScore = response.getScores().get(Category.VIOLENCE.name().toLowerCase());
         var harassmentScore = response.getScores().get(Category.HARASSMENT.name().toLowerCase());
         assertAll(
-            () -> assertTrue(response.isFlagged()),
-            () -> assertTrue(violenceScore != null),
-            () -> assertTrue(violenceScore > 0.5, violenceScore + " is above half"),
-            () -> assertTrue(harassmentScore != null),
-            () -> assertTrue(harassmentScore > 0.5, harassmentScore + " is above half")
+            () -> assertTrue(response.isFlagged(), "content must be flagged"),
+            () -> assertTrue(violenceScore != null, "violence score must be set"),
+            () -> assertTrue(violenceScore > 0.5, "violence score " + violenceScore + " must be above half"),
+            () -> assertTrue(harassmentScore != null, "harassment score must be set"),
+            () -> assertTrue(harassmentScore > 0.5, "harassment score " + harassmentScore + " must be above half")
         );
     }
 }
