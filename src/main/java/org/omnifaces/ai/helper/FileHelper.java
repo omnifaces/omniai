@@ -142,7 +142,7 @@ public final class FileHelper {
 
         private static boolean checkTempFileSupport() {
             try {
-                cleanupFiles(createTempFile(OmniHai.name() + "-probe", ".tmp"));
+                cleanupFiles(createTempFile(OmniHai.name() + "-probe-", ".tmp"));
                 return true;
             }
             catch (Exception ignore) {
