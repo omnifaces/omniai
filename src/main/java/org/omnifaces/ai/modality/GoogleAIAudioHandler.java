@@ -25,11 +25,14 @@ import static org.omnifaces.ai.helper.JsonHelper.streamByPath;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -78,9 +81,20 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             .build();
     }
 
+    public static void main(String[] args) throws Exception {
+        var thiz = new GoogleAIAudioHandler();
+        var jsonfile = new File("/home/bauke/git/omnihai/src/main/resources/gemini.json");
+        var testfile = Paths.get("/home/bauke/git/omnihai/src/main/resources/gemini.test.wav");
+
+        try (var stream = new FileInputStream(jsonfile)) {
+             Files.copy(thiz.parseAudioContentInMemory(stream), testfile, REPLACE_EXISTING);
+        }
+    }
+
     /**
      * In Google AI, the response body represents a JSON with audio content as Base64-encoded PCM file.
-     * If {@link FileHelper#tempFilesSupported()} returns {@code true}, then the current implementation will parse via temp files it will parse fully in memory.
+     * <p>
+     * If {@link FileHelper#tempFilesSupported()} returns {@code true}, then the current implementation will parse via temp files else it will parse fully in memory.
      */
     @Override
     public InputStream parseAudioContent(InputStream responseStream) throws AIResponseException {
@@ -121,6 +135,16 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         }
     }
 
+    /**
+     * NOTE: full streaming approach is not possible for following reasons:
+     * <ol>
+     * <li>InputStream can be read only once but we need to check errors as well.</li>
+     * <li>JSON-B JsonParser doesn't support getInputStream() of value; it only supports getString(), getInt(), etc.</li>
+     * <li>Potential corner cases in JSON format (esp. undefined white space between key and value) which require offset based file channel access.</li>
+     * </ol>
+     * Hence, temp file approach is best for now (without resorting to yet another JSON library such as Jackson and/or a specialized/unreusable impl of JSON parsing).
+     * In long term we could perhaps make Jackson an optional dependency and prefer over temp files.
+     */
     private InputStream parseAudioContentViaTempFiles(InputStream responseStream) throws AIResponseException {
         Path responseJsonTempFile = null;
         Path audioContentTempFile = null;
