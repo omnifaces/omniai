@@ -57,7 +57,7 @@ final class ExecutorServiceHelper {
         try {
             return Class.forName("jakarta.enterprise.inject.spi.CDI").getMethod("current").invoke(null) != null;
         }
-        catch (Exception ignore) {
+        catch (Exception | LinkageError ignore) {
             return false;
         }
     }
