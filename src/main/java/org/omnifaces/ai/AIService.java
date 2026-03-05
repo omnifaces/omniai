@@ -845,7 +845,36 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default <T> T webSearch(String query, Class<T> type) throws AIException {
-        return joinAsync(chatAsync(query, type));
+        return joinAsync(webSearchAsync(query, type));
+    }
+
+    /**
+     * Sends a web search query to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+     *
+     * var price = service.webSearch("What is the current stock price of: " + companyName, StockPrice.class);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, ChatOptions, Class)}.
+     * @param <T> The target type.
+     * @param query The user's web search query to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if query is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the web search request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     * @since 1.3
+     */
+    default <T> T webSearch(String query, ChatOptions options, Class<T> type) throws AIException {
+        return joinAsync(webSearchAsync(query, options, type));
     }
 
     /**
@@ -860,7 +889,7 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default CompletableFuture<String> webSearchAsync(String query) throws AIException {
-        return chatAsync(query, ChatOptions.DEFAULT.withWebSearch());
+        return chatAsync(query, DEFAULT.withWebSearch());
     }
 
     /**
@@ -868,8 +897,7 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch()} on {@link ChatOptions#DEFAULT},
-     * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, ChatOptions, Class)} with {@link ChatOptions#DEFAULT}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
      * @param type The target class for the structured response (record or bean).
@@ -882,7 +910,30 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default <T> CompletableFuture<T> webSearchAsync(String query, Class<T> type) throws AIException {
-        return chatAsync(query, ChatOptions.DEFAULT.withWebSearch().withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+        return webSearchAsync(query, DEFAULT, type);
+    }
+
+    /**
+     * Asynchronously sends a web search query to the AI and returns a typed response.
+     * <p>
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
+     * conforming to that schema, and parses the response back into the specified type.
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch()} on given options,
+     * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
+     * @param <T> The target type.
+     * @param query The user's web search query to send to the AI.
+     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param type The target class for the structured response (record or bean).
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if query is blank.
+     * @throws UnsupportedOperationException if structured output is not supported by the implementation.
+     * @throws AIException if the web search request fails.
+     * @see JsonSchemaHelper#buildJsonSchema(Class)
+     * @see JsonSchemaHelper#fromJson(String, Class)
+     * @since 1.3
+     */
+    default <T> CompletableFuture<T> webSearchAsync(String query, ChatOptions options, Class<T> type) throws AIException {
+        return chatAsync(query, options.withWebSearch().withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
     }
 
 

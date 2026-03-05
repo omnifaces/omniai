@@ -645,7 +645,7 @@ public class ChatOptions implements Serializable {
          * @return This builder instance for chaining.
          * @since 1.3
          */
-        public Builder withWebSearch() {
+        public Builder webSearch() {
             this.webSearch = true;
             return this;
         }

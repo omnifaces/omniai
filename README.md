@@ -296,7 +296,8 @@ ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.cla
 
 ### Web Search
 
-Enable the AI to access up-to-date information from the internet:
+Enable the AI to access up-to-date information from the internet via built-in "web search" tool.
+You can enable web search via `ChatOptions.newBuilder().webSearch()` when calling `chat(…)` or you can use the dedicated `webSearch(…)` methods: 
 
 ```java
 // Basic web search
@@ -310,18 +311,17 @@ StockPrice price = service.webSearch("What is the current stock price of Tesla?"
 CompletableFuture<String> future = service.webSearchAsync("Latest news about AI regulations");
 ```
 
-When using custom chat options, you can enable web search via `ChatOptions.Builder.withWebSearch()` and pass it to `chat(message, options)`.
-
+With custom system prompt and temperature:
 ```java
 ChatOptions options = ChatOptions.newBuilder()
     .systemPrompt("""
-        You are a stock analyst.
-        When retrieving stock prices, prioritize data from official exchange websites like NASDAQ or NYSE over secondary sources like Yahoo Finance or Google Finance.
+        You are a financial analyst.
+        When retrieving data, prioritize official exchange websites like NASDAQ or NYSE over secondary sources like Yahoo Finance or Google Finance.
     """)
-    .withWebSearch()
+    .temperature(0.2)
     .build();
 
-StockPrice nvidiaPrice = service.chat("What is the current stock price of Nvidia?", options, StockPrice.class);
+StockPrice nvidiaPrice = service.webSearch("What is the current stock price of Nvidia?", options, StockPrice.class);
 ```
 
 ### Text Analysis
