@@ -35,6 +35,7 @@ import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.omnifaces.ai.model.ModerationResult;
+import org.omnifaces.ai.service.AIServiceWrapper;
 
 /**
  * Generic interface for AI service providers.
@@ -49,6 +50,7 @@ import org.omnifaces.ai.model.ModerationResult;
  * @see AIProvider
  * @see AIConfig
  * @see AIModality
+ * @see AIServiceWrapper
  */
 public interface AIService extends Serializable {
 
