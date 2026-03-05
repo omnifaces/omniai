@@ -25,6 +25,7 @@ import static org.omnifaces.ai.AIProvider.OPENROUTER;
 import static org.omnifaces.ai.AIProvider.XAI;
 import static org.omnifaces.ai.model.ChatOptions.DETERMINISTIC;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -224,6 +225,26 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertTrue(response.contains("TSLA"), "response contains 'TSLA'"),
             () -> assertTrue(response.contains("$") || response.contains("USD"), "response contains '$' or 'USD'"),
             () -> assertTrue(Pattern.compile("\\d+\\.\\d{2}").matcher(response).find(), "response contains #0.00")
+        );
+    }
+
+    public record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+
+    @Test
+    void webSearchWithStructuredOutput() {
+        if (!service.supportsWebSearch()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var response = service.webSearch("What is the current stock price of Tesla?", StockPrice.class);
+        log(response.toString());
+        assertAll(
+            () -> assertNotNull(response.ticker(), "ticker is set"),
+            () -> assertEquals("TSLA", response.ticker()),
+            () -> assertNotNull(response.price(), "price is set"),
+            () -> assertTrue(response.price().compareTo(BigDecimal.ZERO) >= 0, "price is not negative"),
+            () -> assertNotNull(response.currencyCode(), "currency code is set"),
+            () -> assertEquals("USD", response.currencyCode())
         );
     }
 
