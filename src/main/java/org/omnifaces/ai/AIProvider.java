@@ -16,6 +16,7 @@ import static java.util.Arrays.stream;
 
 import org.omnifaces.ai.cdi.AI;
 import org.omnifaces.ai.modality.AnthropicAITextHandler;
+import org.omnifaces.ai.modality.AzureAITextHandler;
 import org.omnifaces.ai.modality.DefaultAIAudioHandler;
 import org.omnifaces.ai.modality.DefaultAIImageHandler;
 import org.omnifaces.ai.modality.DefaultAITextHandler;
@@ -150,20 +151,20 @@ public enum AIProvider {
      * <p>
      * Defaults currently to model {@code gpt-5-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
      * @see AzureAIService
-     * @see OpenAITextHandler
+     * @see AzureAITextHandler
      * @see OpenAIImageHandler
      * @see DefaultAIAudioHandler
      * @see <a href="https://portal.azure.com/">Manage Azure OpenAI API Keys</a>
      * @see <a href="https://ai.azure.com/catalog">Available Azure OpenAI Models</a>
      */
-    AZURE("Azure OpenAI", AzureAIService.class, true, "gpt-5-mini", "https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1", OpenAITextHandler.class, OpenAIImageHandler.class, DefaultAIAudioHandler.class),
+    AZURE("Azure OpenAI", AzureAIService.class, true, "gpt-5-mini", "https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1", AzureAITextHandler.class, OpenAIImageHandler.class, DefaultAIAudioHandler.class),
 
     /**
      * OpenRouter: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code deepseek/deepseek-v3.2} at endpoint {@code https://openrouter.ai/api/v1}.
      * @see OpenRouterAIService
-     * @see OpenAITextHandler
+     * @see OpenRouterAITextHandler
      * @see OpenAIImageHandler
      * @see DefaultAIAudioHandler
      * @see <a href="https://openrouter.ai/settings/keys/">Manage OpenRouter API Keys</a>

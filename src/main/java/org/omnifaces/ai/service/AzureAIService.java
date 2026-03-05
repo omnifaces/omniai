@@ -87,6 +87,11 @@ public class AzureAIService extends OpenAIService {
     }
 
     @Override
+    public boolean supportsWebSearch() {
+        return true;
+    }
+
+    @Override
     public boolean supportsOpenAIResponsesApi() {
         return false;
     }

@@ -96,9 +96,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadToolsWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
-            payload.add("tools", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("type", "web_search").build()));
+            payload
+                .add("tool_choice", "required")
+                .add("tools", Json.createArrayBuilder()
+                    .add(Json.createObjectBuilder()
+                        .add("type", getWebSearchToolName()).build()));
         }
     }
 
@@ -439,6 +441,14 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         }
 
         return true;
+    }
+
+    /**
+     * Returns web search tool name.
+     * @return Web search tool name.
+     */
+    protected String getWebSearchToolName() {
+        return "web_search";
     }
 
     private static boolean supportsResponsesApi(AIService service) {
