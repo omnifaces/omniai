@@ -84,16 +84,24 @@ public class ChatOptions implements Serializable {
      * An instance with all properties set to {@code null} is equivalent to {@link #GLOBAL},
      * representing a location context without geographical restrictions.
      *
-     * @param country The country, usually represented by country code, e.g. "US", "NL", "CW", etc.
+     * @param country The country, usually represented by two-letter ISO country code, e.g. "US", "NL", "CW", etc.
      * @param region The administrative region, such as a state, province, or territory.
-     * @param locality The specific locality, such as a city, town, or village.
+     * @param city The city or town or village.
      * @since 1.3
      * @see Builder#webSearch(Location)
      */
-    public final record Location(String country, String region, String locality) implements Serializable {
+    public final record Location(String country, String region, String city) implements Serializable {
 
         /** Indicates that no specific geographical location is applied. */
         public static final Location GLOBAL = new Location(null, null, null);
+
+        /**
+         * Checks if this location represents a global context (i.e., all fields are null).
+         * @return {@code true} if this instance is global; {@code false} otherwise.
+         */
+        public boolean isGlobal() {
+            return country == null && region == null && city == null;
+        }
     }
 
     /** The system prompt. */
@@ -349,6 +357,16 @@ public class ChatOptions implements Serializable {
      */
     public boolean useWebSearch() {
         return webSearchLocation != null;
+    }
+
+    /**
+     * Returns web search location.
+     *
+     * @return The configured {@link Location} for web searches, or {@code null} if there is none.
+     * @since 1.3
+     */
+    public Location getWebSearchLocation() {
+        return webSearchLocation;
     }
 
     /**

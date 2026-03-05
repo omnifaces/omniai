@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.Location;
 import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.opentest4j.TestAbortedException;
@@ -225,6 +226,22 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertTrue(response.contains("TSLA"), "response contains 'TSLA'"),
             () -> assertTrue(response.contains("$") || response.contains("USD"), "response contains '$' or 'USD'"),
             () -> assertTrue(Pattern.compile("\\d+\\.\\d{2}").matcher(response).find(), "response contains #0.00")
+        );
+    }
+
+    @Test
+    void webSearchWithLocation() {
+        if (!service.supportsWebSearch()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var miami = new Location("US", null, "Miami");
+        var response = service.webSearch("What is the current weather?", miami);
+        log(response);
+        assertAll(
+            () -> assertTrue(response.contains("Miami"), "response contains 'Miami'"),
+            () -> assertTrue(response.toLowerCase().contains("high"), "response contains 'high'"),
+            () -> assertTrue(response.toLowerCase().contains("low"), "response contains 'low'")
         );
     }
 

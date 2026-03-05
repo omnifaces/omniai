@@ -19,6 +19,7 @@ import static org.omnifaces.ai.helper.JsonHelper.checkErrors;
 import static org.omnifaces.ai.helper.JsonHelper.findAllByPath;
 import static org.omnifaces.ai.helper.JsonHelper.findByPath;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
+import static org.omnifaces.ai.modality.OpenAITextHandler.buildUserLocation;
 import static org.omnifaces.ai.model.Sse.Event.Type.DATA;
 import static org.omnifaces.ai.model.Sse.Event.Type.EVENT;
 
@@ -68,7 +69,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                 .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(payload, options);
+        buildChatPayloadSystemPrompt(payload, options.getWebSearchLocation() == null ? options : appendPrompt(options, "Search within " + options.getWebSearchLocation())); // Current Anthropic versions ignore user_location during web_search!
         buildChatPayloadHistoryMessages(messages, input);
         buildChatPayloadUserContent(messages, input, service, options);
         payload.add("messages", messages);
@@ -86,10 +87,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
-            payload.add("tools", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
+            var webSearchTool = Json.createObjectBuilder()
                     .add("type", service.getModelVersion().gte(CLAUDE_4_6) ? "web_search_20260209" : "web_search_20250305")
-                    .add("name", "web_search").build()));
+                    .add("name", "web_search");
+            var userLocation = buildUserLocation(options.getWebSearchLocation());
+
+            if (userLocation != null) {
+                webSearchTool.add("user_location", userLocation);
+            }
+
+            payload.add("tools", Json.createArrayBuilder().add(webSearchTool.build()));
         }
     }
 

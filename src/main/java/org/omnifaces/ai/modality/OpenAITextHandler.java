@@ -37,6 +37,7 @@ import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.Location;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -96,11 +97,16 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadToolsWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
+            var webSearchTool = Json.createObjectBuilder().add("type", getWebSearchToolName());
+            var userLocation = buildUserLocation(options.getWebSearchLocation());
+
+            if (userLocation != null) {
+                webSearchTool.add("user_location", userLocation);
+            }
+
             payload
                 .add("tool_choice", "required")
-                .add("tools", Json.createArrayBuilder()
-                    .add(Json.createObjectBuilder()
-                        .add("type", getWebSearchToolName()).build()));
+                .add("tools", Json.createArrayBuilder().add(webSearchTool.build()));
         }
     }
 
@@ -457,5 +463,30 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     private static boolean supportsFilesApi(AIService service) {
         return service instanceof OpenAIService openai && openai.supportsOpenAIFilesApi();
+    }
+
+    /**
+     * Builds OpenAI-compatible user location object.
+     */
+    static JsonObject buildUserLocation(Location location) {
+        if (!location.isGlobal()) {
+            var userLocation = Json.createObjectBuilder().add("type", "approximate");
+
+            if (location.country() != null) {
+                userLocation.add("country", location.country());
+            }
+
+            if (location.region() != null) {
+                userLocation.add("region", location.region());
+            }
+
+            if (location.city() != null) {
+                userLocation.add("city", location.city());
+            }
+
+            return userLocation.build();
+        }
+
+        return null;
     }
 }

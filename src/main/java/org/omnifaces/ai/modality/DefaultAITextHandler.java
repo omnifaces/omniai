@@ -27,6 +27,7 @@ import jakarta.json.JsonObject;
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.AITextHandler;
 import org.omnifaces.ai.exception.AIResponseException;
+import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions;
 
@@ -302,6 +303,18 @@ public class DefaultAITextHandler implements AITextHandler {
      */
     public List<String> getFileResponseIdPaths() {
         return List.of("id");
+    }
+
+
+    // Prompt helpers --------------------------------------------------------------------------------------------------
+
+    /**
+     * Appends extra prompt to existing system prompt, if any.
+     */
+    static ChatOptions appendPrompt(ChatOptions options, String extraPrompt) {
+        var oldPrompt = options.getSystemPrompt();
+        var newPrompt = (oldPrompt == null ? "" : (oldPrompt + "\n")) + extraPrompt;
+        return options.withSystemPrompt(newPrompt);
     }
 
 
