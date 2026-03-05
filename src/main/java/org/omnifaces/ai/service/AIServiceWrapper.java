@@ -25,6 +25,7 @@ import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.Location;
 import org.omnifaces.ai.model.GenerateAudioOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -241,8 +242,7 @@ public abstract class AIServiceWrapper implements AIService {
     }
 
     @Override
-    public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options)
-            throws AIException {
+    public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
         return getWrapped().moderateContentAsync(content, options);
     }
 
@@ -252,13 +252,18 @@ public abstract class AIServiceWrapper implements AIService {
     }
 
     @Override
+    public String webSearch(String query, Location location) throws AIException {
+        return getWrapped().webSearch(query, location);
+    }
+
+    @Override
     public <T> T webSearch(String query, Class<T> type) throws AIException {
         return getWrapped().webSearch(query, type);
     }
 
     @Override
-    public <T> T webSearch(String query, ChatOptions options, Class<T> type) throws AIException {
-        return getWrapped().webSearch(query, options, type);
+    public <T> T webSearch(String query, Location location, Class<T> type) throws AIException {
+        return getWrapped().webSearch(query, location, type);
     }
 
     @Override
@@ -267,14 +272,18 @@ public abstract class AIServiceWrapper implements AIService {
     }
 
     @Override
+    public CompletableFuture<String> webSearchAsync(String query, Location location) throws AIException {
+        return getWrapped().webSearchAsync(query, location);
+    }
+
+    @Override
     public <T> CompletableFuture<T> webSearchAsync(String query, Class<T> type) throws AIException {
         return getWrapped().webSearchAsync(query, type);
     }
 
     @Override
-    public <T> CompletableFuture<T> webSearchAsync(String query, ChatOptions options, Class<T> type)
-            throws AIException {
-        return getWrapped().webSearchAsync(query, options, type);
+    public <T> CompletableFuture<T> webSearchAsync(String query, Location location, Class<T> type) throws AIException {
+        return getWrapped().webSearchAsync(query, location, type);
     }
 
     @Override
@@ -313,8 +322,7 @@ public abstract class AIServiceWrapper implements AIService {
     }
 
     @Override
-    public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options)
-            throws AIException {
+    public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
         return getWrapped().generateImageAsync(prompt, options);
     }
 

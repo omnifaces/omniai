@@ -14,6 +14,7 @@ package org.omnifaces.ai.model;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Objects.requireNonNull;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
@@ -77,6 +78,24 @@ public class ChatOptions implements Serializable {
         DETERMINISTIC.immutable = true;
     }
 
+    /**
+     * Represents a geographical location context for AI operations, such as localized web searching.
+     * <p>
+     * An instance with all properties set to {@code null} is equivalent to {@link #GLOBAL},
+     * representing a location context without geographical restrictions.
+     *
+     * @param country The country, usually represented by country code, e.g. "US", "NL", "CW", etc.
+     * @param region The administrative region, such as a state, province, or territory.
+     * @param locality The specific locality, such as a city, town, or village.
+     * @since 1.3
+     * @see Builder#webSearch(Location)
+     */
+    public final record Location(String country, String region, String locality) implements Serializable {
+
+        /** Indicates that no specific geographical location is applied. */
+        public static final Location GLOBAL = new Location(null, null, null);
+    }
+
     /** The system prompt. */
     private final String systemPrompt;
     /** The JSON schema for structured output. */
@@ -87,8 +106,8 @@ public class ChatOptions implements Serializable {
     private final Integer maxTokens;
     /** The Top-P value. */
     private final double topP;
-    /** The Top-P value. */
-    private final boolean webSearch;
+    /** The web search location. */
+    private final Location webSearchLocation;
     /** The conversation history for memory-enabled chat sessions. */
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
@@ -104,7 +123,7 @@ public class ChatOptions implements Serializable {
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
         this.topP = builder.topP;
-        this.webSearch = builder.webSearch;
+        this.webSearchLocation = builder.webSearchLocation;
 
         var memoryEnabled = builder.maxHistory > 0 || builder.history != null;
         this.maxHistory = builder.maxHistory > 0 ? builder.maxHistory : (memoryEnabled ? DEFAULT_MAX_HISTORY : 0);
@@ -119,13 +138,13 @@ public class ChatOptions implements Serializable {
         }
     }
 
-    private ChatOptions(String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, boolean webSearch, List<Message> history, int maxHistory) {
+    private ChatOptions(String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, Location webSearchLocation, List<Message> history, int maxHistory) {
         this.systemPrompt = systemPrompt;
         this.jsonSchema = jsonSchema;
         this.temperature = temperature;
         this.maxTokens = maxTokens;
         this.topP = topP;
-        this.webSearch = webSearch;
+        this.webSearchLocation = webSearchLocation;
         this.history = history;
         this.maxHistory = maxHistory;
     }
@@ -136,7 +155,7 @@ public class ChatOptions implements Serializable {
         this.temperature = source.temperature;
         this.maxTokens = source.maxTokens;
         this.topP = source.topP;
-        this.webSearch = source.webSearch;
+        this.webSearchLocation = source.webSearchLocation;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
     }
@@ -219,7 +238,7 @@ public class ChatOptions implements Serializable {
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearchLocation, history, maxHistory);
     }
 
     /**
@@ -231,19 +250,22 @@ public class ChatOptions implements Serializable {
      * @since 1.1
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearchLocation, history, maxHistory);
     }
 
     /**
-     * Returns a copy of this instance with the given web search flag set, preserving all other options including
-     * any shared {@link #hasMemory() memory} state.
+     * Returns a copy of this instance with web search enabled for the given location,
+     * preserving all other options including any shared {@link #hasMemory() memory} state.
+     * <p>
+     * Pass {@link Location#GLOBAL} to enable web search without restricting it to a specific region.
+     * Pass {@code null} to disable web search.
      *
-     * @param webSearch Whether to enable web search.
-     * @return A new {@code ChatOptions} instance with the specified web search flag.
+     * @param location The location context for web search, or {@link Location#GLOBAL} for global search, or {@code null} to disable web search.
+     * @return A new {@code ChatOptions} instance with the specified web search location enabled.
      * @since 1.3
      */
-    public ChatOptions withWebSearch(boolean webSearch) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
+    public ChatOptions withWebSearch(Location location) {
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, location, history, maxHistory);
     }
 
     /**
@@ -326,7 +348,7 @@ public class ChatOptions implements Serializable {
      * @since 1.3
      */
     public boolean useWebSearch() {
-        return webSearch;
+        return webSearchLocation != null;
     }
 
     /**
@@ -507,7 +529,7 @@ public class ChatOptions implements Serializable {
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
         private Integer maxTokens;
         private double topP = ChatOptions.DEFAULT_TOP_P;
-        private boolean webSearch;
+        private Location webSearchLocation;
         private int maxHistory;
         private List<Message> history;
 
@@ -638,16 +660,32 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Enables web search for this {@link ChatOptions} instance.
+         * Enables global web search for this {@link ChatOptions} instance.
          * <p>
-         * When enabled, the AI service will allow the model to access up-to-date information from the internet and
-         * provide answers with sourced citations.
+         * When enabled, the AI service will access up-to-date information from the internet and provide answers with
+         * sourced citations, without geographical restriction.
          *
          * @return This builder instance for chaining.
          * @since 1.3
          */
         public Builder webSearch() {
-            this.webSearch = true;
+            this.webSearchLocation = Location.GLOBAL;
+            return this;
+        }
+
+        /**
+         * Enables localized web search for this {@link ChatOptions} instance.
+         * <p>
+         * When enabled, the AI service will access up-to-date information from the internet and provide answers with
+         * sourced citations scoped to the provided {@link Location}.
+         *
+         * @param location The specific location.
+         * @return This builder instance for chaining.
+         * @throws NullPointerException if {@code location} is {@code null}.
+         * @since 1.3
+         */
+        public Builder webSearch(Location location) {
+            this.webSearchLocation = requireNonNull(location, "location");
             return this;
         }
 

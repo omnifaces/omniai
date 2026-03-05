@@ -26,7 +26,7 @@ public class AzureAITextHandler extends OpenAITextHandler {
     private static final long serialVersionUID = 1L;
 
     /**
-     * @see <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/web-search">Web search tool</a>
+     * @see <a href="https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/web-search">Web search tool</a>
      */
     @Override
     protected String getWebSearchToolName() {

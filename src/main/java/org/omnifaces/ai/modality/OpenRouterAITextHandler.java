@@ -44,7 +44,7 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
                 public String getModelName() {
                     return super.getModelName() + ":online";
                 }
-            }, input, options.withWebSearch(false), streaming);
+            }, input, options.withWebSearch(null), streaming);
 
         }
         else {

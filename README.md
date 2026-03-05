@@ -307,11 +307,15 @@ String response = service.webSearch("What is the current stock price of Tesla?")
 record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
 StockPrice price = service.webSearch("What is the current stock price of Tesla?", StockPrice.class);
 
+// Localized web search
+Location miami = new Location("US", "Florida", "Miami");
+String response = service.webSearch("What is the current weather?", miami);
+
 // Async variant
 CompletableFuture<String> future = service.webSearchAsync("Latest news about AI regulations");
 ```
 
-With custom system prompt and temperature:
+With custom system prompt and temperature via chat(…) method:
 ```java
 ChatOptions options = ChatOptions.newBuilder()
     .systemPrompt("""
@@ -319,9 +323,10 @@ ChatOptions options = ChatOptions.newBuilder()
         When retrieving data, prioritize official exchange websites like NASDAQ or NYSE over secondary sources like Yahoo Finance or Google Finance.
     """)
     .temperature(0.2)
+    .webSearch() // or webSearch(location) with non-null location
     .build();
 
-StockPrice nvidiaPrice = service.webSearch("What is the current stock price of Nvidia?", options, StockPrice.class);
+StockPrice nvidiaPrice = service.chat("What is the current stock price of Nvidia?", options, StockPrice.class);
 ```
 
 ### Text Analysis

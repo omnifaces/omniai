@@ -12,9 +12,11 @@
  */
 package org.omnifaces.ai;
 
+import static java.util.Objects.requireNonNull;
 import static org.omnifaces.ai.helper.JsonSchemaHelper.buildJsonSchema;
 import static org.omnifaces.ai.helper.JsonSchemaHelper.fromJson;
 import static org.omnifaces.ai.model.ChatOptions.DEFAULT;
+import static org.omnifaces.ai.model.ChatOptions.Location.GLOBAL;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -30,6 +32,7 @@ import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.Location;
 import org.omnifaces.ai.model.GenerateAudioOptions;
 import org.omnifaces.ai.model.GenerateImageOptions;
 import org.omnifaces.ai.model.ModerationOptions;
@@ -823,6 +826,27 @@ public interface AIService extends Serializable {
     }
 
     /**
+     * Sends a web search query with location context to the AI and returns a response.
+     * <p>
+     * Usage example:
+     * <pre>
+     * var miami = new Location("US", "Florida", "Miami");
+     * var weather = service.webSearch("What is the weather like?", miami);
+     * </pre>
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)}.
+     * @param <T> The target type.
+     * @param query The user's web search query to send to the AI.
+     * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
+     * @return The AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if query is blank.
+     * @throws AIException if the web search request fails.
+     * @since 1.3
+     */
+    default String webSearch(String query, Location location) throws AIException {
+        return joinAsync(webSearchAsync(query, location));
+    }
+
+    /**
      * Sends a web search query to the AI and returns a typed response.
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
@@ -851,21 +875,14 @@ public interface AIService extends Serializable {
     }
 
     /**
-     * Sends a web search query to the AI and returns a typed response.
+     * Sends a web search query with location context to the AI and returns a typed response.
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * <p>
-     * Usage example:
-     * <pre>
-     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
-     *
-     * var price = service.webSearch("What is the current stock price of: " + companyName, StockPrice.class);
-     * </pre>
-     * @implNote The default implementation delegates to {@link #webSearchAsync(String, ChatOptions, Class)}.
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
      * @param type The target class for the structured response (record or bean).
      * @return The AI's response parsed into the specified type, never {@code null}.
      * @throws IllegalArgumentException if query is blank.
@@ -875,15 +892,15 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      * @since 1.3
      */
-    default <T> T webSearch(String query, ChatOptions options, Class<T> type) throws AIException {
-        return joinAsync(webSearchAsync(query, options, type));
+    default <T> T webSearch(String query, Location location, Class<T> type) throws AIException {
+        return joinAsync(webSearchAsync(query, location, type));
     }
 
     /**
      * Asynchronously sends a web search query to the AI and returns a response.
      * <p>
      * Useful if you need the model to access up-to-date information from the internet.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(boolean)} on {@link ChatOptions#DEFAULT}.
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)} with {@link Location#GLOBAL}.
      * @param query The user's web search query to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if query is blank.
@@ -891,7 +908,23 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default CompletableFuture<String> webSearchAsync(String query) throws AIException {
-        return chatAsync(query, DEFAULT.withWebSearch(true));
+        return webSearchAsync(query, GLOBAL);
+    }
+
+    /**
+     * Asynchronously sends a web search query with location context to the AI and returns a response.
+     * <p>
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location.
+     * @param <T> The target type.
+     * @param query The user's web search query to send to the AI.
+     * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
+     * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
+     * @throws IllegalArgumentException if query is blank.
+     * @throws AIException if the web search request fails.
+     * @since 1.3
+     */
+    default CompletableFuture<String> webSearchAsync(String query, Location location) throws AIException {
+        return chatAsync(query, DEFAULT.withWebSearch(requireNonNull(location, "location")));
     }
 
     /**
@@ -912,19 +945,19 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default <T> CompletableFuture<T> webSearchAsync(String query, Class<T> type) throws AIException {
-        return webSearchAsync(query, DEFAULT, type);
+        return webSearchAsync(query, GLOBAL, type);
     }
 
     /**
-     * Asynchronously sends a web search query to the AI and returns a typed response.
+     * Asynchronously sends a web search query with location context to the AI and returns a typed response.
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(boolean)} on given options,
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location
      * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
-     * @param options Chat options (system prompt, temperature, max tokens, etc.).
+     * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
      * @param type The target class for the structured response (record or bean).
      * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
      * @throws IllegalArgumentException if query is blank.
@@ -934,8 +967,8 @@ public interface AIService extends Serializable {
      * @see JsonSchemaHelper#fromJson(String, Class)
      * @since 1.3
      */
-    default <T> CompletableFuture<T> webSearchAsync(String query, ChatOptions options, Class<T> type) throws AIException {
-        return chatAsync(query, options.withWebSearch(true).withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+    default <T> CompletableFuture<T> webSearchAsync(String query, Location location, Class<T> type) throws AIException {
+        return chatAsync(query, DEFAULT.withWebSearch(requireNonNull(location, "location")).withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
     }
 
 
