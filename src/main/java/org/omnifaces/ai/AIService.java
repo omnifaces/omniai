@@ -883,7 +883,7 @@ public interface AIService extends Serializable {
      * Asynchronously sends a web search query to the AI and returns a response.
      * <p>
      * Useful if you need the model to access up-to-date information from the internet.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch()} on {@link ChatOptions#DEFAULT}.
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(boolean)} on {@link ChatOptions#DEFAULT}.
      * @param query The user's web search query to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
      * @throws IllegalArgumentException if query is blank.
@@ -920,7 +920,7 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch()} on given options,
+     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(boolean)} on given options,
      * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
