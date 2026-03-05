@@ -24,7 +24,7 @@ import org.omnifaces.ai.service.OpenRouterAIService;
  * Default text handler for OpenRouter AI service.
  *
  * @author Bauke Scholtz
- * @since 1.0
+ * @since 1.3
  * @see OpenRouterAIService
  */
 public class OpenRouterAITextHandler extends OpenAITextHandler {
