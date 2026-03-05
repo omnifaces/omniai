@@ -243,6 +243,24 @@ When messages slide out of the window, their associated file references are evic
 
 Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI(-compatible) providers, Anthropic, and Google AI.
 
+### Token Usage Tracking
+
+Track token consumption for cost monitoring and optimization:
+
+```java
+ChatOptions options = ChatOptions.DEFAULT.copy(); // Default ones are immutable, so you need a copy.
+String response = service.chat("Explain quantum computing", options);
+
+// Get usage statistics after the call
+ChatUsage usage = options.getLastUsage();
+System.out.println("Input tokens: " + usage.inputTokens());
+System.out.println("Output tokens: " + usage.outputTokens());
+System.out.println("Reasoning tokens: " + usage.reasoningTokens()); // Models with reasoning support; the value is a subset of output tokens
+System.out.println("Total tokens: " + usage.totalTokens()); // input tokens + output tokens
+```
+
+`ChatUsage` is available after each chat call when the provider reports token usage. Values are `-1` if not reported by the provider.
+
 ### Structured Outputs
 
 Get typed Java objects directly from AI responses:
@@ -275,6 +293,36 @@ ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.cla
 ```
 
 `JsonSchemaHelper` supports primitive types, strings, enums, temporals, collections, arrays, maps, nested types, and `Optional` fields (which are excluded from `"required"` in JSON schema).
+
+### Web Search
+
+Enable the AI to access up-to-date information from the internet:
+
+```java
+// Basic web search
+String response = service.webSearch("What is the current stock price of Tesla?");
+
+// Structured output from web search
+record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+StockPrice price = service.webSearch("What is the current stock price of Tesla?", StockPrice.class);
+
+// Async variant
+CompletableFuture<String> future = service.webSearchAsync("Latest news about AI regulations");
+```
+
+When using custom chat options, you can enable web search via `ChatOptions.Builder.withWebSearch()` and pass it to `chat(message, options)`.
+
+```java
+ChatOptions options = ChatOptions.newBuilder()
+    .systemPrompt("""
+        You are a stock analyst.
+        When retrieving stock prices, prioritize data from official exchange websites like NASDAQ or NYSE over secondary sources like Yahoo Finance or Google Finance.
+    """)
+    .withWebSearch()
+    .build();
+
+StockPrice nvidiaPrice = service.chat("What is the current stock price of Nvidia?", options, StockPrice.class);
+```
 
 ### Text Analysis
 
