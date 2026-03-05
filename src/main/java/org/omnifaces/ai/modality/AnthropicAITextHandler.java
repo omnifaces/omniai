@@ -85,7 +85,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
      * @see <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool">Web Search Tool Reference</a>
      */
     protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
-        if (options.isWebSearch()) {
+        if (options.useWebSearch()) {
             payload.add("tools", Json.createArrayBuilder()
                 .add(Json.createObjectBuilder()
                     .add("type", service.getModelVersion().gte(CLAUDE_4_6) ? "web_search_20260209" : "web_search_20250305")

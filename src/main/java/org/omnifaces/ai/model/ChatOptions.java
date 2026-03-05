@@ -324,7 +324,7 @@ public class ChatOptions implements Serializable {
      * @return {@code true} if web search is enabled, {@code false} otherwise.
      * @since 1.3
      */
-    public boolean isWebSearch() {
+    public boolean useWebSearch() {
         return webSearch;
     }
 

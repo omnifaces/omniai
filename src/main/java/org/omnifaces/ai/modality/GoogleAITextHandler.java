@@ -68,7 +68,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
      * @see <a href="https://ai.google.dev/gemini-api/docs/google-search">Web Search Tool Reference</a>
      */
     protected void buildChatPayloadTools(JsonObjectBuilder payload, ChatOptions options) {
-        if (options.isWebSearch()) {
+        if (options.useWebSearch()) {
             payload.add("tools", Json.createArrayBuilder()
                 .add(Json.createObjectBuilder()
                     .add("google_search", Json.createObjectBuilder().build()).build()));

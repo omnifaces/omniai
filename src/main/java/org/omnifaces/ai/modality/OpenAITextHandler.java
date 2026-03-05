@@ -73,7 +73,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             buildChatPayloadGenerationConfigWithResponsesApi(payload, service, options, streaming);
         }
         else {
-            if (options.isWebSearch()) {
+            if (options.useWebSearch()) {
                 checkSupportsWebSearch(service);
             }
 
@@ -95,7 +95,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      * @see <a href="https://developers.openai.com/api/docs/guides/tools-web-search/">Web Search Tool Reference</a>
      */
     protected void buildChatPayloadToolsWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
-        if (options.isWebSearch()) {
+        if (options.useWebSearch()) {
             payload.add("tools", Json.createArrayBuilder()
                 .add(Json.createObjectBuilder()
                     .add("type", "web_search").build()));
