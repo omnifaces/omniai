@@ -889,7 +889,7 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default CompletableFuture<String> webSearchAsync(String query) throws AIException {
-        return chatAsync(query, DEFAULT.withWebSearch());
+        return chatAsync(query, DEFAULT.withWebSearch(true));
     }
 
     /**
@@ -933,7 +933,7 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default <T> CompletableFuture<T> webSearchAsync(String query, ChatOptions options, Class<T> type) throws AIException {
-        return chatAsync(query, options.withWebSearch().withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+        return chatAsync(query, options.withWebSearch(true).withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
     }
 
 

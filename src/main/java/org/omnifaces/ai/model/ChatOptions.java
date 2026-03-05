@@ -235,14 +235,15 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns a copy of this instance with web search enabled, preserving all other options including
+     * Returns a copy of this instance with the given web search flag set, preserving all other options including
      * any shared {@link #hasMemory() memory} state.
      *
-     * @return A new {@code ChatOptions} instance with web search enabled.
+     * @param webSearch Whether to enable web search.
+     * @return A new {@code ChatOptions} instance with the specified web search flag.
      * @since 1.3
      */
-    public ChatOptions withWebSearch() {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, true, history, maxHistory);
+    public ChatOptions withWebSearch(boolean webSearch) {
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearch, history, maxHistory);
     }
 
     /**
