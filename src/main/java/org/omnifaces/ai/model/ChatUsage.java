@@ -31,7 +31,7 @@ import java.io.Serializable;
  * @since 1.3
  * @see ChatOptions#getLastUsage()
  */
-public record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens) implements Serializable {
+public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens) implements Serializable {
 
     /**
      * Validates the record components.
