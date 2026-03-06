@@ -318,6 +318,18 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * service.chatAsync("Analyze this review: " + reviewText, ProductReview.class).thenAccept(review -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param message The user's message to send to the AI.
@@ -338,6 +350,22 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     *
+     * var input = ChatInput.newBuilder()
+     *     .message("Analyze this review: " + reviewText)
+     *     .attach(imageBytes)
+     *     .build();
+     * service.chatAsync(input, ProductReview.class).thenAccept(review -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param input The user's input containing message and file attachments.
@@ -383,7 +411,21 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
      *
+     * var options = ChatOptions.newBuilder()
+     *     .systemPrompt("You are a product review analyzer.")
+     *     .build();
+     * service.chatAsync("Analyze this review: " + reviewText, options, ProductReview.class).thenAccept(review -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
      * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
      * delegates to {@link #chatAsync(String, ChatOptions)},
@@ -408,7 +450,25 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
      *
+     * var input = ChatInput.newBuilder()
+     *     .message("Analyze this review: " + reviewText)
+     *     .attach(imageBytes)
+     *     .build();
+     * var options = ChatOptions.newBuilder()
+     *     .systemPrompt("You are a product review analyzer.")
+     *     .build();
+     * service.chatAsync(input, options, ProductReview.class).thenAccept(review -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
      * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
      * delegates to {@link #chatAsync(ChatInput, ChatOptions)},
@@ -819,6 +879,11 @@ public interface AIService extends Serializable {
      * Sends a web search query to the AI and returns a response.
      * <p>
      * Useful if you need the model to access up-to-date information from the internet.
+     * <p>
+     * Usage example:
+     * <pre>
+     * var response = service.webSearch("What is the latest news about Jakarta EE?");
+     * </pre>
      * @implNote The default implementation delegates to {@link #webSearchAsync(String)}.
      * @param query The user's web search query to send to the AI.
      * @return The AI's response, never {@code null}.
@@ -883,6 +948,14 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {}
+     *
+     * var miami = new Location("US", "Florida", "Miami");
+     * var forecast = service.webSearch("What is the weather forecast for this weekend?", miami, WeatherForecast.class);
+     * </pre>
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
@@ -904,6 +977,16 @@ public interface AIService extends Serializable {
      * Asynchronously sends a web search query to the AI and returns a response.
      * <p>
      * Useful if you need the model to access up-to-date information from the internet.
+     * <p>
+     * Usage example:
+     * <pre>
+     * service.webSearchAsync("What is the latest news about Jakarta EE?").thenAccept(response -&gt; {
+     *     // handle response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)} with {@link Location#GLOBAL}.
      * @param query The user's web search query to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
@@ -918,6 +1001,16 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a web search query with location context to the AI and returns a response.
      * <p>
+     * Usage example:
+     * <pre>
+     * var miami = new Location("US", "Florida", "Miami");
+     * service.webSearchAsync("What is the weather like?", miami).thenAccept(response -&gt; {
+     *     // handle response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
@@ -935,6 +1028,18 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+     *
+     * service.webSearchAsync("What is the current stock price of: " + companyName, StockPrice.class).thenAccept(price -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)} with {@link ChatOptions#DEFAULT}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
@@ -956,6 +1061,19 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
+     * <p>
+     * Usage example:
+     * <pre>
+     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {}
+     *
+     * var miami = new Location("US", "Florida", "Miami");
+     * service.webSearchAsync("What is the weather forecast for this weekend?", miami, WeatherForecast.class).thenAccept(forecast -&gt; {
+     *     // handle typed response
+     * }).exceptionally(e -&gt; {
+     *     // handle exception
+     *     return null;
+     * });
+     * </pre>
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location
      * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
      * @param <T> The target type.
