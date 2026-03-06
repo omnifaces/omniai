@@ -37,12 +37,6 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         if (options.useWebSearch()) {
-            var newOptions = options.withWebSearch(null);
-
-            if (options.getWebSearchLocation() != null) {
-                newOptions = appendPrompt(options, "Search within " + options.getWebSearchLocation()); // OpenRouter API doesn't support user_location in payload.
-            }
-
             return super.buildChatPayload(new AIServiceWrapper(service) {
                 private static final long serialVersionUID = 1L;
 
@@ -50,7 +44,7 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
                 public String getModelName() {
                     return super.getModelName() + ":online";
                 }
-            }, input, newOptions, streaming);
+            }, input, appendWebSearchLocationToPromptIfNecessary(options.withWebSearch(null)), streaming);
         }
         else {
             return super.buildChatPayload(service, input, options, streaming);

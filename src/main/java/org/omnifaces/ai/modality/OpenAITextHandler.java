@@ -66,23 +66,23 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 .add("model", service.getModelName());
 
         if (supportsResponsesApi) {
-            buildChatPayloadToolsWithResponsesApi(payload, options);
-            buildChatPayloadSystemPromptWithResponsesApi(payload, options);
-            buildChatPayloadHistoryMessagesWithResponsesApi(messages, input, service);
-            buildChatPayloadUserContentWithResponsesApi(messages, input, service, options);
+            buildChatPayloadToolsWithResponsesApi(service, payload, options);
+            buildChatPayloadSystemPromptWithResponsesApi(service, payload, options);
+            buildChatPayloadHistoryMessagesWithResponsesApi(service, messages, input);
+            buildChatPayloadUserContentWithResponsesApi(service, messages, input, options);
             payload.add("input", messages);
-            buildChatPayloadGenerationConfigWithResponsesApi(payload, service, options, streaming);
+            buildChatPayloadGenerationConfigWithResponsesApi(service, payload, options, streaming);
         }
         else {
             if (options.useWebSearch()) {
                 checkSupportsWebSearch(service);
             }
 
-            buildChatPayloadSystemPromptWithChatCompletionsApi(messages, options);
-            buildChatPayloadHistoryMessagesWithChatCompletionsApi(messages, input, service);
-            buildChatPayloadUserContentWithChatCompletionsApi(messages, input, service, options);
+            buildChatPayloadSystemPromptWithChatCompletionsApi(service, messages, options);
+            buildChatPayloadHistoryMessagesWithChatCompletionsApi(service, messages, input);
+            buildChatPayloadUserContentWithChatCompletionsApi(service, messages, input, options);
             payload.add("messages", messages);
-            buildChatPayloadGenerationConfigWithChatCompletionsApi(payload, service, options, streaming);
+            buildChatPayloadGenerationConfigWithChatCompletionsApi(service, payload, options, streaming);
         }
 
         return payload.build();
@@ -90,12 +90,13 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to payload as top-level {@code tools} field for Responses API.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
      * @since 1.3
      * @see <a href="https://developers.openai.com/api/docs/guides/tools-web-search/">Web Search Tool Reference</a>
      */
-    protected void buildChatPayloadToolsWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadToolsWithResponsesApi(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
             var webSearchTool = Json.createObjectBuilder().add("type", getWebSearchToolName());
             var userLocation = buildUserLocation(options.getWebSearchLocation());
@@ -112,10 +113,12 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to payload as top-level {@code instructions} field for Responses API.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadSystemPromptWithResponsesApi(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadSystemPromptWithResponsesApi(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("instructions", options.getSystemPrompt());
         }
@@ -123,10 +126,12 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to messages array as {@code system} role for Chat Completions API.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadSystemPromptWithChatCompletionsApi(JsonArrayBuilder messages, ChatOptions options) {
+    protected void buildChatPayloadSystemPromptWithChatCompletionsApi(AIService service, JsonArrayBuilder messages, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             messages.add(Json.createObjectBuilder()
                 .add("role", "system")
@@ -136,25 +141,27 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the input array for Responses API.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
+     * @since 1.2
      */
-    protected void buildChatPayloadHistoryMessagesWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
-        addHistoryMessages(messages, input, service, true);
+    protected void buildChatPayloadHistoryMessagesWithResponsesApi(AIService service, JsonArrayBuilder messages, ChatInput input) {
+        addHistoryMessages(service, messages, input, true);
     }
 
     /**
      * Add conversation history messages to the messages array for Chat Completions API.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
+     * @since 1.2
      */
-    protected void buildChatPayloadHistoryMessagesWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service) {
-        addHistoryMessages(messages, input, service, false);
+    protected void buildChatPayloadHistoryMessagesWithChatCompletionsApi(AIService service, JsonArrayBuilder messages, ChatInput input) {
+        addHistoryMessages(service, messages, input, false);
     }
 
-    private static void addHistoryMessages(JsonArrayBuilder messages, ChatInput input, AIService service, boolean supportsResponsesApi) {
+    private static void addHistoryMessages(AIService service, JsonArrayBuilder messages, ChatInput input, boolean supportsResponsesApi) {
         for (var historyMessage : input.getHistory()) {
             if (supportsFilesApi(service)) {
                 var content = Json.createArrayBuilder();
@@ -180,27 +187,29 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, audio files, other files, and text message) to the input array for Responses API.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadUserContentWithResponsesApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
-        addUserContent(messages, input, service, options, file -> getFileUploadMetadata(service, file), true);
+    protected void buildChatPayloadUserContentWithResponsesApi(AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options) {
+        addUserContent(service, messages, input, options, file -> getFileUploadMetadata(service, file), true);
     }
 
     /**
      * Add user content (images, audio files, other files, and text message) to the messages array for Chat Completions API.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadUserContentWithChatCompletionsApi(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
-        addUserContent(messages, input, service, options, file -> getFileUploadMetadata(service, file), false);
+    protected void buildChatPayloadUserContentWithChatCompletionsApi(AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options) {
+        addUserContent(service, messages, input, options, file -> getFileUploadMetadata(service, file), false);
     }
 
-    private static void addUserContent(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options, Function<Attachment, Map<String, String>> getFileUploadMetadata, boolean supportsResponsesApi) {
+    private static void addUserContent(AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options, Function<Attachment, Map<String, String>> getFileUploadMetadata, boolean supportsResponsesApi) {
         var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
         var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
         var content = Json.createArrayBuilder();
@@ -263,27 +272,29 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Responses API.
-     * @param payload The payload builder.
      * @param service The visiting AI service.
+     * @param payload The payload builder.
      * @param options The chat options.
      * @param streaming Whether streaming is enabled.
+     * @since 1.2
      */
-    protected void buildChatPayloadGenerationConfigWithResponsesApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
-        addGenerationConfig(payload, service, options, streaming, true);
+    protected void buildChatPayloadGenerationConfigWithResponsesApi(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming) {
+        addGenerationConfig(service, payload, options, streaming, true);
     }
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Chat Completions API.
-     * @param payload The payload builder.
      * @param service The visiting AI service.
+     * @param payload The payload builder.
      * @param options The chat options.
      * @param streaming Whether streaming is enabled.
+     * @since 1.2
      */
-    protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
-        addGenerationConfig(payload, service, options, streaming, false);
+    protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming) {
+        addGenerationConfig(service, payload, options, streaming, false);
     }
 
-    private static void addGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming, boolean supportsResponsesApi) {
+    private static void addGenerationConfig(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming, boolean supportsResponsesApi) {
         if (options.getMaxTokens() != null) {
             if (supportsResponsesApi) {
                 payload.add("max_output_tokens", options.getMaxTokens());

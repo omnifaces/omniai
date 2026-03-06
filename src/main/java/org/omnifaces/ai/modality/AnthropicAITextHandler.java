@@ -69,17 +69,17 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                 .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility (may be respected in future model versions).
-        buildChatPayloadHistoryMessages(messages, input);
-        buildChatPayloadUserContent(messages, input, service, options);
+        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility (may be respected in future model versions).
+        buildChatPayloadHistoryMessages(service, messages, input);
+        buildChatPayloadUserContent(service, messages, input, options);
         payload.add("messages", messages);
-        buildChatPayloadGenerationConfig(payload, service, options, streaming);
+        buildChatPayloadGenerationConfig(service, payload, options, streaming);
         return payload.build();
     }
 
     /**
      * Add tools to the payload as a top-level {@code tools} field.
-     * @param service The current AI service.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
      * @since 1.3
@@ -102,10 +102,12 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the payload as a top-level {@code system} field.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadSystemPrompt(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadSystemPrompt(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system", options.getSystemPrompt());
         }
@@ -113,10 +115,12 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
+     * @since 1.2
      */
-    protected void buildChatPayloadHistoryMessages(JsonArrayBuilder messages, ChatInput input) {
+    protected void buildChatPayloadHistoryMessages(AIService service, JsonArrayBuilder messages, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
             messages.add(Json.createObjectBuilder()
                 .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
@@ -129,12 +133,13 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, files, and text message) to the messages array.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadUserContent(JsonArrayBuilder messages, ChatInput input, AIService service, ChatOptions options) {
+    protected void buildChatPayloadUserContent(AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options) {
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
@@ -171,12 +176,13 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (streaming, temperature, topP, structured output) to the payload.
-     * @param payload The payload builder.
      * @param service The visiting AI service.
+     * @param payload The payload builder.
      * @param options The chat options.
      * @param streaming Whether streaming is enabled.
+     * @since 1.2
      */
-    protected void buildChatPayloadGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
+    protected void buildChatPayloadGenerationConfig(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming) {
         if (streaming) {
             checkSupportsStreaming(service);
             payload.add("stream", true);

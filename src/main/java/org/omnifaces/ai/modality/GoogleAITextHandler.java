@@ -51,23 +51,24 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder();
         var contents = Json.createArrayBuilder();
-        buildChatPayloadTools(payload, options);
-        buildChatPayloadSystemPrompt(payload, appendWebSearchLocationToPromptIfNecessary(options)); // Google API doesn't support user_location in payload.
-        buildChatPayloadHistoryMessages(contents, input);
-        buildChatPayloadUserContent(contents, input, service, options);
+        buildChatPayloadTools(service, payload, options);
+        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Google API doesn't support user_location in payload.
+        buildChatPayloadHistoryMessages(service, contents, input);
+        buildChatPayloadUserContent(service, contents, input, options);
         payload.add("contents", contents);
-        buildChatPayloadGenerationConfig(payload, service, options, streaming);
+        buildChatPayloadGenerationConfig(service, payload, options, streaming);
         return payload.build();
     }
 
     /**
      * Add tools to the payload as a top-level {@code tools} field.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
      * @since 1.3
      * @see <a href="https://ai.google.dev/gemini-api/docs/google-search">Web Search Tool Reference</a>
      */
-    protected void buildChatPayloadTools(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
             payload.add("tools", Json.createArrayBuilder()
                 .add(Json.createObjectBuilder()
@@ -77,10 +78,12 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the payload as a {@code system_instruction} field.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadSystemPrompt(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadSystemPrompt(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             payload.add("system_instruction", Json.createObjectBuilder()
                 .add("parts", Json.createArrayBuilder()
@@ -91,10 +94,12 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the contents array.
+     * @param service The visiting AI service.
      * @param contents The contents array builder.
      * @param input The chat input.
+     * @since 1.2
      */
-    protected void buildChatPayloadHistoryMessages(JsonArrayBuilder contents, ChatInput input) {
+    protected void buildChatPayloadHistoryMessages(AIService service, JsonArrayBuilder contents, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
             var parts = Json.createArrayBuilder();
 
@@ -116,12 +121,13 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, files, and text message) to the contents array.
+     * @param service The visiting AI service.
      * @param contents The contents array builder.
      * @param input The chat input.
-     * @param service The visiting AI service.
      * @param options The chat options.
+     * @since 1.2
      */
-    protected void buildChatPayloadUserContent(JsonArrayBuilder contents, ChatInput input, AIService service, ChatOptions options) {
+    protected void buildChatPayloadUserContent(AIService service, JsonArrayBuilder contents, ChatInput input, ChatOptions options) {
         var parts = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
@@ -154,12 +160,13 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
-     * @param payload The payload builder.
      * @param service The visiting AI service.
+     * @param payload The payload builder.
      * @param options The chat options.
      * @param streaming Whether streaming is enabled (unused for Google AI, streaming is URL-based).
+     * @since 1.2
      */
-    protected void buildChatPayloadGenerationConfig(JsonObjectBuilder payload, AIService service, ChatOptions options, boolean streaming) {
+    protected void buildChatPayloadGenerationConfig(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming) {
         var generationConfig = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());
 

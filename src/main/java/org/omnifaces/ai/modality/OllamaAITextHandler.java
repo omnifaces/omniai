@@ -44,24 +44,25 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var messages = Json.createArrayBuilder();
-        buildChatPayloadSystemPrompt(messages, options);
-        buildChatPayloadHistoryMessages(messages, input);
-        buildChatPayloadUserContent(messages, input);
+        buildChatPayloadSystemPrompt(service, messages, options);
+        buildChatPayloadHistoryMessages(service, messages, input);
+        buildChatPayloadUserContent(service, messages, input);
         var payload = Json.createObjectBuilder()
                 .add("model", service.getModelName())
                 .add("messages", messages)
                 .add("stream", false);
-        buildChatPayloadGenerationConfig(payload, options);
+        buildChatPayloadGenerationConfig(service, payload, options);
 
         return payload.build();
     }
 
     /**
      * Add system prompt to the messages array as a {@code system} role message.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
      */
-    protected void buildChatPayloadSystemPrompt(JsonArrayBuilder messages, ChatOptions options) {
+    protected void buildChatPayloadSystemPrompt(AIService service, JsonArrayBuilder messages, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
             messages.add(Json.createObjectBuilder()
                 .add("role", "system")
@@ -71,10 +72,11 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
      */
-    protected void buildChatPayloadHistoryMessages(JsonArrayBuilder messages, ChatInput input) {
+    protected void buildChatPayloadHistoryMessages(AIService service, JsonArrayBuilder messages, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
             messages.add(Json.createObjectBuilder()
                 .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
@@ -84,10 +86,11 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images and text message) to the messages array.
+     * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
      */
-    protected void buildChatPayloadUserContent(JsonArrayBuilder messages, ChatInput input) {
+    protected void buildChatPayloadUserContent(AIService service, JsonArrayBuilder messages, ChatInput input) {
         var message = Json.createObjectBuilder().add("role", "user");
 
         if (!input.getImages().isEmpty()) {
@@ -106,10 +109,11 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
+     * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
      */
-    protected void buildChatPayloadGenerationConfig(JsonObjectBuilder payload, ChatOptions options) {
+    protected void buildChatPayloadGenerationConfig(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         var optionsBuilder = Json.createObjectBuilder()
             .add("temperature", options.getTemperature());
 
