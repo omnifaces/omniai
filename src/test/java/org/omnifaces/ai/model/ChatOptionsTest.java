@@ -800,6 +800,133 @@ class ChatOptionsTest {
     }
 
     // =================================================================================================================
+    // Web search - Location
+    // =================================================================================================================
+
+    @Test
+    void location_global_isGlobal() {
+        assertTrue(ChatOptions.Location.GLOBAL.isGlobal());
+    }
+
+    @Test
+    void location_allNulls_isGlobal() {
+        assertTrue(new ChatOptions.Location(null, null, null).isGlobal());
+    }
+
+    @Test
+    void location_withCountry_isNotGlobal() {
+        assertFalse(new ChatOptions.Location("US", null, null).isGlobal());
+    }
+
+    @Test
+    void location_withRegion_isNotGlobal() {
+        assertFalse(new ChatOptions.Location(null, "Florida", null).isGlobal());
+    }
+
+    @Test
+    void location_withCity_isNotGlobal() {
+        assertFalse(new ChatOptions.Location(null, null, "Miami").isGlobal());
+    }
+
+    @Test
+    void location_accessors() {
+        var location = new ChatOptions.Location("US", "Florida", "Miami");
+        assertEquals("US", location.country());
+        assertEquals("Florida", location.region());
+        assertEquals("Miami", location.city());
+    }
+
+    // =================================================================================================================
+    // Web search - Location#toString
+    // =================================================================================================================
+
+    @Test
+    void location_toString_global_returnsGlobal() {
+        assertEquals("global", ChatOptions.Location.GLOBAL.toString());
+    }
+
+    @Test
+    void location_toString_allFieldsSet_returnsCityRegionCountry() {
+        assertEquals("Miami, Florida, US", new ChatOptions.Location("US", "Florida", "Miami").toString());
+    }
+
+    @Test
+    void location_toString_cityAndCountryOnly_omitsNullRegion() {
+        assertEquals("Miami, US", new ChatOptions.Location("US", null, "Miami").toString());
+    }
+
+    @Test
+    void location_toString_countryOnly_returnsCountry() {
+        assertEquals("US", new ChatOptions.Location("US", null, null).toString());
+    }
+
+    // =================================================================================================================
+    // Web search - Builder and useWebSearch / getWebSearchLocation
+    // =================================================================================================================
+
+    @Test
+    void useWebSearch_notConfigured_returnsFalse() {
+        assertFalse(ChatOptions.newBuilder().build().useWebSearch());
+    }
+
+    @Test
+    void getWebSearchLocation_notConfigured_returnsNull() {
+        assertNull(ChatOptions.newBuilder().build().getWebSearchLocation());
+    }
+
+    @Test
+    void webSearch_builderGlobal_enablesWebSearch() {
+        var options = ChatOptions.newBuilder().webSearch().build();
+        assertTrue(options.useWebSearch());
+        assertEquals(ChatOptions.Location.GLOBAL, options.getWebSearchLocation());
+    }
+
+    @Test
+    void webSearch_builderWithLocation_enablesLocalized() {
+        var miami = new ChatOptions.Location("US", "Florida", "Miami");
+        var options = ChatOptions.newBuilder().webSearch(miami).build();
+        assertTrue(options.useWebSearch());
+        assertEquals(miami, options.getWebSearchLocation());
+    }
+
+    @Test
+    void webSearch_builderWithNullLocation_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.newBuilder().webSearch(null));
+    }
+
+    @Test
+    void withWebSearch_enablesWebSearch() {
+        var miami = new ChatOptions.Location("US", "Florida", "Miami");
+        var options = ChatOptions.DEFAULT.withWebSearch(miami);
+        assertTrue(options.useWebSearch());
+        assertEquals(miami, options.getWebSearchLocation());
+    }
+
+    @Test
+    void withWebSearch_null_disablesWebSearch() {
+        var options = ChatOptions.newBuilder().webSearch().build().withWebSearch(null);
+        assertFalse(options.useWebSearch());
+        assertNull(options.getWebSearchLocation());
+    }
+
+    @Test
+    void withWebSearch_preservesOtherSettings() {
+        var options = ChatOptions.newBuilder().systemPrompt("test").temperature(0.7).build();
+        var withSearch = options.withWebSearch(ChatOptions.Location.GLOBAL);
+        assertEquals("test", withSearch.getSystemPrompt());
+        assertEquals(0.7, withSearch.getTemperature());
+    }
+
+    @Test
+    void copy_preservesWebSearchLocation() {
+        var miami = new ChatOptions.Location("US", "Florida", "Miami");
+        var original = ChatOptions.newBuilder().webSearch(miami).build();
+        var copy = original.copy();
+        assertTrue(copy.useWebSearch());
+        assertEquals(miami, copy.getWebSearchLocation());
+    }
+
+    // =================================================================================================================
     // Sliding window - uploaded file cleanup
     // =================================================================================================================
 
