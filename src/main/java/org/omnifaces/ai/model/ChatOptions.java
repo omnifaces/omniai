@@ -530,7 +530,7 @@ public class ChatOptions implements Serializable {
      * @since 1.3
      */
     public void recordUsage(ChatUsage usage) {
-        if (immutable) {
+        if (isDefault()) {
             throw new IllegalStateException("Cannot record usage on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
         }
 
