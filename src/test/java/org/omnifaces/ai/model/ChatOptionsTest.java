@@ -772,6 +772,13 @@ class ChatOptionsTest {
     }
 
     @Test
+    void getLastUsage_onDefault_throwsISE() {
+        assertThrows(IllegalStateException.class, ChatOptions.DEFAULT::getLastUsage);
+        assertThrows(IllegalStateException.class, ChatOptions.CREATIVE::getLastUsage);
+        assertThrows(IllegalStateException.class, ChatOptions.DETERMINISTIC::getLastUsage);
+    }
+
+    @Test
     void copy_preservesSettings() {
         var copy = ChatOptions.DEFAULT.copy();
 

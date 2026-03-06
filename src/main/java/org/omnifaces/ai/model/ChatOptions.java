@@ -435,16 +435,21 @@ public class ChatOptions implements Serializable {
      * or {@code null} if no call has been made yet or if the provider does not report usage.
      *
      * @return The last recorded {@link ChatUsage}, or {@code null}.
+     * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
      * @since 1.3
      */
     public ChatUsage getLastUsage() {
+        if (isDefault()) {
+            throw new IllegalStateException("Cannot get last usage from a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
+        }
+
         return lastUsage;
     }
 
     /**
      * Returns whether this instance is one of the shared default constants ({@link #DEFAULT}, {@link #CREATIVE},
-     * {@link #DETERMINISTIC}) and therefore immutable. Calling any {@code recordXxx} method on a default instance
-     * throws {@link IllegalStateException}.
+     * {@link #DETERMINISTIC}) and therefore immutable. Calling {@link #getLastUsage()} or any {@code recordXxx}
+     * method on a default instance throws {@link IllegalStateException}.
      * <p>
      * Use {@link #copy()} to obtain a mutable copy with the same settings, or {@link #newBuilder()} to build
      * a new instance from scratch.
