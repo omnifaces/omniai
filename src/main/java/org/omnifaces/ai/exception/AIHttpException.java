@@ -21,6 +21,7 @@ import java.net.URI;
  * <ul>
  * <li>{@link AIBadRequestException} - 400 Bad Request
  * <li>{@link AIAuthenticationException} - 401 Unauthorized
+ * <li>{@link AIPaymentRequiredException} - 402 Payment Required
  * <li>{@link AIAuthorizationException} - 403 Forbidden
  * <li>{@link AIEndpointNotFoundException} - 404 Not Found
  * <li>{@link AIRateLimitExceededException} - 429 Too Many Requests
@@ -61,6 +62,7 @@ public class AIHttpException extends AIException {
         return switch (statusCode) {
             case AIBadRequestException.STATUS_CODE -> new AIBadRequestException(uri, responseBody);
             case AIAuthenticationException.STATUS_CODE -> new AIAuthenticationException(uri, responseBody);
+            case AIPaymentRequiredException.STATUS_CODE -> new AIPaymentRequiredException(uri, responseBody);
             case AIAuthorizationException.STATUS_CODE -> new AIAuthorizationException(uri, responseBody);
             case AIEndpointNotFoundException.STATUS_CODE -> new AIEndpointNotFoundException(uri, responseBody);
             case AIRateLimitExceededException.STATUS_CODE -> new AIRateLimitExceededException(uri, responseBody);
