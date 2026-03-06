@@ -107,7 +107,7 @@ private AIService jakartaExpert;
 @Inject
 @AI(provider = AIProvider.XAI,
     apiKey = "#{configBean.xaiApiKey}",
-    model = "grok-2-image-1212")
+    model = "grok-imagine-image")
 private AIService imageGenerator;
 ```
 
