@@ -15,6 +15,7 @@ package org.omnifaces.ai.model;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static org.omnifaces.ai.helper.JsonHelper.parseJson;
 
 import java.io.IOException;
@@ -23,6 +24,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import jakarta.json.JsonObject;
 
@@ -101,6 +104,15 @@ public class ChatOptions implements Serializable {
          */
         public boolean isGlobal() {
             return country == null && region == null && city == null;
+        }
+
+        /**
+         * Returns a human-readable representation of this location, e.g. {@code "Miami, Florida, US"}.
+         * Null fields are omitted. Returns {@code "global"} for {@link #GLOBAL}.
+         */
+        @Override
+        public String toString() {
+            return isGlobal() ? "global" : Stream.of(city, region, country).filter(Objects::nonNull).collect(joining(", "));
         }
     }
 

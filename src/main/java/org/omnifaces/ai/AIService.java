@@ -573,6 +573,11 @@ public interface AIService extends Serializable {
      * <p>
      * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
      * included in the request and updated with the user message and the accumulated assistant response upon completion.
+     * <p>
+     * When {@link ChatOptions#useWebSearch() web search} is enabled, streaming is supported but intermediate tool-use
+     * activity (e.g., the model fetching search results) produces no tokens in the {@code onToken} callback. The stream
+     * will appear paused during that phase and resume once the model begins writing its response. This behaviour is
+     * provider-dependent and may vary across AI implementations.
      *
      * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
@@ -834,7 +839,6 @@ public interface AIService extends Serializable {
      * var weather = service.webSearch("What is the weather like?", miami);
      * </pre>
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)}.
-     * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
      * @return The AI's response parsed into the specified type, never {@code null}.
@@ -914,8 +918,7 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a web search query with location context to the AI and returns a response.
      * <p>
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location.
-     * @param <T> The target type.
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
      * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
@@ -932,7 +935,7 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * @implNote The default implementation delegates to {@link #webSearchAsync(String, ChatOptions, Class)} with {@link ChatOptions#DEFAULT}.
+     * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)} with {@link ChatOptions#DEFAULT}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
      * @param type The target class for the structured response (record or bean).
@@ -953,7 +956,7 @@ public interface AIService extends Serializable {
      * <p>
      * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
      * conforming to that schema, and parses the response back into the specified type.
-     * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location
      * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.

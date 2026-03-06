@@ -69,7 +69,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                 .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(payload, options.getWebSearchLocation() == null ? options : appendPrompt(options, "Search within " + options.getWebSearchLocation())); // Current Anthropic versions ignore user_location during web_search!
+        buildChatPayloadSystemPrompt(payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility (may be respected in future model versions).
         buildChatPayloadHistoryMessages(messages, input);
         buildChatPayloadUserContent(messages, input, service, options);
         payload.add("messages", messages);

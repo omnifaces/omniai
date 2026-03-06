@@ -310,11 +310,28 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Appends extra prompt to existing system prompt, if any.
+     * @param options The chat options whose system prompt to append to.
+     * @param extraPrompt The extra prompt text to append.
+     * @return A new {@link ChatOptions} instance with the appended system prompt.
+     * @since 1.3
      */
     static ChatOptions appendPrompt(ChatOptions options, String extraPrompt) {
         var oldPrompt = options.getSystemPrompt();
         var newPrompt = (oldPrompt == null ? "" : (oldPrompt + "\n")) + extraPrompt;
         return options.withSystemPrompt(newPrompt);
+    }
+
+    /**
+     * Returns options with a "Search within {location}" hint appended to the system prompt,
+     * but only if web search is enabled with a non-global location.
+     * Returns the original options unchanged otherwise.
+     * @param options The chat options to inspect and potentially modify.
+     * @return Updated options, or the original options if no injection is needed.
+     * @since 1.3
+     */
+    static ChatOptions appendWebSearchLocationToPromptIfNecessary(ChatOptions options) {
+        var location = options.getWebSearchLocation();
+        return (location == null || location.isGlobal()) ? options : appendPrompt(options, "Search within " + location);
     }
 
 

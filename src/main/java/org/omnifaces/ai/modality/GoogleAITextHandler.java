@@ -52,7 +52,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         var payload = Json.createObjectBuilder();
         var contents = Json.createArrayBuilder();
         buildChatPayloadTools(payload, options);
-        buildChatPayloadSystemPrompt(payload, options.getWebSearchLocation() == null ? options : appendPrompt(options, "Search within " + options.getWebSearchLocation())); // Google API doesn't support user_location in payload.
+        buildChatPayloadSystemPrompt(payload, appendWebSearchLocationToPromptIfNecessary(options)); // Google API doesn't support user_location in payload.
         buildChatPayloadHistoryMessages(contents, input);
         buildChatPayloadUserContent(contents, input, service, options);
         payload.add("contents", contents);

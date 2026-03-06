@@ -505,6 +505,8 @@ private AIService trackedService;
 | **Proofreading** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Summarization** | ✅ | ❌ (via chat) | ❌ (via chat) | TBD |
 | **Memory/History** | ✅ | ✅ | ✅ | TBD |
+| **Token Usage Tracking** | ✅ | ✅ | ✅ | TBD |
+| **Web Search** | ✅ (built-in) | ✅ | ✅ | TBD |
 | **Agents** | ❌ | ✅ | ✅ | ✅ (core focus) |
 | **Prompt Templates** | ❌ | ✅ | ✅ | TBD |
 
@@ -539,6 +541,8 @@ private AIService trackedService;
 - Built-in text utilities - Summarization, translation, transcription, proofreading, key point extraction, moderation as first-class features (not "build your own prompt")
 - Structured outputs - Get typed Java objects directly from AI responses: `service.chat(message, MyRecord.class)`
 - File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
+- Web search - Access up-to-date internet information via `service.webSearch(query)` or `ChatOptions.newBuilder().webSearch().build()`, with optional location context for localized results
+- Token usage tracking - Track input, output, and reasoning tokens per call via `ChatOptions.getLastUsage()` for cost monitoring and optimization
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
 - 10 providers out of the box - Including Ollama for local/offline
@@ -563,8 +567,10 @@ OmniHai fills a different niche. For apps that need:
 
 - Multi-provider chat with easy switching
 - Text analysis (summarize, translate, proofread, moderate)
+- Web search with optional location context
 - Image analysis (describe, generate alt text)
 - Audio analysis (transcribe) and generation (text-to-speech)
+- Token usage tracking for cost monitoring
 - Minimal dependencies
 - Pure Jakarta EE / MicroProfile
 

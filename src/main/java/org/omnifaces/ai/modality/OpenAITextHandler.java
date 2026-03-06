@@ -452,6 +452,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     /**
      * Returns web search tool name.
      * @return Web search tool name.
+     * @since 1.3
      */
     protected String getWebSearchToolName() {
         return "web_search";
@@ -466,7 +467,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     /**
-     * Builds OpenAI-compatible user location object.
+     * Builds an OpenAI-compatible {@code user_location} object from the given {@link Location}.
+     * Returns {@code null} if the location is {@link Location#isGlobal() global}.
+     * @param location The location to build the user location object from.
+     * @return An OpenAI-compatible {@code user_location} JSON object, or {@code null} if the location is global.
+     * @since 1.3
      */
     static JsonObject buildUserLocation(Location location) {
         if (!location.isGlobal()) {
