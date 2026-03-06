@@ -490,11 +490,11 @@ public class FallbackAIService extends AIServiceWrapper {
     }
 
     @Override
-    public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
+    public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
         return super.chatAsync(message, options).exceptionallyCompose(exception -> {
             var cause = exception instanceof CompletionException ? exception.getCause() : exception;
             if (cause instanceof AIRateLimitExceededException || cause instanceof AIServiceUnavailableException) {
-                return fallback.chatAsync(message, options);
+                return fallback.chatAsync(input, options);
             }
             return CompletableFuture.failedFuture(exception);
         });
