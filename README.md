@@ -473,6 +473,50 @@ AIService service = AIConfig.of("your-api-key").withStrategy(strategy).createSer
 private AIService trackedService;
 ```
 
+## Service Wrapper
+
+`AIServiceWrapper` is an abstract decorator base class that lets you wrap any `AIService` and intercept specific methods. All methods delegate to the wrapped service by default, so you only override what you need.
+
+A practical example is a provider fallback: if the primary service is rate-limited or temporarily unavailable, transparently retry on a backup provider:
+
+```java
+public class FallbackAIService extends AIServiceWrapper {
+
+    private final AIService fallback;
+
+    public FallbackAIService(AIService primary, AIService fallback) {
+        super(primary);
+        this.fallback = fallback;
+    }
+
+    @Override
+    public CompletableFuture<String> chatAsync(String message, ChatOptions options) throws AIException {
+        return super.chatAsync(message, options).exceptionallyCompose(exception -> {
+            var cause = exception instanceof CompletionException ? exception.getCause() : exception;
+            if (cause instanceof AIRateLimitExceededException || cause instanceof AIServiceUnavailableException) {
+                return fallback.chatAsync(message, options);
+            }
+            return CompletableFuture.failedFuture(exception);
+        });
+    }
+}
+```
+
+Wire it up by composing two injected services:
+
+```java
+@Inject @AI(apiKey = "#{keys.openai}")
+private AIService gpt;
+
+@Inject @AI(provider = ANTHROPIC, apiKey = "#{keys.anthropic}")
+private AIService claude;
+
+AIService resilient = new FallbackAIService(gpt, claude);
+String response = resilient.chat("Explain the Jakarta EE security model.");
+```
+
+From the caller's perspective it is just an `AIService`. Other use cases include rate limiting, caching, cost tracking, or A/B testing between providers.
+
 ## OmniHai vs LangChain4J vs Spring AI vs Jakarta Agentic
 
 ### Philosophy
@@ -649,6 +693,7 @@ Bottom line: If you need a lightweight utility for AI chat/text operations in Ja
 - [Blog post: OmniHai 1.0 released!](https://balusc.omnifaces.org/2026/02/omnihai-10-released.html)
 - [Blog post: OmniHai 1.1: OmniHai grows ears](https://balusc.omnifaces.org/2026/02/omnihai-grows-ears.html)
 - [Blog post: OmniHai 1.2: OmniHai finds its voice](https://balusc.omnifaces.org/2026/02/omnihai-finds-its-voice.html)
+- [Blog post: OmniHai 1.3: OmniHai goes online](https://balusc.omnifaces.org/2026/03/omnihai-goes-online.html)
 
 ## Credits
 
