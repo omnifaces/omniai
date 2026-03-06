@@ -25,14 +25,11 @@ import static org.omnifaces.ai.helper.JsonHelper.streamByPath;
 import static org.omnifaces.ai.modality.DefaultAITextHandler.DEFAULT_ERROR_MESSAGE_PATHS;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -79,16 +76,6 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
                             .add("voiceName", voiceName))))
             )
             .build();
-    }
-
-    public static void main(String[] args) throws Exception {
-        var thiz = new GoogleAIAudioHandler();
-        var jsonfile = new File("/home/bauke/git/omnihai/src/main/resources/gemini.json");
-        var testfile = Paths.get("/home/bauke/git/omnihai/src/main/resources/gemini.test.wav");
-
-        try (var stream = new FileInputStream(jsonfile)) {
-             Files.copy(thiz.parseAudioContentInMemory(stream), testfile, REPLACE_EXISTING);
-        }
     }
 
     /**
