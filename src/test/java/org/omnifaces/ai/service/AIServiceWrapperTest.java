@@ -123,7 +123,7 @@ class AIServiceWrapperTest {
             fail("Delegation issues in AIServiceWrapper:" + lineSeparator()
                     + failures.stream()
                             .sorted()
-                            .map(s -> "  - " + s)
+                            .map(failure -> "  - AIService#" + failure)
                             .collect(joining(lineSeparator())));
         }
     }
