@@ -21,9 +21,10 @@
  * The {@link org.omnifaces.ai.mime.MimeType} interface represents a detected MIME type with its media type value
  * and file extension. Implementations are organized by content category (image, document, audio/video).
  * <p>
- * OmniHai uses {@code byte[]} for file content rather than {@link java.io.File}, {@link java.nio.file.Path}, or
- * {@link java.io.InputStream} because not all environments support filesystem access (e.g., serverless, read-only
- * containers) and streams risk resource leaks if not properly closed.
+ * OmniHai supports both {@code byte[]}- and {@link java.nio.file.Path}-backed file content via
+ * {@link org.omnifaces.ai.model.ChatInput.Attachment}. {@link java.io.File} and {@link java.io.InputStream} are not
+ * used directly: not all environments support filesystem access (e.g., serverless, read-only containers) and streams
+ * risk resource leaks if not properly closed.
  *
  * @see org.omnifaces.ai.mime.MimeType
  */

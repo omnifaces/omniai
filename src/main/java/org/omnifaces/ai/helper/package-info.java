@@ -22,6 +22,8 @@
  * <li>{@link org.omnifaces.ai.helper.TextHelper} - Text validation and manipulation utilities.</li>
  * <li>{@link org.omnifaces.ai.helper.ImageHelper} - Image sanitization for AI model compatibility (alpha channel
  *     removal, format conversion).</li>
+ * <li>{@link org.omnifaces.ai.helper.FileHelper} - File I/O utilities for offset-ranged streaming, delete-on-close
+ *     streams, and temporary file lifecycle management.</li>
  * </ul>
  */
 package org.omnifaces.ai.helper;

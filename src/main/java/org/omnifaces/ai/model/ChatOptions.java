@@ -283,6 +283,8 @@ public class ChatOptions implements Serializable {
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search, or {@code null} to disable web search.
      * @return A new {@code ChatOptions} instance with the specified web search location enabled.
      * @since 1.3
+     * @see #useWebSearch()
+     * @see #getWebSearchLocation()
      */
     public ChatOptions withWebSearch(Location location) {
         return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, location, history, maxHistory);
@@ -366,6 +368,7 @@ public class ChatOptions implements Serializable {
      *
      * @return {@code true} if web search is enabled, {@code false} otherwise.
      * @since 1.3
+     * @see #getWebSearchLocation()
      */
     public boolean useWebSearch() {
         return webSearchLocation != null;
@@ -376,6 +379,7 @@ public class ChatOptions implements Serializable {
      *
      * @return The configured {@link Location} for web searches, or {@code null} if there is none.
      * @since 1.3
+     * @see #useWebSearch()
      */
     public Location getWebSearchLocation() {
         return webSearchLocation;
@@ -528,6 +532,7 @@ public class ChatOptions implements Serializable {
      * @param usage The usage to record, or {@code null} if the provider did not report any usage.
      * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
      * @since 1.3
+     * @see #getLastUsage()
      */
     public void recordUsage(ChatUsage usage) {
         if (isDefault()) {
@@ -702,6 +707,7 @@ public class ChatOptions implements Serializable {
          *
          * @return This builder instance for chaining.
          * @since 1.3
+         * @see #webSearch(Location)
          */
         public Builder webSearch() {
             this.webSearchLocation = Location.GLOBAL;
@@ -718,6 +724,7 @@ public class ChatOptions implements Serializable {
          * @return This builder instance for chaining.
          * @throws NullPointerException if {@code location} is {@code null}.
          * @since 1.3
+         * @see #webSearch()
          */
         public Builder webSearch(Location location) {
             this.webSearchLocation = requireNonNull(location, "location");

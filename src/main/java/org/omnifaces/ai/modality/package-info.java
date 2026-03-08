@@ -19,12 +19,14 @@
  * {@link org.omnifaces.ai.AIAudioHandler} implementations that adapt the generic API to provider-specific requirements:
  * <ul>
  * <li>{@link org.omnifaces.ai.modality.DefaultAITextHandler} / {@link org.omnifaces.ai.modality.DefaultAIImageHandler} / {@link org.omnifaces.ai.modality.DefaultAIAudioHandler} - sensible defaults for most LLMs</li>
- * <li>{@link org.omnifaces.ai.modality.OpenAITextHandler} / {@link org.omnifaces.ai.modality.OpenAIImageHandler} - OpenAI-specific handling</li>
+ * <li>{@link org.omnifaces.ai.modality.OpenAITextHandler} / {@link org.omnifaces.ai.modality.OpenAIImageHandler} / {@link org.omnifaces.ai.modality.OpenAIAudioHandler} - OpenAI-specific handling</li>
  * <li>{@link org.omnifaces.ai.modality.AnthropicAITextHandler} - Anthropic-specific handling</li>
- * <li>{@link org.omnifaces.ai.modality.GoogleAITextHandler} / {@link org.omnifaces.ai.modality.GoogleAIImageHandler} - Google AI-specific handling</li>
+ * <li>{@link org.omnifaces.ai.modality.GoogleAITextHandler} / {@link org.omnifaces.ai.modality.GoogleAIImageHandler} / {@link org.omnifaces.ai.modality.GoogleAIAudioHandler} - Google AI-specific handling</li>
  * <li>{@link org.omnifaces.ai.modality.XAIImageHandler} - xAI-specific handling</li>
  * <li>{@link org.omnifaces.ai.modality.MetaAITextHandler} - Meta-specific handling</li>
  * <li>{@link org.omnifaces.ai.modality.MistralAITextHandler} - Mistral-specific handling</li>
+ * <li>{@link org.omnifaces.ai.modality.AzureAITextHandler} - Azure AI-specific handling</li>
+ * <li>{@link org.omnifaces.ai.modality.OpenRouterAITextHandler} - OpenRouter-specific handling</li>
  * <li>{@link org.omnifaces.ai.modality.OllamaAITextHandler} - Ollama-specific handling</li>
  * </ul>
  * Custom handlers can be specified via {@link org.omnifaces.ai.cdi.AI#textHandler()},

@@ -27,7 +27,7 @@ import org.omnifaces.ai.AIAudioHandler;
  *
  * @author Bauke Scholtz
  * @since 1.2
- * @see org.omnifaces.ai.AIService#generateAudio(String)
+ * @see org.omnifaces.ai.AIService#generateAudio(String, GenerateAudioOptions)
  */
 public class GenerateAudioOptions implements Serializable {
 

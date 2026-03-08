@@ -19,6 +19,7 @@
  * <li>{@link org.omnifaces.ai.exception.AIHttpException} - HTTP-level errors (4xx/5xx responses)
  *     <ul>
  *     <li>{@link org.omnifaces.ai.exception.AIAuthenticationException} - authentication failures (401)</li>
+ *     <li>{@link org.omnifaces.ai.exception.AIPaymentRequiredException} - payment required (402)</li>
  *     <li>{@link org.omnifaces.ai.exception.AIAuthorizationException} - authorization failures (403)</li>
  *     <li>{@link org.omnifaces.ai.exception.AIBadRequestException} - malformed requests (400)</li>
  *     <li>{@link org.omnifaces.ai.exception.AIEndpointNotFoundException} - endpoint not found (404)</li>

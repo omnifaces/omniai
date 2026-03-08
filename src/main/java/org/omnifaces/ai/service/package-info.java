@@ -29,6 +29,9 @@
  * </ul>
  * All implementations extend {@link org.omnifaces.ai.service.BaseAIService} which provides common HTTP client
  * functionality via {@link java.net.http.HttpClient}.
+ * <p>
+ * {@link org.omnifaces.ai.service.AIServiceWrapper} is an abstract decorator that allows wrapping any
+ * {@link org.omnifaces.ai.AIService} instance to add or override behaviour without modifying the underlying service.
  *
  * @see org.omnifaces.ai.AIProvider
  */
