@@ -241,7 +241,7 @@ String followUp = service.chat("What's on page 2?", options); // AI still has ac
 
 When messages slide out of the window, their associated file references are evicted as well. Uploaded files on the provider's servers are automatically cleaned up in the background after 2 days, preventing stale file accumulation. Only files uploaded by OmniHai are cleaned up.
 
-Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI(-compatible) providers, Anthropic, and Google AI.
+Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI, Anthropic, Google AI, xAI, Mistral, and OpenRouter.
 
 ### Token Usage Tracking
 
