@@ -177,8 +177,8 @@ service.chatStream(message, token -> {
 
 With file attachments:
 ```java
-byte[] document = Files.readAllBytes(Path.of("report.pdf"));
-byte[] image = Files.readAllBytes(Path.of("chart.png"));
+Path document = Path.of("report.pdf");
+Path image = Path.of("chart.png");
 
 ChatInput input = ChatInput.newBuilder()
     .message("Compare these files")
@@ -232,7 +232,7 @@ ChatOptions options = ChatOptions.newBuilder()
 
 ChatInput input = ChatInput.newBuilder()
     .message("Analyze this PDF")
-    .attach(Files.readAllBytes(Path.of("report.pdf")))
+    .attach(Path.of("report.pdf"))
     .build();
 
 String analysis = service.chat(input, options);
@@ -241,7 +241,7 @@ String followUp = service.chat("What's on page 2?", options); // AI still has ac
 
 When messages slide out of the window, their associated file references are evicted as well. Uploaded files on the provider's servers are automatically cleaned up in the background after 2 days, preventing stale file accumulation. Only files uploaded by OmniHai are cleaned up.
 
-Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI(-compatible) providers, Anthropic, and Google AI.
+Note: file tracking in history requires the AI provider to support a files API. This is currently the case for OpenAI, Anthropic, Google AI, xAI, Mistral, and OpenRouter.
 
 ### Token Usage Tracking
 
@@ -400,8 +400,7 @@ byte[] image = service.generateImage("A modern office",
 
 ```java
 // Transcribe audio
-byte[] audioBytes = Files.readAllBytes(audioPath);
-String transcription = service.transcribe(audioBytes);
+String transcription = service.transcribe(Path.of("audio.mp3"));
 ```
 
 ### Audio Generation (Text-to-Speech)
