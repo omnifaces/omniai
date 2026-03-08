@@ -177,8 +177,8 @@ service.chatStream(message, token -> {
 
 With file attachments:
 ```java
-byte[] document = Files.readAllBytes(Path.of("report.pdf"));
-byte[] image = Files.readAllBytes(Path.of("chart.png"));
+Path document = Path.of("report.pdf");
+Path image = Path.of("chart.png");
 
 ChatInput input = ChatInput.newBuilder()
     .message("Compare these files")
@@ -232,7 +232,7 @@ ChatOptions options = ChatOptions.newBuilder()
 
 ChatInput input = ChatInput.newBuilder()
     .message("Analyze this PDF")
-    .attach(Files.readAllBytes(Path.of("report.pdf")))
+    .attach(Path.of("report.pdf"))
     .build();
 
 String analysis = service.chat(input, options);
@@ -400,8 +400,7 @@ byte[] image = service.generateImage("A modern office",
 
 ```java
 // Transcribe audio
-byte[] audioBytes = Files.readAllBytes(audioPath);
-String transcription = service.transcribe(audioBytes);
+String transcription = service.transcribe(Path.of("audio.mp3"));
 ```
 
 ### Audio Generation (Text-to-Speech)
