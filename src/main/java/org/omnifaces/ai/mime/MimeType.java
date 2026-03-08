@@ -12,9 +12,16 @@
  */
 package org.omnifaces.ai.mime;
 
+import static java.lang.Math.min;
+import static java.nio.file.Files.size;
+import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.guessAudioVideoMimeType;
 import static org.omnifaces.ai.mime.DocumentMimeTypeDetector.guessDocumentMimeType;
 import static org.omnifaces.ai.mime.ImageMimeTypeDetector.guessImageMimeType;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 
 /**
  * Represents a MIME type with its associated file extension.
@@ -74,5 +81,24 @@ public interface MimeType {
      */
     static MimeType guessMimeType(byte[] content) {
         return guessImageMimeType(content).or(() -> guessAudioVideoMimeType(content)).orElseGet(() -> guessDocumentMimeType(content));
+    }
+
+    /**
+     * Guesses the MIME type of the given source based on magic bytes.
+     * <p>
+     * Detection order: images first, then audio/video, then documents. Falls back to {@code application/octet-stream}
+     * for unrecognized binary content or {@code text/plain} for unrecognized text content.
+     *
+     * @param source The source path to analyze, must not be {@code null}.
+     * @return The detected MIME type, never {@code null}.
+     * @since 1.4
+     */
+    static MimeType guessMimeType(Path source) {
+        try (var stream = newOffsetInputStream(source, 0L, min(size(source), 1024))) {
+            return guessMimeType(stream.readAllBytes());
+        }
+        catch (IOException e) {
+            throw new UncheckedIOException("Cannot read magic bytes from " + source, e);
+        }
     }
 }

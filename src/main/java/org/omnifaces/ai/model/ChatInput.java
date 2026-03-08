@@ -12,14 +12,11 @@
  */
 package org.omnifaces.ai.model;
 
-import static java.lang.Math.min;
-import static java.nio.file.Files.size;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toUnmodifiableMap;
-import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
 import static org.omnifaces.ai.helper.ImageHelper.isSupportedAsImageAttachment;
 import static org.omnifaces.ai.helper.ImageHelper.sanitizeImageAttachment;
 import static org.omnifaces.ai.helper.TextHelper.isBlank;
@@ -55,8 +52,6 @@ import org.omnifaces.ai.mime.MimeType;
 public class ChatInput implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    private static final int MAGIC_BYTES_LENGTH = 1024;
 
     /**
      * Represents a single message in a conversation history.
@@ -120,6 +115,7 @@ public class ChatInput implements Serializable {
     /**
      * Represents an attached file.
      *
+     * @see ChatInput.Builder#attach(Path...)
      * @see ChatInput.Builder#attach(byte[]...)
      * @see ChatInput#getImages()
      * @see ChatInput#getFiles()
@@ -194,7 +190,7 @@ public class ChatInput implements Serializable {
          * @since 1.2
          */
         public Attachment(Path source, Map<String, String> metadata) {
-            this(null, requireNonNull(source, "source"), guessMimeType(readMagicBytes(source)), null, metadata);
+            this(null, requireNonNull(source, "source"), guessMimeType(source), null, metadata);
         }
 
         private Attachment(byte[] content, Path source, MimeType mimeType, String fileName, Map<String, String> metadata) {
@@ -474,7 +470,7 @@ public class ChatInput implements Serializable {
          */
         public Builder attach(Path... sources) {
             for (var source : sources) {
-                processAndAttach(null, source, guessMimeType(readMagicBytes(source)));
+                processAndAttach(null, source, guessMimeType(source));
             }
 
             return this;
@@ -509,15 +505,6 @@ public class ChatInput implements Serializable {
         public ChatInput build() {
             requireNonBlank(message, "message");
             return new ChatInput(this);
-        }
-    }
-
-    private static byte[] readMagicBytes(Path source) {
-        try (var stream = newOffsetInputStream(source, 0L, min(size(source), MAGIC_BYTES_LENGTH))) {
-            return stream.readAllBytes();
-        }
-        catch (IOException e) {
-            throw new UncheckedIOException("Cannot read magic bytes from " + source, e);
         }
     }
 
