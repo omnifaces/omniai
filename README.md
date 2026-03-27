@@ -78,7 +78,7 @@ You can technically also use it on plain Java SE, you'll still need the JSON-P d
 
 ```java
 // Create a service instance
-AIService service = AIConfig.of("your-openai-api-key").createService();
+AIService service = AIConfig.of(AIProvider.OPENAI, "your-openai-api-key").createService();
 
 // Simple chat
 String response = service.chat("What is Jakarta EE?");
@@ -462,7 +462,7 @@ public class TrackingTextHandler extends OpenAITextHandler {
 
 ```java
 AIStrategy strategy = AIStrategy.of(TrackingTextHandler.class);
-AIService service = AIConfig.of("your-api-key").withStrategy(strategy).createService();
+AIService service = AIConfig.of(AIProvider.OPENAI, "your-openai-api-key").withStrategy(strategy).createService();
 ```
 
 ### CDI Integration
