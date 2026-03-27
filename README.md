@@ -27,6 +27,7 @@ OmniHai provides a single, consistent API to interact with multiple AI providers
     <version>1.4-SNAPSHOT</version>
 </dependency>
 ```
+That's all for Jakarta EE / MicroProfile runtimes. No additional dependencies needed.
 
 On non-Jakarta EE / non-MicroProfile runtimes such as Tomcat, you'll need to manually add JSON-P and optionally CDI / MP Config dependencies:
 
@@ -53,7 +54,7 @@ On non-Jakarta EE / non-MicroProfile runtimes such as Tomcat, you'll need to man
 </dependency>
 ```
 
-You can technically also use it on plain Java SE, you'll still need the JSON-P implementation, but you cannot use the CDI annotation.
+You can technically also use it on plain Java SE, you'll still need the JSON-P dependency as shown above, but you cannot use the CDI annotation so you can skip the CDI/MP dependencies.
 
 ## Supported Providers
 
