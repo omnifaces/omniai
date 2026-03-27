@@ -33,13 +33,18 @@ final class DocumentMimeTypeDetector {
 
     private enum DocumentMimeType implements MimeType {
 
-        PDF("application/pdf", "pdf"), DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"), XLSX(
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"
-        ), PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"), ZIP("application/zip", "zip"), CSV(
-            "text/csv", "csv"
-        ), JSON("application/json", "json"), HTML(
-            "text/html", "html"
-        ), XML("application/xml", "xml"), MARKDOWN("text/markdown", "md"), TEXT("text/plain", "txt"), BINARY("application/octet-stream", "bin");
+        PDF("application/pdf", "pdf"),
+        DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+        XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+        PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"),
+        ZIP("application/zip", "zip"),
+        CSV("text/csv", "csv"),
+        JSON("application/json", "json"),
+        HTML("text/html", "html"),
+        XML("application/xml", "xml"),
+        MARKDOWN("text/markdown", "md"),
+        TEXT("text/plain", "txt"),
+        BINARY("application/octet-stream", "bin");
 
         private final String value;
         private final String extension;

@@ -83,7 +83,9 @@ class JsonSchemaHelperTest {
     }
 
     enum Status {
-        PENDING, APPROVED, REJECTED
+        PENDING,
+        APPROVED,
+        REJECTED
     }
 
     record WithEnum(Status status) {

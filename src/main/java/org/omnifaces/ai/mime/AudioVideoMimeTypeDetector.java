@@ -33,19 +33,20 @@ final class AudioVideoMimeTypeDetector {
 
     private enum AudioVideoMimeType implements MimeType {
 
-        AAC("audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF1 }, 0, null), AAC_ADTS(
-            "audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF9 }, 0, null
-        ), // Also handled as special case.
+        AAC("audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF1 }, 0, null),
+        AAC_ADTS("audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF9 }, 0, null), // Also handled as special case.
         MP3("audio/mpeg", "mp3", 0, new byte[] { (byte) 0xFF, (byte) 0xE0 }, 0, null), // Also handled as special case.
-        MP3_ID3("audio/mpeg", "mp3", 0, new byte[] { 'I', 'D', '3' }, 0, null), FLAC("audio/flac", "flac", 0, new byte[] { 'f', 'L', 'a', 'C' }, 0, null), OGG(
-            "audio/ogg", "ogg", 0, new byte[] { 'O', 'g', 'g', 'S' }, 0, null
-        ), MKV("video/x-matroska", "mkv", 0, MKV_MAGIC, 0, null), WEBM("video/webm", "webm", 0, MKV_MAGIC, 0, null), // Handled as special case.
-        AIFF("audio/x-aiff", "aif", 0, FORM_MAGIC, 8, new byte[] { 'A', 'I', 'F', 'F' }), AVI(
-            "video/x-msvideo", "avi", 0, RIFF_MAGIC, 8, new byte[] { 'A', 'V', 'I', ' ' }
-        ), WAV("audio/wav", "wav", 0, RIFF_MAGIC, 8, new byte[] { 'W', 'A', 'V', 'E' }), MOV(
-            "video/quicktime", "mov", 4, FTYP_MAGIC, 8, new byte[] { 'q', 't', ' ', ' ' }
-        ), M4A("audio/mp4", "m4a", 4, FTYP_MAGIC, 8, new byte[] { 'M', '4', 'A', ' ' }), MP4("video/mp4", "mp4", 4, FTYP_MAGIC, 8, null); // Handled as special
-                                                                                                                                          // case.
+        MP3_ID3("audio/mpeg", "mp3", 0, new byte[] { 'I', 'D', '3' }, 0, null),
+        FLAC("audio/flac", "flac", 0, new byte[] { 'f', 'L', 'a', 'C' }, 0, null),
+        OGG("audio/ogg", "ogg", 0, new byte[] { 'O', 'g', 'g', 'S' }, 0, null),
+        MKV("video/x-matroska", "mkv", 0, MKV_MAGIC, 0, null),
+        WEBM("video/webm", "webm", 0, MKV_MAGIC, 0, null), // Handled as special case.
+        AIFF("audio/x-aiff", "aif", 0, FORM_MAGIC, 8, new byte[] { 'A', 'I', 'F', 'F' }),
+        AVI("video/x-msvideo", "avi", 0, RIFF_MAGIC, 8, new byte[] { 'A', 'V', 'I', ' ' }),
+        WAV("audio/wav", "wav", 0, RIFF_MAGIC, 8, new byte[] { 'W', 'A', 'V', 'E' }),
+        MOV("video/quicktime", "mov", 4, FTYP_MAGIC, 8, new byte[] { 'q', 't', ' ', ' ' }),
+        M4A("audio/mp4", "m4a", 4, FTYP_MAGIC, 8, new byte[] { 'M', '4', 'A', ' ' }),
+        MP4("video/mp4", "mp4", 4, FTYP_MAGIC, 8, null); // Handled as special case.
 
         private final String value;
         private final String extension;
