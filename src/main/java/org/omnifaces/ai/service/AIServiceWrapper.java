@@ -34,11 +34,10 @@ import org.omnifaces.ai.model.ModerationResult;
 /**
  * Abstract decorator wrapper for {@link AIService} instances.
  * <p>
- * This class implements the decorator pattern, allowing you to wrap existing {@code AIService} implementations to
- * decorate behavior without modifying the underlying service implementation.
+ * This class implements the decorator pattern, allowing you to wrap existing {@code AIService} implementations to decorate behavior without modifying the
+ * underlying service implementation.
  * <p>
- * All methods delegate to the wrapped service by default. Subclasses can override specific methods to add behavior
- * before or after delegation.
+ * All methods delegate to the wrapped service by default. Subclasses can override specific methods to add behavior before or after delegation.
  *
  * @author Bauke Scholtz
  * @since 1.3
@@ -435,4 +434,5 @@ public abstract class AIServiceWrapper implements AIService {
     public boolean supportsModality(AIModality modality) {
         return getWrapped().supportsModality(modality);
     }
+
 }

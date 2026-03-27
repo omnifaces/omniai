@@ -130,4 +130,5 @@ public class ModerationResult implements Serializable {
     public String toString() {
         return "ModerationResult{flagged=" + flagged + ", scores=" + scores + "}";
     }
+
 }

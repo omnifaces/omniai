@@ -662,4 +662,5 @@ class AIModelVersionTest {
         var v1 = AIModelVersion.of("gpt", 4, 0);
         assertTrue(v1.ne()); // not equal to any of nothing = true
     }
+
 }

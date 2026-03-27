@@ -29,17 +29,16 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#GOOGLE}</li>
- *     <li>apiKey: your Google API key</li>
+ * <li>provider: {@link AIProvider#GOOGLE}</li>
+ * <li>apiKey: your Google API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#GOOGLE} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#GOOGLE} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -82,8 +81,8 @@ public class GoogleAIService extends BaseAIService {
     }
 
     /**
-     * Google AI supports streaming, but it comes in big chunks. According to Gemini it's caused by "Safety Filter"
-     * bottleneck whereby the AI doublechecks every paragraph before sending out, so it basically comes in paragraphs.
+     * Google AI supports streaming, but it comes in big chunks. According to Gemini it's caused by "Safety Filter" bottleneck whereby the AI doublechecks every
+     * paragraph before sending out, so it basically comes in paragraphs.
      */
     @Override
     public boolean supportsStreaming() {
@@ -108,7 +107,7 @@ public class GoogleAIService extends BaseAIService {
     @Override
     protected URI resolveURI(String path) {
         if (path.equals(getFilesPath())) {
-            return super.resolveURI("../upload/v1beta/"+ format(getFilesPath() + "?key=%s", apiKey));
+            return super.resolveURI("../upload/v1beta/" + format(getFilesPath() + "?key=%s", apiKey));
         }
         else {
             var parts = path.split("\\?", 2);
@@ -129,4 +128,5 @@ public class GoogleAIService extends BaseAIService {
     protected String getFilesPath() {
         return "files";
     }
+
 }

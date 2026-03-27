@@ -24,28 +24,28 @@ import java.util.Optional;
  */
 final class AudioVideoMimeTypeDetector {
 
-    private static final byte[] MKV_MAGIC = {0x1A, 'E', (byte)0xDF, (byte)0xA3};
-    private static final byte[] FORM_MAGIC = {'F', 'O', 'R', 'M'};
+    private static final byte[] MKV_MAGIC = { 0x1A, 'E', (byte) 0xDF, (byte) 0xA3 };
+    private static final byte[] FORM_MAGIC = { 'F', 'O', 'R', 'M' };
     /** The RIFF magic (to be shared with {@link ImageMimeTypeDetector}). */
-    static final byte[] RIFF_MAGIC = {'R', 'I', 'F', 'F'};
+    static final byte[] RIFF_MAGIC = { 'R', 'I', 'F', 'F' };
     /** The FTYP magic (to be shared with {@link ImageMimeTypeDetector}). */
-    static final byte[] FTYP_MAGIC = {'f', 't', 'y', 'p'};
+    static final byte[] FTYP_MAGIC = { 'f', 't', 'y', 'p' };
 
     private enum AudioVideoMimeType implements MimeType {
-        AAC("audio/aac", "aac", 0, new byte[]{(byte)0xFF, (byte)0xF1}, 0, null),
-        AAC_ADTS("audio/aac", "aac", 0, new byte[]{(byte)0xFF, (byte)0xF9}, 0, null), // Also handled as special case.
-        MP3("audio/mpeg", "mp3", 0, new byte[]{(byte)0xFF, (byte)0xE0}, 0, null), // Also handled as special case.
-        MP3_ID3("audio/mpeg", "mp3", 0, new byte[]{'I', 'D', '3'}, 0, null),
-        FLAC("audio/flac", "flac", 0, new byte[]{'f', 'L', 'a', 'C'}, 0, null),
-        OGG("audio/ogg", "ogg", 0, new byte[]{'O', 'g', 'g', 'S'}, 0, null),
-        MKV("video/x-matroska", "mkv", 0, MKV_MAGIC, 0, null),
-        WEBM("video/webm", "webm", 0, MKV_MAGIC, 0, null), // Handled as special case.
-        AIFF("audio/x-aiff", "aif", 0, FORM_MAGIC, 8, new byte[]{'A', 'I', 'F', 'F'}),
-        AVI("video/x-msvideo", "avi", 0, RIFF_MAGIC, 8, new byte[]{'A', 'V', 'I', ' '}),
-        WAV("audio/wav", "wav", 0, RIFF_MAGIC, 8, new byte[]{'W', 'A', 'V', 'E'}),
-        MOV("video/quicktime", "mov", 4, FTYP_MAGIC, 8, new byte[]{'q', 't', ' ', ' '}),
-        M4A("audio/mp4", "m4a", 4, FTYP_MAGIC, 8, new byte[]{'M', '4', 'A', ' '}),
-        MP4("video/mp4", "mp4", 4, FTYP_MAGIC, 8, null); // Handled as special case.
+
+        AAC("audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF1 }, 0, null), AAC_ADTS(
+            "audio/aac", "aac", 0, new byte[] { (byte) 0xFF, (byte) 0xF9 }, 0, null
+        ), // Also handled as special case.
+        MP3("audio/mpeg", "mp3", 0, new byte[] { (byte) 0xFF, (byte) 0xE0 }, 0, null), // Also handled as special case.
+        MP3_ID3("audio/mpeg", "mp3", 0, new byte[] { 'I', 'D', '3' }, 0, null), FLAC("audio/flac", "flac", 0, new byte[] { 'f', 'L', 'a', 'C' }, 0, null), OGG(
+            "audio/ogg", "ogg", 0, new byte[] { 'O', 'g', 'g', 'S' }, 0, null
+        ), MKV("video/x-matroska", "mkv", 0, MKV_MAGIC, 0, null), WEBM("video/webm", "webm", 0, MKV_MAGIC, 0, null), // Handled as special case.
+        AIFF("audio/x-aiff", "aif", 0, FORM_MAGIC, 8, new byte[] { 'A', 'I', 'F', 'F' }), AVI(
+            "video/x-msvideo", "avi", 0, RIFF_MAGIC, 8, new byte[] { 'A', 'V', 'I', ' ' }
+        ), WAV("audio/wav", "wav", 0, RIFF_MAGIC, 8, new byte[] { 'W', 'A', 'V', 'E' }), MOV(
+            "video/quicktime", "mov", 4, FTYP_MAGIC, 8, new byte[] { 'q', 't', ' ', ' ' }
+        ), M4A("audio/mp4", "m4a", 4, FTYP_MAGIC, 8, new byte[] { 'M', '4', 'A', ' ' }), MP4("video/mp4", "mp4", 4, FTYP_MAGIC, 8, null); // Handled as special
+                                                                                                                                          // case.
 
         private final String value;
         private final String extension;
@@ -84,6 +84,7 @@ final class AudioVideoMimeTypeDetector {
 
             return true;
         }
+
     }
 
     private AudioVideoMimeTypeDetector() {
@@ -138,7 +139,6 @@ final class AudioVideoMimeTypeDetector {
         return Optional.empty();
     }
 
-
     // Common helper ---------------------------------------------------------------------------------------------------
 
     /**
@@ -162,4 +162,5 @@ final class AudioVideoMimeTypeDetector {
 
         return true;
     }
+
 }

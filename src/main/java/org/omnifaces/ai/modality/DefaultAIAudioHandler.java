@@ -18,8 +18,8 @@ import org.omnifaces.ai.AIAudioHandler;
 import org.omnifaces.ai.AIService;
 
 /**
- * Default AI audio handler implementation that provides general-purpose prompt templates suitable for most current
- * transcription-capable and audio-generation-capable models.
+ * Default AI audio handler implementation that provides general-purpose prompt templates suitable for most current transcription-capable and
+ * audio-generation-capable models.
  * <p>
  * This class is intended as a fallback when no provider-specific implementation is available.
  *
@@ -38,18 +38,19 @@ public class DefaultAIAudioHandler implements AIAudioHandler {
     @Override
     public String buildTranscribePrompt() {
         return """
-            You are an expert at transcribing audio.
-            Transcribe the audio verbatim in its original language.
-            Preserve the spoken words exactly as heard.
-            Rules:
-            - Do not summarize or paraphrase.
-            - Do not add explanations or notes.
-            - Do not translate.
-            - Omit non-speech sounds unless they are spoken words.
-            - Do not include speaker labels.
-            Output format:
-            - Plain text transcription only.
-            - No markdown or extra text.
-        """;
+                You are an expert at transcribing audio.
+                Transcribe the audio verbatim in its original language.
+                Preserve the spoken words exactly as heard.
+                Rules:
+                - Do not summarize or paraphrase.
+                - Do not add explanations or notes.
+                - Do not translate.
+                - Omit non-speech sounds unless they are spoken words.
+                - Do not include speaker labels.
+                Output format:
+                - Plain text transcription only.
+                - No markdown or extra text.
+            """;
     }
+
 }

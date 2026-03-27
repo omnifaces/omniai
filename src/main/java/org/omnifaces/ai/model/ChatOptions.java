@@ -38,8 +38,8 @@ import org.omnifaces.ai.model.ChatInput.UploadedFile;
 /**
  * Options for chat-based AI interactions.
  * <p>
- * This class provides configuration options for AI chat operations, including system prompt, JSON schema for structured
- * output, temperature, max tokens, and various sampling parameters.
+ * This class provides configuration options for AI chat operations, including system prompt, JSON schema for structured output, temperature, max tokens, and
+ * various sampling parameters.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -84,8 +84,7 @@ public class ChatOptions implements Serializable {
     /**
      * Represents a geographical location context for AI operations, such as localized web searching.
      * <p>
-     * An instance with all properties set to {@code null} is equivalent to {@link #GLOBAL},
-     * representing a location context without geographical restrictions.
+     * An instance with all properties set to {@code null} is equivalent to {@link #GLOBAL}, representing a location context without geographical restrictions.
      *
      * @param country The country, usually represented by two-letter ISO country code, e.g. "US", "NL", "CW", etc.
      * @param region The administrative region, such as a state, province, or territory.
@@ -100,6 +99,7 @@ public class ChatOptions implements Serializable {
 
         /**
          * Checks if this location represents a global context (i.e., all fields are null).
+         * 
          * @return {@code true} if this instance is global; {@code false} otherwise.
          */
         public boolean isGlobal() {
@@ -107,13 +107,14 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Returns a human-readable representation of this location, e.g. {@code "Miami, Florida, US"}.
-         * Null fields are omitted. Returns {@code "global"} for {@link #GLOBAL}.
+         * Returns a human-readable representation of this location, e.g. {@code "Miami, Florida, US"}. Null fields are omitted. Returns {@code "global"} for
+         * {@link #GLOBAL}.
          */
         @Override
         public String toString() {
             return isGlobal() ? "global" : Stream.of(city, region, country).filter(Objects::nonNull).collect(joining(", "));
         }
+
     }
 
     /** The system prompt. */
@@ -158,7 +159,11 @@ public class ChatOptions implements Serializable {
         }
     }
 
-    private ChatOptions(String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, Location webSearchLocation, List<Message> history, int maxHistory) {
+    private ChatOptions(
+        String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, Location webSearchLocation, List<Message> history,
+        int maxHistory
+    )
+    {
         this.systemPrompt = systemPrompt;
         this.jsonSchema = jsonSchema;
         this.temperature = temperature;
@@ -182,6 +187,7 @@ public class ChatOptions implements Serializable {
 
     /**
      * Custom serialization to handle non-serializable {@link JsonObject}.
+     * 
      * @param output The object output stream.
      * @throws IOException If an I/O error occurs.
      */
@@ -192,6 +198,7 @@ public class ChatOptions implements Serializable {
 
     /**
      * Custom deserialization to restore {@link JsonObject} from its string representation.
+     * 
      * @param input The object input stream.
      * @throws IOException If an I/O error occurs.
      * @throws ClassNotFoundException If the class of a serialized object cannot be found.
@@ -218,16 +225,16 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the JSON schema for structured output. Defaults to {@code null}.
      * <p>
-     * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)} which
-     * handle schema generation and response parsing automatically. Use this property directly only when you need
-     * manual control over the schema.
+     * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)} which handle schema generation and response
+     * parsing automatically. Use this property directly only when you need manual control over the schema.
      * <p>
      * You can use {@link JsonSchemaHelper#buildJsonSchema(Class)} to create one for your record or bean class.
      * <p>
-     * When set, the AI model is instructed to return a response that conforms to this JSON schema.
-     * This is useful for ensuring the model returns valid, parseable JSON in a specific format.
+     * When set, the AI model is instructed to return a response that conforms to this JSON schema. This is useful for ensuring the model returns valid,
+     * parseable JSON in a specific format.
      * <p>
      * The schema should follow the JSON Schema specification. For example:
+     * 
      * <pre>
      * {
      *   "type": "object",
@@ -241,8 +248,8 @@ public class ChatOptions implements Serializable {
      * <p>
      * You can use {@link JsonSchemaHelper#fromJson(String, Class)} to parse the response into your record or bean class.
      * <p>
-     * Note: Not all AI providers support JSON schema enforcement. When unsupported, the AI service implementation
-     * may throw {@link UnsupportedOperationException} during chat payload construction.
+     * Note: Not all AI providers support JSON schema enforcement. When unsupported, the AI service implementation may throw
+     * {@link UnsupportedOperationException} during chat payload construction.
      *
      * @return The JSON schema object, or {@code null} if no schema is defined.
      */
@@ -251,8 +258,7 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns a copy of this instance with the given JSON schema set, preserving all other options including
-     * any shared {@link #hasMemory() memory} state.
+     * Returns a copy of this instance with the given JSON schema set, preserving all other options including any shared {@link #hasMemory() memory} state.
      *
      * @param jsonSchema The JSON schema to use for structured output.
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
@@ -262,8 +268,7 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns a copy of this instance with the given system prompt set, preserving all other options including
-     * any shared {@link #hasMemory() memory} state.
+     * Returns a copy of this instance with the given system prompt set, preserving all other options including any shared {@link #hasMemory() memory} state.
      *
      * @param systemPrompt The system prompt to use for providing high-level instructions to the model.
      * @return A new {@code ChatOptions} instance with the specified system prompt.
@@ -274,11 +279,10 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns a copy of this instance with web search enabled for the given location,
-     * preserving all other options including any shared {@link #hasMemory() memory} state.
+     * Returns a copy of this instance with web search enabled for the given location, preserving all other options including any shared {@link #hasMemory()
+     * memory} state.
      * <p>
-     * Pass {@link Location#GLOBAL} to enable web search without restricting it to a specific region.
-     * Pass {@code null} to disable web search.
+     * Pass {@link Location#GLOBAL} to enable web search without restricting it to a specific region. Pass {@code null} to disable web search.
      *
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search, or {@code null} to disable web search.
      * @return A new {@code ChatOptions} instance with the specified web search location enabled.
@@ -291,11 +295,12 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Returns a mutable copy of this instance, preserving all options and any shared {@link #hasMemory() memory} state,
-     * but starting with no {@link #getLastUsage() last usage} recorded.
+     * Returns a mutable copy of this instance, preserving all options and any shared {@link #hasMemory() memory} state, but starting with no
+     * {@link #getLastUsage() last usage} recorded.
      * <p>
-     * This is the recommended way to obtain a dedicated, mutable instance from one of the shared constants
-     * ({@link #DEFAULT}, {@link #CREATIVE}, {@link #DETERMINISTIC}) when you want to track token usage:
+     * This is the recommended way to obtain a dedicated, mutable instance from one of the shared constants ({@link #DEFAULT}, {@link #CREATIVE},
+     * {@link #DETERMINISTIC}) when you want to track token usage:
+     * 
      * <pre>
      * ChatOptions options = ChatOptions.DEFAULT.copy();
      * service.chat("Hello", options);
@@ -312,9 +317,8 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the sampling temperature used for token selection. Defaults to {@value #DEFAULT_TEMPERATURE}.
      * <p>
-     * Higher values (e.g., 0.8) make responses more creative and varied.
-     * Lower values (e.g., 0.2) make them more focused and predictable.
-     * A value of 0 always picks the most likely next word.
+     * Higher values (e.g., 0.8) make responses more creative and varied. Lower values (e.g., 0.2) make them more focused and predictable. A value of 0 always
+     * picks the most likely next word.
      *
      * @return The temperature value, typically in the range [0.0, 2.0].
      */
@@ -325,14 +329,12 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the maximum number of tokens to generate in the response. Defaults to {@code null}.
      * <p>
-     * A token is a model-specific unit of text which varies per input and output language.
-     * In English 1000 tokens is roughly 750 words, but in e.g. Spanish it would be roughly 700 words due to more inflection and functions in the language.
+     * A token is a model-specific unit of text which varies per input and output language. In English 1000 tokens is roughly 750 words, but in e.g. Spanish it
+     * would be roughly 700 words due to more inflection and functions in the language.
      * <p>
-     * For classic (fast) chat models (e.g. gpt-4), this setting only limits how long the response can be.
-     * For reasoning-enabled chat models (e.g. gpt-5), this limit includes both the visible response and the model's thinking process.
-     * If the limit is reached, the response will be cut off mid-sentence.
-     * If the thinking process is complex, the response may be shorter.
-     * Your input plus this limit must fit within the model's maximum context size.
+     * For classic (fast) chat models (e.g. gpt-4), this setting only limits how long the response can be. For reasoning-enabled chat models (e.g. gpt-5), this
+     * limit includes both the visible response and the model's thinking process. If the limit is reached, the response will be cut off mid-sentence. If the
+     * thinking process is complex, the response may be shorter. Your input plus this limit must fit within the model's maximum context size.
      *
      * @return The maximum token limit for the completion, or {@code null} to use the AI service's default.
      */
@@ -343,9 +345,8 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the Nucleus Sampling (Top-P) value. Defaults to {@value #DEFAULT_TOP_P}.
      * <p>
-     * Top-P controls how many word choices the model considers.
-     * A value of 1.0 considers all possible words, while 0.1 only considers the most likely words (top 10%).
-     * Lower values give more focused responses, higher values allow more variety.
+     * Top-P controls how many word choices the model considers. A value of 1.0 considers all possible words, while 0.1 only considers the most likely words
+     * (top 10%). Lower values give more focused responses, higher values allow more variety.
      * <ul>
      * <li><strong>Low Temp + Low Top-P:</strong> Corporate email simulator (The Deterministic Robot)</li>
      * <li><strong>Low Temp + High Top-P:</strong> Boring but stable (The Safe Bet)</li>
@@ -388,10 +389,9 @@ public class ChatOptions implements Serializable {
     /**
      * Returns whether conversation memory is enabled for this instance.
      * <p>
-     * When {@code true}, the AI service will automatically track all user messages and assistant responses
-     * made with this {@code ChatOptions} instance, and include them as conversation history in subsequent requests.
-     * The history is kept within a sliding window of {@link #getMaxHistory()} messages, counting both sent and received
-     * messages (default {@value #DEFAULT_MAX_HISTORY}, i.e. 10 conversational turns).
+     * When {@code true}, the AI service will automatically track all user messages and assistant responses made with this {@code ChatOptions} instance, and
+     * include them as conversation history in subsequent requests. The history is kept within a sliding window of {@link #getMaxHistory()} messages, counting
+     * both sent and received messages (default {@value #DEFAULT_MAX_HISTORY}, i.e. 10 conversational turns).
      *
      * @return {@code true} if conversation history is maintained, {@code false} otherwise.
      */
@@ -402,11 +402,11 @@ public class ChatOptions implements Serializable {
     /**
      * Gets the maximum number of messages retained in the conversation history for this memory-enabled instance.
      * <p>
-     * This counts both sent (user) and received (assistant) messages. For example, the default of
-     * {@value #DEFAULT_MAX_HISTORY} retains up to 10 conversational turns.
+     * This counts both sent (user) and received (assistant) messages. For example, the default of {@value #DEFAULT_MAX_HISTORY} retains up to 10 conversational
+     * turns.
      * <p>
-     * When conversation memory is enabled, the history acts as a sliding window: once the number of recorded
-     * messages exceeds this limit, the oldest messages are automatically discarded.
+     * When conversation memory is enabled, the history acts as a sliding window: once the number of recorded messages exceeds this limit, the oldest messages
+     * are automatically discarded.
      *
      * @return The maximum number of messages retained.
      * @throws IllegalStateException if this instance is not {@link #hasMemory() memory-enabled}.
@@ -428,15 +428,17 @@ public class ChatOptions implements Serializable {
      */
     public List<Message> getHistory() {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot get message history from non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
+            throw new IllegalStateException(
+                "Cannot get message history from non-memory ChatOptions; use withMemory() method to create a memory-enabled instance"
+            );
         }
 
         return unmodifiableList(history);
     }
 
     /**
-     * Returns the token usage recorded for the most recent chat call made with this instance,
-     * or {@code null} if no call has been made yet or if the provider does not report usage.
+     * Returns the token usage recorded for the most recent chat call made with this instance, or {@code null} if no call has been made yet or if the provider
+     * does not report usage.
      *
      * @return The last recorded {@link ChatUsage}, or {@code null}.
      * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
@@ -444,19 +446,19 @@ public class ChatOptions implements Serializable {
      */
     public ChatUsage getLastUsage() {
         if (isDefault()) {
-            throw new IllegalStateException("Cannot get last usage from a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
+            throw new IllegalStateException(
+                "Cannot get last usage from a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance"
+            );
         }
 
         return lastUsage;
     }
 
     /**
-     * Returns whether this instance is one of the shared default constants ({@link #DEFAULT}, {@link #CREATIVE},
-     * {@link #DETERMINISTIC}) and therefore immutable. Calling {@link #getLastUsage()} or any {@code recordXxx}
-     * method on a default instance throws {@link IllegalStateException}.
+     * Returns whether this instance is one of the shared default constants ({@link #DEFAULT}, {@link #CREATIVE}, {@link #DETERMINISTIC}) and therefore
+     * immutable. Calling {@link #getLastUsage()} or any {@code recordXxx} method on a default instance throws {@link IllegalStateException}.
      * <p>
-     * Use {@link #copy()} to obtain a mutable copy with the same settings, or {@link #newBuilder()} to build
-     * a new instance from scratch.
+     * Use {@link #copy()} to obtain a mutable copy with the same settings, or {@link #newBuilder()} to build a new instance from scratch.
      *
      * @return {@code true} if this is a shared default instance, {@code false} otherwise.
      * @since 1.3
@@ -468,12 +470,11 @@ public class ChatOptions implements Serializable {
     /**
      * Records a message in the conversation history for this memory-enabled instance.
      * <p>
-     * This is automatically called by the AI service to record user messages before the API call
-     * and assistant responses after a successful response. It can also be called manually to seed
-     * the conversation with prior context.
+     * This is automatically called by the AI service to record user messages before the API call and assistant responses after a successful response. It can
+     * also be called manually to seed the conversation with prior context.
      * <p>
-     * When the history exceeds the configured maximum (default {@value #DEFAULT_MAX_HISTORY} messages, counting both
-     * sent and received), the oldest messages are automatically discarded to maintain the sliding window.
+     * When the history exceeds the configured maximum (default {@value #DEFAULT_MAX_HISTORY} messages, counting both sent and received), the oldest messages
+     * are automatically discarded to maintain the sliding window.
      *
      * @param role The role of the message.
      * @param message The message content.
@@ -494,9 +495,8 @@ public class ChatOptions implements Serializable {
     /**
      * Records an uploaded file reference against the most recent user message in the conversation history.
      * <p>
-     * This is called by text handlers during {@code buildChatPayload} after uploading a file, so the file ID
-     * can be replayed in subsequent turns. The file reference is automatically discarded when its associated
-     * message is evicted from the sliding window.
+     * This is called by text handlers during {@code buildChatPayload} after uploading a file, so the file ID can be replayed in subsequent turns. The file
+     * reference is automatically discarded when its associated message is evicted from the sliding window.
      *
      * @param fileId The provider-assigned file ID or URI.
      * @param mimeType The MIME type of the uploaded file.
@@ -506,7 +506,9 @@ public class ChatOptions implements Serializable {
      */
     public void recordUploadedFile(String fileId, MimeType mimeType) {
         if (!hasMemory()) {
-            throw new IllegalStateException("Cannot record uploaded file on non-memory ChatOptions; use withMemory() method to create a memory-enabled instance");
+            throw new IllegalStateException(
+                "Cannot record uploaded file on non-memory ChatOptions; use withMemory() method to create a memory-enabled instance"
+            );
         }
 
         for (var i = history.size() - 1; i >= 0; i--) {
@@ -524,10 +526,8 @@ public class ChatOptions implements Serializable {
     }
 
     /**
-     * Records token usage for the most recent chat call.
-     * This is automatically called by the AI service after each chat response, even when the provider did not report
-     * usage. A {@code null} value indicates that the last call did not report any usage, which clears any previously
-     * recorded usage.
+     * Records token usage for the most recent chat call. This is automatically called by the AI service after each chat response, even when the provider did
+     * not report usage. A {@code null} value indicates that the last call did not report any usage, which clears any previously recorded usage.
      *
      * @param usage The usage to record, or {@code null} if the provider did not report any usage.
      * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
@@ -536,7 +536,9 @@ public class ChatOptions implements Serializable {
      */
     public void recordUsage(ChatUsage usage) {
         if (isDefault()) {
-            throw new IllegalStateException("Cannot record usage on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance");
+            throw new IllegalStateException(
+                "Cannot record usage on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance"
+            );
         }
 
         this.lastUsage = usage;
@@ -544,7 +546,9 @@ public class ChatOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link ChatOptions} instances. For example:
+     * 
      * <pre>
+     * 
      * ChatOptions options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a helpful software architect.")
      *     .jsonSchema(myJsonSchema)
@@ -564,6 +568,7 @@ public class ChatOptions implements Serializable {
      * Use {@link ChatOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
+
         private String systemPrompt;
         private JsonObject jsonSchema;
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
@@ -573,7 +578,8 @@ public class ChatOptions implements Serializable {
         private int maxHistory;
         private List<Message> history;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the system prompt used to provide high-level instructions to the model.
@@ -591,16 +597,16 @@ public class ChatOptions implements Serializable {
         /**
          * Sets the JSON schema for structured output. Defaults to {@code null}.
          * <p>
-         * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)}
-         * which handle schema generation and response parsing automatically. Use this method directly only when you
-         * need manual control over the schema.
+         * For most use cases, prefer the typed chat overloads {@link org.omnifaces.ai.AIService#chat(String, Class)} which handle schema generation and
+         * response parsing automatically. Use this method directly only when you need manual control over the schema.
          * <p>
          * You can use {@link JsonSchemaHelper#buildJsonSchema(Class)} to create one for your record or bean class.
          * <p>
-         * When set, the AI model is instructed to return a response that conforms to this JSON schema.
-         * This is useful for ensuring the model returns valid, parseable JSON in a specific format.
+         * When set, the AI model is instructed to return a response that conforms to this JSON schema. This is useful for ensuring the model returns valid,
+         * parseable JSON in a specific format.
          * <p>
          * The schema should follow the JSON Schema specification. For example:
+         * 
          * <pre>
          * {
          *   "type": "object",
@@ -614,8 +620,8 @@ public class ChatOptions implements Serializable {
          * <p>
          * You can use {@link JsonSchemaHelper#fromJson(String, Class)} to parse the response into your record or bean class.
          * <p>
-         * Note: Not all AI providers support JSON schema enforcement. When unsupported, the AI service implementation
-         * may throw {@link UnsupportedOperationException} during chat payload construction.
+         * Note: Not all AI providers support JSON schema enforcement. When unsupported, the AI service implementation may throw
+         * {@link UnsupportedOperationException} during chat payload construction.
          *
          * @param jsonSchema The JSON schema object. Can be {@code null}.
          * @return This builder instance for chaining.
@@ -628,9 +634,8 @@ public class ChatOptions implements Serializable {
         /**
          * Sets the sampling temperature used for token selection. Defaults to {@value ChatOptions#DEFAULT_TEMPERATURE}.
          * <p>
-         * Higher values (e.g., 0.8) make responses more creative and varied.
-         * Lower values (e.g., 0.2) make them more focused and predictable.
-         * A value of 0 always picks the most likely next word.
+         * Higher values (e.g., 0.8) make responses more creative and varied. Lower values (e.g., 0.2) make them more focused and predictable. A value of 0
+         * always picks the most likely next word.
          *
          * @param temperature The temperature value, typically between 0.0 and 2.0.
          * @return This builder instance for chaining.
@@ -648,14 +653,12 @@ public class ChatOptions implements Serializable {
         /**
          * Sets the maximum number of tokens to generate in the chat completion. Defaults to {@code null}.
          * <p>
-         * A token is a model-specific unit of text which varies per input and output language.
-         * In English 1000 tokens is roughly 750 words, but in e.g. Spanish it would be roughly 700 words due to more inflection and functions in the language.
+         * A token is a model-specific unit of text which varies per input and output language. In English 1000 tokens is roughly 750 words, but in e.g. Spanish
+         * it would be roughly 700 words due to more inflection and functions in the language.
          * <p>
-         * For classic (fast) chat models (e.g. gpt-4), this setting only limits how long the response can be.
-         * For reasoning-enabled chat models (e.g. gpt-5), this limit includes both the visible response and the model's thinking process.
-         * If the limit is reached, the response will be cut off mid-sentence.
-         * If the thinking process is complex, the response may be shorter.
-         * Your input plus this limit must fit within the model's maximum context size.
+         * For classic (fast) chat models (e.g. gpt-4), this setting only limits how long the response can be. For reasoning-enabled chat models (e.g. gpt-5),
+         * this limit includes both the visible response and the model's thinking process. If the limit is reached, the response will be cut off mid-sentence.
+         * If the thinking process is complex, the response may be shorter. Your input plus this limit must fit within the model's maximum context size.
          *
          * @param maxTokens The maximum number of tokens to generate. Must be positive, or {@code null} to use the AI service's default.
          * @return This builder instance for chaining.
@@ -673,10 +676,9 @@ public class ChatOptions implements Serializable {
         /**
          * Sets the Nucleus Sampling (Top-P) value. Defaults to {@value ChatOptions#DEFAULT_TOP_P}.
          * <p>
-         * Top-P controls how many word choices the model considers.
-         * A value of 1.0 considers all possible words, while 0.1 only considers the most likely words (top 10%).
-         * Lower values give more focused responses, higher values allow more variety.
-         * It is generally recommended to alter either this or {@code temperature}, but not both.
+         * Top-P controls how many word choices the model considers. A value of 1.0 considers all possible words, while 0.1 only considers the most likely words
+         * (top 10%). Lower values give more focused responses, higher values allow more variety. It is generally recommended to alter either this or
+         * {@code temperature}, but not both.
          * <ul>
          * <li><strong>Low Temp + Low Top-P:</strong> Corporate email simulator (The Deterministic Robot)</li>
          * <li><strong>Low Temp + High Top-P:</strong> Boring but stable (The Safe Bet)</li>
@@ -702,8 +704,8 @@ public class ChatOptions implements Serializable {
         /**
          * Enables global web search for this {@link ChatOptions} instance.
          * <p>
-         * When enabled, the AI service will access up-to-date information from the internet and provide answers with
-         * sourced citations, without geographical restriction.
+         * When enabled, the AI service will access up-to-date information from the internet and provide answers with sourced citations, without geographical
+         * restriction.
          *
          * @return This builder instance for chaining.
          * @since 1.3
@@ -717,8 +719,8 @@ public class ChatOptions implements Serializable {
         /**
          * Enables localized web search for this {@link ChatOptions} instance.
          * <p>
-         * When enabled, the AI service will access up-to-date information from the internet and provide answers with
-         * sourced citations scoped to the provided {@link Location}.
+         * When enabled, the AI service will access up-to-date information from the internet and provide answers with sourced citations scoped to the provided
+         * {@link Location}.
          *
          * @param location The specific location.
          * @return This builder instance for chaining.
@@ -732,12 +734,11 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Enables conversation memory for this {@code ChatOptions} instance with a default sliding window
-         * of {@value ChatOptions#DEFAULT_MAX_HISTORY} messages (counting both sent and received, i.e. 10 conversational turns).
+         * Enables conversation memory for this {@code ChatOptions} instance with a default sliding window of {@value ChatOptions#DEFAULT_MAX_HISTORY} messages
+         * (counting both sent and received, i.e. 10 conversational turns).
          * <p>
-         * When enabled, the AI service will automatically remember all user messages and assistant responses
-         * made with this instance, and include them in subsequent chat requests. This allows multi-turn
-         * conversations where the AI has context of previous exchanges.
+         * When enabled, the AI service will automatically remember all user messages and assistant responses made with this instance, and include them in
+         * subsequent chat requests. This allows multi-turn conversations where the AI has context of previous exchanges.
          * <p>
          * Once the number of recorded messages exceeds the maximum, the oldest messages are automatically discarded.
          *
@@ -751,9 +752,8 @@ public class ChatOptions implements Serializable {
         /**
          * Enables conversation memory for this {@code ChatOptions} instance with a custom sliding window size.
          * <p>
-         * When enabled, the AI service will automatically remember all user messages and assistant responses
-         * made with this instance, and include them in subsequent chat requests. This allows multi-turn
-         * conversations where the AI has context of previous exchanges.
+         * When enabled, the AI service will automatically remember all user messages and assistant responses made with this instance, and include them in
+         * subsequent chat requests. This allows multi-turn conversations where the AI has context of previous exchanges.
          * <p>
          * Once the number of recorded messages exceeds the given maximum, the oldest messages are automatically discarded.
          *
@@ -775,17 +775,18 @@ public class ChatOptions implements Serializable {
         /**
          * Sets the initial conversation history for this memory-enabled {@code ChatOptions} instance.
          * <p>
-         * This allows restoring a previously saved conversation. The history list is typically obtained from
-         * {@link ChatOptions#getHistory()} of a prior session and persisted externally (e.g. in a database or HTTP session).
+         * This allows restoring a previously saved conversation. The history list is typically obtained from {@link ChatOptions#getHistory()} of a prior
+         * session and persisted externally (e.g. in a database or HTTP session).
          * <p>
-         * If the provided history exceeds the configured {@link #withMemory(int) maximum}, the oldest messages are
-         * automatically discarded to fit within the sliding window.
+         * If the provided history exceeds the configured {@link #withMemory(int) maximum}, the oldest messages are automatically discarded to fit within the
+         * sliding window.
          * <p>
-         * Memory is implicitly enabled with {@value ChatOptions#DEFAULT_MAX_HISTORY} if not already set via
-         * {@link #withMemory()} or {@link #withMemory(int)}.
+         * Memory is implicitly enabled with {@value ChatOptions#DEFAULT_MAX_HISTORY} if not already set via {@link #withMemory()} or {@link #withMemory(int)}.
          * <p>
          * Usage example:
+         * 
          * <pre>
+         * 
          * // Save history from a previous session
          * List&lt;Message&gt; saved = options.getHistory();
          *
@@ -818,5 +819,7 @@ public class ChatOptions implements Serializable {
         public ChatOptions build() {
             return new ChatOptions(this);
         }
+
     }
+
 }

@@ -29,9 +29,9 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#AZURE}</li>
- *     <li>apiKey: your Azure OpenAI API key</li>
- *     <li>{@code org.omnifaces.ai.AZURE_RESOURCE}: your Azure resource name</li>
+ * <li>provider: {@link AIProvider#AZURE}</li>
+ * <li>apiKey: your Azure OpenAI API key</li>
+ * <li>{@code org.omnifaces.ai.AZURE_RESOURCE}: your Azure resource name</li>
  * </ul>
  * <p>
  * The Azure-specific {@code org.omnifaces.ai.AZURE_RESOURCE} must represent the <code>{org.omnifaces.ai.AZURE_RESOURCE}</code> part of the default endpoint URL
@@ -39,15 +39,14 @@ import org.omnifaces.ai.AIService;
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#AZURE} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#AZURE} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  * <p>
- * If the custom endopint does not contain the <code>{org.omnifaces.ai.AZURE_RESOURCE}</code> part,
- * then the {@code org.omnifaces.ai.AZURE_RESOURCE} configuration parameter is not anymore required and will be ignored.
+ * If the custom endopint does not contain the <code>{org.omnifaces.ai.AZURE_RESOURCE}</code> part, then the {@code org.omnifaces.ai.AZURE_RESOURCE}
+ * configuration parameter is not anymore required and will be ignored.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -110,4 +109,5 @@ public class AzureAIService extends OpenAIService {
     protected URI resolveURI(String path) {
         return super.resolveURI(String.format("openai/v1/deployments/%s/%s", model, path));
     }
+
 }

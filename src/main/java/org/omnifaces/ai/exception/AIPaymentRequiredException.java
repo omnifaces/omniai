@@ -17,8 +17,7 @@ import java.net.URI;
 /**
  * Exception thrown when the AI API returns HTTP 402 Payment Required.
  * <p>
- * This indicates the account has insufficient credits or an active subscription is required.
- * Check your billing status with the AI provider.
+ * This indicates the account has insufficient credits or an active subscription is required. Check your billing status with the AI provider.
  *
  * @author Bauke Scholtz
  * @since 1.3
@@ -39,4 +38,5 @@ public class AIPaymentRequiredException extends AIHttpException {
     public AIPaymentRequiredException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

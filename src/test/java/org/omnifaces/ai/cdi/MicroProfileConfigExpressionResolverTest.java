@@ -168,4 +168,5 @@ class MicroProfileConfigExpressionResolverTest {
     void resolveConfig_resultContainsCurlyBraces() {
         assertEquals("{\"key\":\"val\"}", resolveMicroProfileConfigExpression("${config:test.special.braces}"));
     }
+
 }

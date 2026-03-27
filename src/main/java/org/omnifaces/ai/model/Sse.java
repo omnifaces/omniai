@@ -23,6 +23,7 @@ public final class Sse {
 
     /**
      * Represents a single SSE field (id, event, or data).
+     * 
      * @param type The SSE event type.
      * @param value The SSE event value.
      */
@@ -39,5 +40,7 @@ public final class Sse {
             /** Event of type "data". */
             DATA;
         }
+
     }
+
 }

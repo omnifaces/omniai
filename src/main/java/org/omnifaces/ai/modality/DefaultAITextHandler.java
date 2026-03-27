@@ -32,12 +32,11 @@ import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions;
 
 /**
- * Default AI text handler implementation that provides sensible, general-purpose prompt templates, and
- * response parsing suitable for most modern large language models (LLMs).
+ * Default AI text handler implementation that provides sensible, general-purpose prompt templates, and response parsing suitable for most modern large language
+ * models (LLMs).
  * <p>
- * This class is intended as a reasonable fallback / starting point when no provider-specific implementation is
- * available or desired. It uses widely compatible prompt patterns that perform acceptably on models from OpenAI,
- * Anthropic, Google, xAI, Meta, Mistral, and similar instruction-tuned LLMs.
+ * This class is intended as a reasonable fallback / starting point when no provider-specific implementation is available or desired. It uses widely compatible
+ * prompt patterns that perform acceptably on models from OpenAI, Anthropic, Google, xAI, Meta, Mistral, and similar instruction-tuned LLMs.
  *
  * <h2>When to extend or override</h2>
  * <p>
@@ -48,8 +47,7 @@ import org.omnifaces.ai.model.ModerationOptions;
  * <li>change default temperature, output formatting rules, or safety instructions</li>
  * </ul>
  * <p>
- * This implementation makes no provider-specific API calls or assumptions, it only generates default prompts and
- * parses default moderation response.
+ * This implementation makes no provider-specific API calls or assumptions, it only generates default prompts and parses default moderation response.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -80,102 +78,101 @@ public class DefaultAITextHandler implements AITextHandler {
     @Override
     public String buildSummarizePrompt(int maxWords) {
         return """
-            You are a professional summarizer.
-            Summarize the provided text in at most %d words.
-            Rules:
-            - Provide one coherent summary.
-            Output format:
-            - Plain text summary only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(maxWords);
+                You are a professional summarizer.
+                Summarize the provided text in at most %d words.
+                Rules:
+                - Provide one coherent summary.
+                Output format:
+                - Plain text summary only.
+                - No explanations, no notes, no extra text, no markdown formatting.
+            """.formatted(maxWords);
     }
 
     @Override
     public String buildExtractKeyPointsPrompt(int maxPoints) {
         return """
-            You are an expert at extracting key points.
-            Extract the %d most important key points from the provided text.
-            Each key point can have at most %d words.
-            Output format:
-            - One key point per line.
-            - No numbering, no bullets, no dashes, no explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(maxPoints, DEFAULT_MAX_WORDS_PER_KEYPOINT);
+                You are an expert at extracting key points.
+                Extract the %d most important key points from the provided text.
+                Each key point can have at most %d words.
+                Output format:
+                - One key point per line.
+                - No numbering, no bullets, no dashes, no explanations, no notes, no extra text, no markdown formatting.
+            """.formatted(maxPoints, DEFAULT_MAX_WORDS_PER_KEYPOINT);
     }
 
     @Override
     public String buildDetectLanguagePrompt() {
         return """
-            You are a language detection expert.
-            Determine the language of the provided text.
-            Output format:
-            - Only the ISO 639-1 two-letter code of the main language (e.g. en, fr, es, zh).
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """;
+                You are a language detection expert.
+                Determine the language of the provided text.
+                Output format:
+                - Only the ISO 639-1 two-letter code of the main language (e.g. en, fr, es, zh).
+                - No explanations, no notes, no extra text, no markdown formatting.
+            """;
     }
 
     @Override
     public String buildTranslatePrompt(String sourceLang, String targetLang) {
         var sourcePrompt = sourceLang == null
-                ? "Detect the source language automatically."
-                : "Translate from ISO 639-1 code '%s'".formatted(sourceLang.toLowerCase());
+            ? "Detect the source language automatically."
+            : "Translate from ISO 639-1 code '%s'".formatted(sourceLang.toLowerCase());
         return """
-            You are a professional translator.
-            %s
-            Translate to ISO 639-1 code '%s'.
-            Rules for every input:
-            - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
-            Rules if the input is parseable as HTML/XML:
-            - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
-            - Preserve ALL HTML/XML attribute values (style="...", class="...", id="...", data-*, etc.) EXACTLY as-is.
-            Output format:
-            - Only the translated input.
-            - No explanations, no notes, no extra text, no markdown formatting.
-            - Keep exact same line breaks, spacing and structure where possible.
-        """.formatted(sourcePrompt, targetLang.toLowerCase());
+                You are a professional translator.
+                %s
+                Translate to ISO 639-1 code '%s'.
+                Rules for every input:
+                - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
+                Rules if the input is parseable as HTML/XML:
+                - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
+                - Preserve ALL HTML/XML attribute values (style="...", class="...", id="...", data-*, etc.) EXACTLY as-is.
+                Output format:
+                - Only the translated input.
+                - No explanations, no notes, no extra text, no markdown formatting.
+                - Keep exact same line breaks, spacing and structure where possible.
+            """.formatted(sourcePrompt, targetLang.toLowerCase());
     }
 
     @Override
     public String buildProofreadPrompt() {
         return """
-            You are a professional proofreader.
-            Correct any grammar and spelling errors in the provided text.
-            Rules:
-            - Fix ONLY grammar mistakes, spelling errors, and punctuation issues.
-            - Do NOT change the meaning, tone, style, or voice of the text.
-            - Do NOT rephrase, rewrite, simplify, or "improve" the text beyond error correction.
-            - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
-            - Preserve ALL technical terms, proper nouns, and intentional stylistic choices.
-            - If the text contains no errors, return it unchanged.
-            Rules if the input is parseable as HTML/XML:
-            - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
-            - Preserve ALL HTML/XML tags and attribute values EXACTLY as-is.
-            Output format:
-            - Only the corrected text.
-            - No explanations, no notes, no extra text, no markdown formatting.
-            - Keep exact same line breaks, spacing and structure.
-        """;
+                You are a professional proofreader.
+                Correct any grammar and spelling errors in the provided text.
+                Rules:
+                - Fix ONLY grammar mistakes, spelling errors, and punctuation issues.
+                - Do NOT change the meaning, tone, style, or voice of the text.
+                - Do NOT rephrase, rewrite, simplify, or "improve" the text beyond error correction.
+                - Preserve ALL placeholders (#{...}, ${...}, {{...}}, etc) EXACTLY as-is.
+                - Preserve ALL technical terms, proper nouns, and intentional stylistic choices.
+                - If the text contains no errors, return it unchanged.
+                Rules if the input is parseable as HTML/XML:
+                - Preserve ALL <script> tags (<script>...</script>) EXACTLY as-is.
+                - Preserve ALL HTML/XML tags and attribute values EXACTLY as-is.
+                Output format:
+                - Only the corrected text.
+                - No explanations, no notes, no extra text, no markdown formatting.
+                - Keep exact same line breaks, spacing and structure.
+            """;
     }
 
     @Override
     public String buildModerationPrompt(ModerationOptions options) {
         return """
-            You are a strict content moderation model whose only task is to evaluate safety violations.
-            Categories to evaluate:
-            %s
-            Rules:
-            - 0.0: no violation at all
-            - 0.1 - 0.3: mild / subtle undertone / possible concern
-            - 0.4 - 0.6: moderate / clear but not extreme
-            - 0.7 - 0.9: strong violation
-            - 1.0: extremely severe / blatant / dangerous content
-            Think carefully step by step:
-            1. Read the whole message
-            2. For each category, decide whether it applies
-            3. Assign a score using the scale above
-            4. Be objective; do not over-react to fictional, humorous, historical, or artistic context unless it clearly promotes harm
-        """.formatted(String.join(", ", options.getCategories()));
+                You are a strict content moderation model whose only task is to evaluate safety violations.
+                Categories to evaluate:
+                %s
+                Rules:
+                - 0.0: no violation at all
+                - 0.1 - 0.3: mild / subtle undertone / possible concern
+                - 0.4 - 0.6: moderate / clear but not extreme
+                - 0.7 - 0.9: strong violation
+                - 1.0: extremely severe / blatant / dangerous content
+                Think carefully step by step:
+                1. Read the whole message
+                2. For each category, decide whether it applies
+                3. Assign a score using the scale above
+                4. Be objective; do not over-react to fictional, humorous, historical, or artistic context unless it clearly promotes harm
+            """.formatted(String.join(", ", options.getCategories()));
     }
-
 
     // Response parsing -----------------------------------------------------------------------------------------------
 
@@ -188,7 +185,8 @@ public class DefaultAITextHandler implements AITextHandler {
             throw new IllegalStateException("getChatResponseContentPaths() may not return an empty list");
         }
 
-        return findFirstNonBlankByPaths(responseJson, messageContentPaths).orElseThrow(() -> new AIResponseException("No message content found at paths " + messageContentPaths, responseJson));
+        return findFirstNonBlankByPaths(responseJson, messageContentPaths)
+            .orElseThrow(() -> new AIResponseException("No message content found at paths " + messageContentPaths, responseJson));
     }
 
     @Override
@@ -211,7 +209,7 @@ public class DefaultAITextHandler implements AITextHandler {
             var reasoningTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageReasoningTokensPaths());
 
             if (inputTokensString.isPresent() || outputTokensString.isPresent()) {
-                var inputTokens  = inputTokensString.map(Integer::parseInt).orElse(-1);
+                var inputTokens = inputTokensString.map(Integer::parseInt).orElse(-1);
                 var outputTokens = outputTokensString.map(Integer::parseInt).orElse(-1);
                 var reasoningTokens = reasoningTokensString.map(Integer::parseInt).orElse(-1);
                 return new ChatUsage(inputTokens, outputTokens, reasoningTokens);
@@ -233,13 +231,14 @@ public class DefaultAITextHandler implements AITextHandler {
             throw new IllegalStateException("getFileResponseIdPaths() may not return an empty list");
         }
 
-        return findFirstNonBlankByPaths(responseJson, fileIdPaths).orElseThrow(() -> new AIResponseException("No file ID found at paths " + fileIdPaths, responseJson));
+        return findFirstNonBlankByPaths(responseJson, fileIdPaths)
+            .orElseThrow(() -> new AIResponseException("No file ID found at paths " + fileIdPaths, responseJson));
     }
 
     /**
-     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(JsonObject)} or {@link #parseFileResponse(JsonObject)}.
-     * May be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(JsonObject)} or
+     * {@link #parseFileResponse(JsonObject)}. May be empty. The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
@@ -248,9 +247,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(JsonObject)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(JsonObject)}. May not be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the message content in the JSON response.
      */
@@ -259,9 +258,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May not be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the input token count in the JSON response.
      * @since 1.3
@@ -271,9 +270,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May not be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the output token count in the JSON response.
      * @since 1.3
@@ -283,9 +282,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the reasoning token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}.
-     * May be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the reasoning token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns an empty list.
      * @return all possible paths to the reasoning token count in the JSON response.
      * @since 1.3
@@ -295,9 +294,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(JsonObject)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(JsonObject)}. May not be empty. The first path that
+     * matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns {@code id}.
      * @return all possible paths to the message content in the JSON response.
      */
@@ -305,11 +304,11 @@ public class DefaultAITextHandler implements AITextHandler {
         return List.of("id");
     }
 
-
     // Prompt helpers --------------------------------------------------------------------------------------------------
 
     /**
      * Appends extra prompt to existing system prompt, if any.
+     * 
      * @param options The chat options whose system prompt to append to.
      * @param extraPrompt The extra prompt text to append.
      * @return A new {@link ChatOptions} instance with the appended system prompt.
@@ -322,9 +321,9 @@ public class DefaultAITextHandler implements AITextHandler {
     }
 
     /**
-     * Returns options with a "Search within {location}" hint appended to the system prompt,
-     * but only if web search is enabled with a non-global location.
+     * Returns options with a "Search within {location}" hint appended to the system prompt, but only if web search is enabled with a non-global location.
      * Returns the original options unchanged otherwise.
+     * 
      * @param options The chat options to inspect and potentially modify.
      * @return Updated options, or the original options if no injection is needed.
      * @since 1.3
@@ -334,12 +333,11 @@ public class DefaultAITextHandler implements AITextHandler {
         return (location == null || location.isGlobal()) ? options : appendPrompt(options, "Search within " + location);
     }
 
-
     // Streaming helpers -----------------------------------------------------------------------------------------------
 
     /**
-     * Try to parse the given SSE event data as JSON and feed it to the given JSON processor. Any failure to parse will
-     * log a WARNING and continue.
+     * Try to parse the given SSE event data as JSON and feed it to the given JSON processor. Any failure to parse will log a WARNING and continue.
+     * 
      * @param eventData SSE event data line.
      * @param processor The JSON processor.
      * @return {@code true} to continue stream in case of exception, else the result of the given JSON processor.
@@ -406,4 +404,5 @@ public class DefaultAITextHandler implements AITextHandler {
             throw new UnsupportedOperationException("Web search is not supported by " + service.getName());
         }
     }
+
 }

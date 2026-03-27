@@ -38,4 +38,5 @@ public class AIServiceUnavailableException extends AIHttpException {
     public AIServiceUnavailableException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

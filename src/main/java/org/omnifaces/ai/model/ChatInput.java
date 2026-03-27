@@ -88,6 +88,7 @@ public class ChatInput implements Serializable {
             /** A response from the AI assistant. */
             ASSISTANT
         }
+
     }
 
     /**
@@ -110,6 +111,7 @@ public class ChatInput implements Serializable {
             id = requireNonBlank(id, "id");
             mimeType = requireNonNull(mimeType, "mimeType");
         }
+
     }
 
     /**
@@ -163,10 +165,9 @@ public class ChatInput implements Serializable {
         /**
          * Creates a new attachment backed by a source path for memory-efficient streaming.
          * <p>
-         * The file name is derived from the path and the MIME type is detected by reading the first kilobyte of magic
-         * bytes. The file content is initially <strong>not</strong> loaded into memory; it will be streamed when the AI
-         * service builds the request payload and supports a {@code files} API for file attachments. It is only loaded
-         * into memory when the AI service does not support any {@code files} API.
+         * The file name is derived from the path and the MIME type is detected by reading the first kilobyte of magic bytes. The file content is initially
+         * <strong>not</strong> loaded into memory; it will be streamed when the AI service builds the request payload and supports a {@code files} API for file
+         * attachments. It is only loaded into memory when the AI service does not support any {@code files} API.
          *
          * @param source The source path, must not be {@code null}.
          * @throws UncheckedIOException if the source cannot be read for MIME type detection.
@@ -179,10 +180,9 @@ public class ChatInput implements Serializable {
         /**
          * Creates a new attachment backed by a source path for memory-efficient streaming.
          * <p>
-         * The file name is derived from the path and the MIME type is detected by reading the first kilobyte of magic
-         * bytes. The file content is initially <strong>not</strong> loaded into memory; it will be streamed when the AI
-         * service builds the request payload and supports a {@code files} API for file attachments. It is only loaded
-         * into memory when the AI service does not support any {@code files} API.
+         * The file name is derived from the path and the MIME type is detected by reading the first kilobyte of magic bytes. The file content is initially
+         * <strong>not</strong> loaded into memory; it will be streamed when the AI service builds the request payload and supports a {@code files} API for file
+         * attachments. It is only loaded into memory when the AI service does not support any {@code files} API.
          *
          * @param source The source path, must not be {@code null}.
          * @param metadata Additional provider-specific metadata to use in upload request, must not be {@code null}.
@@ -199,12 +199,13 @@ public class ChatInput implements Serializable {
             this.mimeType = requireNonNull(mimeType, "mimeType");
             this.fileName = fileName != null ? fileName : ("file." + mimeType.extension());
             this.metadata = requireNonNull(metadata, "metadata").entrySet().stream()
-                    .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
-                    .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
+                .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
+                .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
         }
 
         /**
          * Custom serialization to handle non-serializable {@link Path}.
+         * 
          * @param output The object output stream.
          * @throws IOException If an I/O error occurs.
          */
@@ -215,6 +216,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Custom deserialization to restore {@link Path} from its string representation.
+         * 
          * @param input The object input stream.
          * @throws IOException If an I/O error occurs.
          * @throws ClassNotFoundException If the class of a serialized object cannot be found.
@@ -229,6 +231,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Gets the content bytes, or {@code null} if this attachment is backed by a {@link #source() Path}.
+         * 
          * @return The content bytes, or {@code null} for Path-backed attachments.
          */
         public byte[] content() {
@@ -237,6 +240,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Gets the source path, or {@code null} if this attachment is backed by {@link #content() byte[]}.
+         * 
          * @return The source path, or {@code null} for byte[]-backed attachments.
          * @since 1.2
          */
@@ -246,6 +250,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Gets the MIME type.
+         * 
          * @return The MIME type.
          */
         public MimeType mimeType() {
@@ -254,6 +259,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Gets the file name.
+         * 
          * @return The file name.
          */
         public String fileName() {
@@ -262,6 +268,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Gets the additional provider-specific metadata.
+         * 
          * @return An unmodifiable map of metadata.
          */
         public Map<String, String> metadata() {
@@ -327,6 +334,7 @@ public class ChatInput implements Serializable {
 
             return stringBuilder.append(']').toString();
         }
+
     }
 
     /** The user message. */
@@ -351,6 +359,7 @@ public class ChatInput implements Serializable {
 
     /**
      * Gets the user message text.
+     * 
      * @return The message string.
      */
     public String getMessage() {
@@ -358,8 +367,8 @@ public class ChatInput implements Serializable {
     }
 
     /**
-     * Gets the list of images associated with this input.
-     * This does not include non-image files; these are available via {@link #getFiles()}.
+     * Gets the list of images associated with this input. This does not include non-image files; these are available via {@link #getFiles()}.
+     * 
      * @return An unmodifiable list of images, or an empty list if no images are attached.
      */
     public List<Attachment> getImages() {
@@ -367,8 +376,8 @@ public class ChatInput implements Serializable {
     }
 
     /**
-     * Gets the list of files associated with this input.
-     * This does not include image files; these are available via {@link #getImages()}.
+     * Gets the list of files associated with this input. This does not include image files; these are available via {@link #getImages()}.
+     * 
      * @return An unmodifiable list of files, or an empty list if no files are attached.
      */
     public List<Attachment> getFiles() {
@@ -398,7 +407,9 @@ public class ChatInput implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link ChatInput} instances. For example:
+     * 
      * <pre>
+     * 
      * ChatInput input = ChatInput.newBuilder()
      *     .message("What do you see in these images?")
      *     .attach(image1, image2)
@@ -417,14 +428,17 @@ public class ChatInput implements Serializable {
      * Use {@link ChatInput#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
+
         private String message;
         private List<Attachment> images = new ArrayList<>();
         private List<Attachment> files = new ArrayList<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the user message text.
+         * 
          * @param message The message string.
          * @return This builder instance for chaining.
          */
@@ -438,9 +452,10 @@ public class ChatInput implements Serializable {
          * <p>
          * File contents are automatically classified based on their content:
          * <ul>
-         *   <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP, SVG) are added as images and sanitized for AI compatibility.</li>
-         *   <li>All other files are added as files with their MIME type auto-detected.</li>
+         * <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP, SVG) are added as images and sanitized for AI compatibility.</li>
+         * <li>All other files are added as files with their MIME type auto-detected.</li>
          * </ul>
+         * 
          * @param contents The file contents to attach.
          * @return This builder instance for chaining.
          * @see ImageHelper#isSupportedAsImageAttachment(MimeType)
@@ -459,9 +474,10 @@ public class ChatInput implements Serializable {
          * <p>
          * Source paths are automatically classified based on their content:
          * <ul>
-         *   <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP, SVG) are added as images and sanitized for AI compatibility.</li>
-         *   <li>All other files are added as files with their MIME type auto-detected.</li>
+         * <li>Supported image formats (JPEG, PNG, GIF, BMP, WEBP, SVG) are added as images and sanitized for AI compatibility.</li>
+         * <li>All other files are added as files with their MIME type auto-detected.</li>
          * </ul>
+         * 
          * @param sources The source paths to attach.
          * @return This builder instance for chaining.
          * @see ImageHelper#isSupportedAsImageAttachment(MimeType)
@@ -499,6 +515,7 @@ public class ChatInput implements Serializable {
 
         /**
          * Finalizes the configuration and creates a {@link ChatInput} instance.
+         * 
          * @return A fully configured {@code ChatInput} object.
          * @throws IllegalArgumentException if message is blank.
          */
@@ -506,6 +523,7 @@ public class ChatInput implements Serializable {
             requireNonBlank(message, "message");
             return new ChatInput(this);
         }
+
     }
 
     private static byte[] readAllBytes(Path source) {
@@ -516,4 +534,5 @@ public class ChatInput implements Serializable {
             throw new UncheckedIOException("Cannot read all bytes from " + source, e);
         }
     }
+
 }

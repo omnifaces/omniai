@@ -42,10 +42,14 @@ abstract class BaseAIServiceImageHandlerIT extends AIServiceIT {
         log(response);
         var sentences = response.split("\\.");
         assertAll(
-            () -> assertTrue(ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains), "response must contain acceptable descriptions: " + ACCEPTABLE_DESCRIPTIONS),
+            () -> assertTrue(
+                ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains),
+                "response must contain acceptable descriptions: " + ACCEPTABLE_DESCRIPTIONS
+            ),
             () -> assertTrue(sentences.length <= 2, "max 2 sentences"),
             () -> assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5) in 1st sentence"),
             () -> assertTrue(sentences.length < 2 || sentences[1].split("\\s+").length <= 30, "max 30 words (slack of 5) in 2nd sentence")
         );
     }
+
 }

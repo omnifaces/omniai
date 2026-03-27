@@ -42,13 +42,31 @@ import org.omnifaces.ai.model.ChatInput.Message.Role;
 class ChatInputTest {
 
     private static final MimeType TEST_PNG = new MimeType() {
-        @Override public String value() { return "image/png"; }
-        @Override public String extension() { return "png"; }
+
+        @Override
+        public String value() {
+            return "image/png";
+        }
+
+        @Override
+        public String extension() {
+            return "png";
+        }
+
     };
 
     private static final MimeType TEST_PDF = new MimeType() {
-        @Override public String value() { return "application/pdf"; }
-        @Override public String extension() { return "pdf"; }
+
+        @Override
+        public String value() {
+            return "application/pdf";
+        }
+
+        @Override
+        public String extension() {
+            return "pdf";
+        }
+
     };
 
     private static final byte[] PNG_BYTES = createTestImage("PNG");
@@ -62,7 +80,8 @@ class ChatInputTest {
             var baos = new ByteArrayOutputStream();
             ImageIO.write(image, format, baos);
             return baos.toByteArray();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Failed to create test " + format + " image", e);
         }
     }
@@ -76,8 +95,8 @@ class ChatInputTest {
     @Test
     void builder_messageOnly() {
         var input = ChatInput.newBuilder()
-                .message("Hello, AI!")
-                .build();
+            .message("Hello, AI!")
+            .build();
 
         assertEquals("Hello, AI!", input.getMessage());
         assertTrue(input.getImages().isEmpty());
@@ -106,9 +125,9 @@ class ChatInputTest {
     @Test
     void builder_attachPngImage() {
         var input = ChatInput.newBuilder()
-                .message("What's in this image?")
-                .attach(PNG_BYTES)
-                .build();
+            .message("What's in this image?")
+            .attach(PNG_BYTES)
+            .build();
 
         assertEquals(1, input.getImages().size());
         assertTrue(input.getFiles().isEmpty());
@@ -121,9 +140,9 @@ class ChatInputTest {
     @Test
     void builder_attachMultipleImages() {
         var input = ChatInput.newBuilder()
-                .message("Compare these images")
-                .attach(PNG_BYTES, JPEG_BYTES, GIF_BYTES)
-                .build();
+            .message("Compare these images")
+            .attach(PNG_BYTES, JPEG_BYTES, GIF_BYTES)
+            .build();
 
         assertEquals(3, input.getImages().size());
         assertEquals("image1.png", input.getImages().get(0).fileName());
@@ -138,9 +157,9 @@ class ChatInputTest {
     @Test
     void builder_attachPdfFile() {
         var input = ChatInput.newBuilder()
-                .message("Summarize this document")
-                .attach(PDF_BYTES)
-                .build();
+            .message("Summarize this document")
+            .attach(PDF_BYTES)
+            .build();
 
         assertTrue(input.getImages().isEmpty());
         assertEquals(1, input.getFiles().size());
@@ -157,9 +176,9 @@ class ChatInputTest {
     @Test
     void builder_attachMixedImagesAndFiles() {
         var input = ChatInput.newBuilder()
-                .message("Analyze all of these")
-                .attach(PNG_BYTES, PDF_BYTES, JPEG_BYTES)
-                .build();
+            .message("Analyze all of these")
+            .attach(PNG_BYTES, PDF_BYTES, JPEG_BYTES)
+            .build();
 
         assertEquals(2, input.getImages().size());
         assertEquals(1, input.getFiles().size());
@@ -168,11 +187,11 @@ class ChatInputTest {
     @Test
     void builder_attachCalledMultipleTimes() {
         var input = ChatInput.newBuilder()
-                .message("Multiple attachments")
-                .attach(PNG_BYTES)
-                .attach(JPEG_BYTES)
-                .attach(PDF_BYTES)
-                .build();
+            .message("Multiple attachments")
+            .attach(PNG_BYTES)
+            .attach(JPEG_BYTES)
+            .attach(PDF_BYTES)
+            .build();
 
         assertEquals(2, input.getImages().size());
         assertEquals(1, input.getFiles().size());
@@ -185,23 +204,27 @@ class ChatInputTest {
     @Test
     void getImages_isImmutable() {
         var input = ChatInput.newBuilder()
-                .message("Test")
-                .attach(PNG_BYTES)
-                .build();
+            .message("Test")
+            .attach(PNG_BYTES)
+            .build();
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png", emptyMap())));
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> input.getImages().add(new Attachment(new byte[0], TEST_PNG, "test.png", emptyMap()))
+        );
     }
 
     @Test
     void getFiles_isImmutable() {
         var input = ChatInput.newBuilder()
-                .message("Test")
-                .attach(PDF_BYTES)
-                .build();
+            .message("Test")
+            .attach(PDF_BYTES)
+            .build();
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf", emptyMap())));
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> input.getFiles().add(new Attachment(new byte[0], TEST_PDF, "test.pdf", emptyMap()))
+        );
     }
 
     // =================================================================================================================
@@ -211,9 +234,9 @@ class ChatInputTest {
     @Test
     void withHistory_preservesMessageAndAttachments() {
         var input = ChatInput.newBuilder()
-                .message("Current message")
-                .attach(PNG_BYTES, PDF_BYTES)
-                .build();
+            .message("Current message")
+            .attach(PNG_BYTES, PDF_BYTES)
+            .build();
 
         var history = List.of(new Message(Role.USER, "Hi", emptyList()), new Message(Role.ASSISTANT, "Hello", emptyList()));
         var withHistory = input.withHistory(history);
@@ -230,8 +253,8 @@ class ChatInputTest {
     @Test
     void withHistory_originalUnchanged() {
         var input = ChatInput.newBuilder()
-                .message("Test")
-                .build();
+            .message("Test")
+            .build();
 
         input.withHistory(List.of(new Message(Role.USER, "old", emptyList())));
 
@@ -241,8 +264,8 @@ class ChatInputTest {
     @Test
     void builder_defaultHistory_isEmpty() {
         var input = ChatInput.newBuilder()
-                .message("Test")
-                .build();
+            .message("Test")
+            .build();
 
         assertTrue(input.getHistory().isEmpty());
     }
@@ -293,9 +316,9 @@ class ChatInputTest {
     @Test
     void serialization_preservesAllFields() throws Exception {
         var original = ChatInput.newBuilder()
-                .message("Test with attachments")
-                .attach(PNG_BYTES, PDF_BYTES)
-                .build();
+            .message("Test with attachments")
+            .attach(PNG_BYTES, PDF_BYTES)
+            .build();
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -324,4 +347,5 @@ class ChatInputTest {
         assertNotNull(attachment.toBase64());
         assertNotNull(attachment.toDataUri());
     }
+
 }

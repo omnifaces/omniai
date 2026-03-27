@@ -36,27 +36,36 @@ import org.omnifaces.ai.model.ChatOptions;
  * CDI qualifier annotation for injecting configured {@link AIService} instances.
  * <p>
  * Usage example with built-in provider:
+ * 
  * <pre>
+ * 
  * &#64;Inject
  * &#64;AI(provider = ANTHROPIC, apiKey = "#{config.anthropicApiKey}")
  * private AIService ai;
  * </pre>
  * <p>
  * Usage example with custom service class:
+ * 
  * <pre>
+ * 
  * &#64;Inject
  * &#64;AI(serviceClass = MyCustomAIService.class)
  * private AIService ai;
  * </pre>
+ * 
  * Usage example with custom OpenAI text handler for request tracking:
+ * 
  * <pre>
+ * 
  * public class TrackingTextHandler extends OpenAITextHandler {
+ * 
  *     &#64;Override
  *     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
  *         return Json.createObjectBuilder(super.buildChatPayload(service, input, options, streaming))
  *             .add("safety_identifier", getCurrentUserHash())
  *             .build();
  *     }
+ * 
  * }
  *
  * &#64;Inject
@@ -75,7 +84,7 @@ import org.omnifaces.ai.model.ChatOptions;
  */
 @Qualifier
 @Retention(RUNTIME)
-@Target({TYPE, METHOD, FIELD, PARAMETER, ANNOTATION_TYPE})
+@Target({ TYPE, METHOD, FIELD, PARAMETER, ANNOTATION_TYPE })
 public @interface AI {
 
     /**
@@ -87,9 +96,8 @@ public @interface AI {
     AIProvider provider() default AIProvider.OPENAI;
 
     /**
-     * Custom {@link AIService} implementation class.
-     * Use this instead of {@link #provider()} when you have a custom implementation.
-     * If specified (not {@link AIService AIService.class}), the {@link #provider()} is ignored.
+     * Custom {@link AIService} implementation class. Use this instead of {@link #provider()} when you have a custom implementation. If specified (not
+     * {@link AIService AIService.class}), the {@link #provider()} is ignored.
      *
      * @return The custom service class, or {@link AIService AIService.class} if not specified.
      */
@@ -97,8 +105,7 @@ public @interface AI {
     Class<? extends AIService> serviceClass() default AIService.class;
 
     /**
-     * The API key. Supports EL and/or MicroProfile Config expressions.
-     * Required for most providers.
+     * The API key. Supports EL and/or MicroProfile Config expressions. Required for most providers.
      *
      * @return The API key or EL expression.
      */
@@ -106,8 +113,8 @@ public @interface AI {
     String apiKey() default "";
 
     /**
-     * The model to use. Supports EL and/or MicroProfile Config expressions.
-     * If empty, uses the provider's default model as per {@link AIProvider#getDefaultModel()}.
+     * The model to use. Supports EL and/or MicroProfile Config expressions. If empty, uses the provider's default model as per
+     * {@link AIProvider#getDefaultModel()}.
      *
      * @return The model name or EL expression.
      */
@@ -115,8 +122,8 @@ public @interface AI {
     String model() default "";
 
     /**
-     * The API endpoint URL. Supports EL and/or MicroProfile Config expressions.
-     * If empty, uses the provider's default endpoint as per {@link AIProvider#getDefaultEndpoint()}.
+     * The API endpoint URL. Supports EL and/or MicroProfile Config expressions. If empty, uses the provider's default endpoint as per
+     * {@link AIProvider#getDefaultEndpoint()}.
      *
      * @return The endpoint URL or EL expression.
      */
@@ -126,8 +133,8 @@ public @interface AI {
     /**
      * The default system prompt to provide high-level instructions to the model. Supports EL and/or MicroProfile Config expressions.
      * <p>
-     * This is used as the {@link ChatOptions#getSystemPrompt()} when calling {@link AIService#chat(String)} or {@link AIService#chatAsync(String)} without explicit options.
-     * When you call {@link AIService#chat(String, ChatOptions)} or {@link AIService#chatAsync(String, ChatOptions)} with explicit options,
+     * This is used as the {@link ChatOptions#getSystemPrompt()} when calling {@link AIService#chat(String)} or {@link AIService#chatAsync(String)} without
+     * explicit options. When you call {@link AIService#chat(String, ChatOptions)} or {@link AIService#chatAsync(String, ChatOptions)} with explicit options,
      * this value is ignored in favor of the options' system prompt.
      *
      * @return The default system prompt or EL expression.
@@ -136,8 +143,8 @@ public @interface AI {
     String prompt() default "";
 
     /**
-     * Custom {@link AITextHandler} implementation class.
-     * If not specified, uses the provider's default text handler as per {@link AIProvider#getDefaultTextHandler()}.
+     * Custom {@link AITextHandler} implementation class. If not specified, uses the provider's default text handler as per
+     * {@link AIProvider#getDefaultTextHandler()}.
      *
      * @return The custom text handler class, or {@link AITextHandler AITextHandler.class} if not specified.
      */
@@ -145,8 +152,8 @@ public @interface AI {
     Class<? extends AITextHandler> textHandler() default AITextHandler.class;
 
     /**
-     * Custom {@link AIImageHandler} implementation class.
-     * If not specified, uses the provider's default image handler as per {@link AIProvider#getDefaultImageHandler()}.
+     * Custom {@link AIImageHandler} implementation class. If not specified, uses the provider's default image handler as per
+     * {@link AIProvider#getDefaultImageHandler()}.
      *
      * @return The custom image handler class, or {@link AIImageHandler AIImageHandler.class} if not specified.
      */
@@ -154,8 +161,8 @@ public @interface AI {
     Class<? extends AIImageHandler> imageHandler() default AIImageHandler.class;
 
     /**
-     * Custom {@link AIAudioHandler} implementation class.
-     * If not specified, uses the provider's default audio handler as per {@link AIProvider#getDefaultAudioHandler()}.
+     * Custom {@link AIAudioHandler} implementation class. If not specified, uses the provider's default audio handler as per
+     * {@link AIProvider#getDefaultAudioHandler()}.
      *
      * @return The custom audio handler class, or {@link AIAudioHandler AIAudioHandler.class} if not specified.
      * @since 1.1

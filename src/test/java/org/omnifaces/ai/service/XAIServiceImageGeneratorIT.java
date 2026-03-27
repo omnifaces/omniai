@@ -34,4 +34,5 @@ class XAIServiceImageGeneratorIT extends BaseAIServiceImageGeneratorIT {
     protected String getModel() {
         return "grok-imagine-image";
     }
+
 }

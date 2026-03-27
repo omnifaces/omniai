@@ -387,11 +387,11 @@ class AIConfigTest {
     void withXxx_chainingPreservesAllFields() {
         var strategy = AIStrategy.of(OpenAITextHandler.class);
         var config = AIConfig.of(AIProvider.ANTHROPIC, "my-key")
-                .withModel("claude-sonnet-4-5")
-                .withEndpoint("https://custom.api.com")
-                .withPrompt("Be helpful")
-                .withStrategy(strategy)
-                .withProperty("extra", "data");
+            .withModel("claude-sonnet-4-5")
+            .withEndpoint("https://custom.api.com")
+            .withPrompt("Be helpful")
+            .withStrategy(strategy)
+            .withProperty("extra", "data");
 
         assertEquals("ANTHROPIC", config.provider());
         assertEquals("my-key", config.apiKey());
@@ -479,38 +479,38 @@ class AIConfigTest {
     @Test
     void property_propertiesMapOverridesProvider() {
         var config = AIConfig.of(AIProvider.OPENAI, "key")
-                .withProperty(AIConfig.PROPERTY_PROVIDER, "OVERRIDDEN");
+            .withProperty(AIConfig.PROPERTY_PROVIDER, "OVERRIDDEN");
         assertEquals("OVERRIDDEN", config.property(AIConfig.PROPERTY_PROVIDER));
     }
 
     @Test
     void property_propertiesMapOverridesApiKey() {
         var config = AIConfig.of(AIProvider.OPENAI, "original")
-                .withProperty(AIConfig.PROPERTY_API_KEY, "overridden");
+            .withProperty(AIConfig.PROPERTY_API_KEY, "overridden");
         assertEquals("overridden", config.property(AIConfig.PROPERTY_API_KEY));
     }
 
     @Test
     void property_propertiesMapOverridesModel() {
         var config = AIConfig.of(AIProvider.OPENAI, "key")
-                .withModel("original")
-                .withProperty(AIConfig.PROPERTY_MODEL, "overridden");
+            .withModel("original")
+            .withProperty(AIConfig.PROPERTY_MODEL, "overridden");
         assertEquals("overridden", config.property(AIConfig.PROPERTY_MODEL));
     }
 
     @Test
     void property_propertiesMapOverridesEndpoint() {
         var config = AIConfig.of(AIProvider.OPENAI, "key")
-                .withEndpoint("https://original.com")
-                .withProperty(AIConfig.PROPERTY_ENDPOINT, "https://overridden.com");
+            .withEndpoint("https://original.com")
+            .withProperty(AIConfig.PROPERTY_ENDPOINT, "https://overridden.com");
         assertEquals("https://overridden.com", config.property(AIConfig.PROPERTY_ENDPOINT));
     }
 
     @Test
     void property_propertiesMapOverridesPrompt() {
         var config = AIConfig.of(AIProvider.OPENAI, "key")
-                .withPrompt("original")
-                .withProperty(AIConfig.PROPERTY_PROMPT, "overridden");
+            .withPrompt("original")
+            .withProperty(AIConfig.PROPERTY_PROMPT, "overridden");
         assertEquals("overridden", config.property(AIConfig.PROPERTY_PROMPT));
     }
 
@@ -669,28 +669,115 @@ class AIConfigTest {
 
     /** A stub that implements AIService but lacks the required AIConfig constructor. */
     public static class NoConstructorService implements AIService {
+
         private static final long serialVersionUID = 1L;
+
         // No AIConfig constructor — createService should fail.
-        @Override public String getProviderName() throws AIException { return null; }
-        @Override public String getModelName() throws AIException { return null; }
-        @Override public String getChatPrompt() throws AIException { return null; }
-        @Override public boolean supportsModality(AIModality modality) throws AIException { return false; }
-        @Override public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException { return null; }
-        @Override public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) throws AIException { return null; }
-        @Override public String upload(Attachment attachment, ChatOptions options) throws AIException { return null; }
-        @Override public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException { return null; }
-        @Override public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException { return null; }
-        @Override public CompletableFuture<String> detectLanguageAsync(String text) throws AIException { return null; }
-        @Override public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException { return null; }
-        @Override public CompletableFuture<String> proofreadAsync(String text) throws AIException { return null; }
-        @Override public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException { return null; }
-        @Override public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException { return null; }
-        @Override public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException { return null; }
-        @Override public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException { return null; }
-        @Override public String transcribe(byte[] audio) throws AIException { return AIService.super.transcribe(audio); }
-        @Override public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException { return null; }
-        @Override public CompletableFuture<String> transcribeAsync(Path audio) throws AIException { return null; }
-        @Override public CompletableFuture<byte[]> generateAudioAsync(String text, GenerateAudioOptions options) throws AIException { return null; }
-        @Override public CompletableFuture<Void> generateAudioAsync(String text, Path path, GenerateAudioOptions options) throws AIException { return null; }
+        @Override
+        public String getProviderName() throws AIException {
+            return null;
+        }
+
+        @Override
+        public String getModelName() throws AIException {
+            return null;
+        }
+
+        @Override
+        public String getChatPrompt() throws AIException {
+            return null;
+        }
+
+        @Override
+        public boolean supportsModality(AIModality modality) throws AIException {
+            return false;
+        }
+
+        @Override
+        public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) throws AIException {
+            return null;
+        }
+
+        @Override
+        public String upload(Attachment attachment, ChatOptions options) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> summarizeAsync(String text, int maxWords) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> detectLanguageAsync(String text) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> proofreadAsync(String text) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> analyzeImageAsync(byte[] image, String prompt) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
+            return null;
+        }
+
+        @Override
+        public String transcribe(byte[] audio) throws AIException {
+            return AIService.super.transcribe(audio);
+        }
+
+        @Override
+        public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<String> transcribeAsync(Path audio) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<byte[]> generateAudioAsync(String text, GenerateAudioOptions options) throws AIException {
+            return null;
+        }
+
+        @Override
+        public CompletableFuture<Void> generateAudioAsync(String text, Path path, GenerateAudioOptions options) throws AIException {
+            return null;
+        }
+
     }
+
 }

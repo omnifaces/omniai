@@ -34,4 +34,5 @@ class OpenRouterAIServiceAudioHandlerIT extends BaseAIServiceAudioHandlerIT {
     protected String getModel() {
         return "openai/gpt-audio-mini";
     }
+
 }

@@ -32,18 +32,14 @@ import java.util.zip.ZipInputStream;
 final class DocumentMimeTypeDetector {
 
     private enum DocumentMimeType implements MimeType {
-        PDF("application/pdf", "pdf"),
-        DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
-        XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
-        PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"),
-        ZIP("application/zip", "zip"),
-        CSV("text/csv", "csv"),
-        JSON("application/json", "json"),
-        HTML("text/html", "html"),
-        XML("application/xml", "xml"),
-        MARKDOWN("text/markdown", "md"),
-        TEXT("text/plain", "txt"),
-        BINARY("application/octet-stream", "bin");
+
+        PDF("application/pdf", "pdf"), DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"), XLSX(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"
+        ), PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"), ZIP("application/zip", "zip"), CSV(
+            "text/csv", "csv"
+        ), JSON("application/json", "json"), HTML(
+            "text/html", "html"
+        ), XML("application/xml", "xml"), MARKDOWN("text/markdown", "md"), TEXT("text/plain", "txt"), BINARY("application/octet-stream", "bin");
 
         private final String value;
         private final String extension;
@@ -62,10 +58,11 @@ final class DocumentMimeTypeDetector {
         public String extension() {
             return extension;
         }
+
     }
 
-    private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
-    private static final byte[] ZIP_MAGIC = {'P', 'K', 0x03, 0x04};
+    private static final byte[] PDF_MAGIC = { '%', 'P', 'D', 'F' };
+    private static final byte[] ZIP_MAGIC = { 'P', 'K', 0x03, 0x04 };
 
     private DocumentMimeTypeDetector() {
         throw new AssertionError();
@@ -102,9 +99,8 @@ final class DocumentMimeTypeDetector {
     }
 
     /**
-     * Guesses the mime type for ZIP-based formats (docx, xlsx, pptx).
-     * We peek inside the ZIP to find characteristic files.
-     * Falls back to {@code application/zip}.
+     * Guesses the mime type for ZIP-based formats (docx, xlsx, pptx). We peek inside the ZIP to find characteristic files. Falls back to
+     * {@code application/zip}.
      */
     private static MimeType guessZipMimeType(byte[] content) {
         try (var zis = new ZipInputStream(new ByteArrayInputStream(content))) {
@@ -134,8 +130,7 @@ final class DocumentMimeTypeDetector {
     }
 
     /**
-     * Checks if content is likely text (not binary).
-     * Validates UTF-8 encoding and rejects control characters.
+     * Checks if content is likely text (not binary). Validates UTF-8 encoding and rejects control characters.
      */
     private static Optional<String> findLikelyText(byte[] content) {
         var decoder = UTF_8.newDecoder().onMalformedInput(REPORT).onUnmappableCharacter(REPORT);
@@ -163,8 +158,7 @@ final class DocumentMimeTypeDetector {
     }
 
     /**
-     * Guesses the mime type for text-based content.
-     * Falls back to {@code text/plain}.
+     * Guesses the mime type for text-based content. Falls back to {@code text/plain}.
      */
     private static MimeType guessTextMimeType(String text) {
         if (looksLikeJson(text)) {
@@ -256,6 +250,8 @@ final class DocumentMimeTypeDetector {
      * Check for common markdown patterns: headers, links, code blocks.
      */
     private static boolean looksLikeMarkdown(String text) {
-        return text.startsWith("# ") || text.startsWith("## ") || text.startsWith("### ") || text.contains("\n# ") || text.contains("\n## ") || text.contains("\n### ") || text.contains("](") || text.contains("```");
+        return text.startsWith("# ") || text.startsWith("## ") || text.startsWith("### ") || text.contains("\n# ") || text.contains("\n## ")
+            || text.contains("\n### ") || text.contains("](") || text.contains("```");
     }
+
 }

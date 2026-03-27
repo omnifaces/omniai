@@ -37,4 +37,5 @@ class MistralAIServiceAudioHandlerIT extends BaseAIServiceAudioHandlerIT {
     protected String getModel() {
         return "voxtral-small-2507";
     }
+
 }

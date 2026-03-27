@@ -49,8 +49,7 @@ public final class FileHelper {
     /**
      * Returns whether the creation of temporary files is supported in the current environment.
      * <p>
-     * This is determined by probing the default temp directory at class-loading time.
-     * When {@code false}, callers should fall back to in-memory processing.
+     * This is determined by probing the default temp directory at class-loading time. When {@code false}, callers should fall back to in-memory processing.
      *
      * @return {@code true} if temporary files can be created, {@code false} otherwise.
      */
@@ -77,8 +76,7 @@ public final class FileHelper {
     /**
      * Creates an {@link InputStream} that deletes the underlying file when closed.
      * <p>
-     * This is useful for consuming temporary files exactly once without leaving them on disk.
-     * The returned stream must be closed by the caller.
+     * This is useful for consuming temporary files exactly once without leaving them on disk. The returned stream must be closed by the caller.
      *
      * @param source The file to read from, must not be {@code null}.
      * @return An {@link InputStream} that deletes the file on close.
@@ -89,8 +87,7 @@ public final class FileHelper {
     }
 
     /**
-     * Attempts to delete the given paths, silently falling back to {@link java.io.File#deleteOnExit()} for any
-     * files that cannot be deleted immediately.
+     * Attempts to delete the given paths, silently falling back to {@link java.io.File#deleteOnExit()} for any files that cannot be deleted immediately.
      * <p>
      * {@code null} entries in the array are ignored.
      *
@@ -121,8 +118,8 @@ public final class FileHelper {
     /**
      * Closes the given {@link Closeable} resource, silently ignoring any {@link IOException}.
      * <p>
-     * This is intended for use in cleanup blocks (like {@code finally}) where a failure to close should not suppress
-     * or mask a primary exception. If the argument is {@code null}, this method does nothing.
+     * This is intended for use in cleanup blocks (like {@code finally}) where a failure to close should not suppress or mask a primary exception. If the
+     * argument is {@code null}, this method does nothing.
      *
      * @param closeable The resource to close, may be {@code null}.
      */
@@ -138,6 +135,7 @@ public final class FileHelper {
     }
 
     private static class TempFiles {
+
         private static final boolean SUPPORTED = checkTempFileSupport();
 
         private static boolean checkTempFileSupport() {
@@ -149,6 +147,7 @@ public final class FileHelper {
                 return false;
             }
         }
+
     }
 
     private static class OffsetInputStream extends InputStream {
@@ -229,5 +228,7 @@ public final class FileHelper {
         public void close() throws IOException {
             channel.close();
         }
+
     }
+
 }

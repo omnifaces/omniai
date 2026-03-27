@@ -60,7 +60,8 @@ class AIServiceProducer {
      * @param beanManager The CDI bean manager.
      * @return The configured AI service instance.
      * @throws IllegalArgumentException If {@link AIProvider#CUSTOM} is used via {@code @AI} annotation (use {@code serviceClass} instead).
-     * @throws UnsupportedOperationException If a required runtime dependency is not available (jakarta.json-api, jakarta.enterprise.cdi-el-api, or jakarta.el-api).
+     * @throws UnsupportedOperationException If a required runtime dependency is not available (jakarta.json-api, jakarta.enterprise.cdi-el-api, or
+     * jakarta.el-api).
      */
     @Produces
     @Dependent
@@ -73,8 +74,10 @@ class AIServiceProducer {
         }
 
         if (!isJsonAvailable()) {
-            throw new UnsupportedOperationException("You need a runtime implementation of jakarta.json-api in order for default AI services to work."
-                    + " E.g. org.eclipse.parsson:parsson:1.1.7 or simply a Jakarta EE-compatible runtime such as WildFly");
+            throw new UnsupportedOperationException(
+                "You need a runtime implementation of jakarta.json-api in order for default AI services to work."
+                    + " E.g. org.eclipse.parsson:parsson:1.1.7 or simply a Jakarta EE-compatible runtime such as WildFly"
+            );
         }
 
         var provider = annotation.serviceClass() == AIService.class ? annotation.provider().name() : annotation.serviceClass().getName();
@@ -92,6 +95,7 @@ class AIServiceProducer {
 
     /**
      * Resolves expressions in the given value if necessary.
+     * 
      * @param beanManager The CDI bean manager for EL resolution.
      * @param value The value, possibly containing an expression.
      * @return The resolved value, or {@code null} if the input is blank.
@@ -106,15 +110,19 @@ class AIServiceProducer {
         }
 
         if (!stripped.contains("}")) {
-            throw new IllegalArgumentException("The expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'.");
+            throw new IllegalArgumentException(
+                "The expression '" + stripped + "' in an @AI annotation attribute appears corrupted, it is missing the trailing '}'."
+            );
         }
 
         var expression = stripped;
 
         if (looksLikeMicroProfileConfigExpression(expression)) {
             if (!isMicroProfileConfigAvailable()) {
-                throw new UnsupportedOperationException("You need a runtime implementation of microprofile-config-api in order for MP config resolution in @AI attributes to work."
-                    + " E.g. io.smallrye.config:smallrye-config:3.15.1 or simply a MicroProfile-compatible runtime such as Quarkus");
+                throw new UnsupportedOperationException(
+                    "You need a runtime implementation of microprofile-config-api in order for MP config resolution in @AI attributes to work."
+                        + " E.g. io.smallrye.config:smallrye-config:3.15.1 or simply a MicroProfile-compatible runtime such as Quarkus"
+                );
             }
 
             expression = resolveMicroProfileConfigExpression(expression);
@@ -122,13 +130,17 @@ class AIServiceProducer {
 
         if (looksLikeExpression(expression)) {
             if (!isELAwareBeanManagerAvailable(beanManager)) {
-                throw new UnsupportedOperationException("You need a runtime implementation of jakarta.enterprise.cdi-el-api in order for EL resolution in @AI attributes to work."
-                    + " E.g. org.jboss.weld.servlet:weld-servlet-shaded:6.0.0.Final or org.jboss.weld.se:weld-se-core:6.0.0.Final or simply a Jakarta EE-compatible runtime such as WildFly");
+                throw new UnsupportedOperationException(
+                    "You need a runtime implementation of jakarta.enterprise.cdi-el-api in order for EL resolution in @AI attributes to work."
+                        + " E.g. org.jboss.weld.servlet:weld-servlet-shaded:6.0.0.Final or org.jboss.weld.se:weld-se-core:6.0.0.Final or simply a Jakarta EE-compatible runtime such as WildFly"
+                );
             }
 
             if (!isELProcessorAvailable()) {
-                throw new UnsupportedOperationException("You need a runtime implementation of jakarta.el-api in order for EL resolution in @AI attributes to work."
-                    + " E.g. org.glassfish.expressly:expressly:6.0.0 or simply a Jakarta EE-compatible runtime such as WildFly");
+                throw new UnsupportedOperationException(
+                    "You need a runtime implementation of jakarta.el-api in order for EL resolution in @AI attributes to work."
+                        + " E.g. org.glassfish.expressly:expressly:6.0.0 or simply a Jakarta EE-compatible runtime such as WildFly"
+                );
             }
 
             expression = resolveELExpression(beanManager, expression);
@@ -172,4 +184,5 @@ class AIServiceProducer {
             return false;
         }
     }
+
 }

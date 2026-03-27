@@ -32,8 +32,7 @@ class ExecutorServiceManager {
     private ExecutorService executorService;
 
     /**
-     * First look up the JEE default managed executor service in JNDI.
-     * If unavailable, then look up the MP default managed executor service in CDI.
+     * First look up the JEE default managed executor service in JNDI. If unavailable, then look up the MP default managed executor service in CDI.
      */
     @PostConstruct
     public void init() {
@@ -62,6 +61,7 @@ class ExecutorServiceManager {
 
     /**
      * Returns the managed executor service, or {@code null} if unavailable.
+     * 
      * @return The managed executor service, or {@code null} if unavailable.
      */
     public ExecutorService getManagedExecutorService() {
@@ -70,9 +70,11 @@ class ExecutorServiceManager {
 
     /**
      * Returns the CDI-managed instance of this bean.
+     * 
      * @return The CDI-managed instance of this bean.
      */
     public static ExecutorServiceManager getCurrentInstance() {
         return CDI.current().select(ExecutorServiceManager.class).get();
     }
+
 }

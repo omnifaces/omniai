@@ -34,4 +34,5 @@ class OpenAIServiceAudioHandlerIT extends BaseAIServiceAudioHandlerIT {
     protected String getModel() {
         return "gpt-4o-transcribe";
     }
+
 }

@@ -39,15 +39,25 @@ public class GoogleAIImageHandler extends DefaultAIImageHandler {
     public JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
         var generationConfig = Json.createObjectBuilder()
             .add("responseModalities", Json.createArrayBuilder().add("IMAGE"))
-            .add("imageConfig", Json.createObjectBuilder()
-                .add("aspectRatio", options.getAspectRatio()));
+            .add(
+                "imageConfig", Json.createObjectBuilder()
+                    .add("aspectRatio", options.getAspectRatio())
+            );
 
         return Json.createObjectBuilder()
-            .add("contents", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("parts", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("text", prompt)))))
+            .add(
+                "contents", Json.createArrayBuilder()
+                    .add(
+                        Json.createObjectBuilder()
+                            .add(
+                                "parts", Json.createArrayBuilder()
+                                    .add(
+                                        Json.createObjectBuilder()
+                                            .add("text", prompt)
+                                    )
+                            )
+                    )
+            )
             .add("generationConfig", generationConfig)
             .build();
     }
@@ -56,4 +66,5 @@ public class GoogleAIImageHandler extends DefaultAIImageHandler {
     public List<String> getImageResponseContentPaths() {
         return List.of("candidates[0].content.parts[0].inlineData.data");
     }
+
 }

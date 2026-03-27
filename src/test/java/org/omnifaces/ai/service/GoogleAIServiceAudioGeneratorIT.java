@@ -34,4 +34,5 @@ class GoogleAIServiceAudioGeneratorIT extends BaseAIServiceAudioGeneratorIT {
     protected String getModel() {
         return "gemini-2.5-flash-preview-tts";
     }
+
 }

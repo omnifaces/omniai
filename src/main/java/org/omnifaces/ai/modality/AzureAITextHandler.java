@@ -32,4 +32,5 @@ public class AzureAITextHandler extends OpenAITextHandler {
     protected String getWebSearchToolName() {
         return "web_search_preview";
     }
+
 }

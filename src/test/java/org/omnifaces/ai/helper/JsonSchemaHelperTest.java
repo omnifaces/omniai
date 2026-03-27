@@ -29,7 +29,8 @@ class JsonSchemaHelperTest {
     // Test records
     // =================================================================================================================
 
-    record SimpleRecord(String name, int age) {}
+    record SimpleRecord(String name, int age) {
+    }
 
     @Test
     void buildJsonSchema_simpleRecord() {
@@ -55,7 +56,8 @@ class JsonSchemaHelperTest {
         float floatPrimitive, Float floatWrapper,
         double doublePrimitive, Double doubleWrapper,
         char charPrimitive, Character charWrapper
-    ) {}
+    ) {
+    }
 
     @Test
     void buildJsonSchema_allPrimitives() {
@@ -80,9 +82,12 @@ class JsonSchemaHelperTest {
         assertEquals("string", properties.getJsonObject("charWrapper").getString("type"));
     }
 
-    enum Status { PENDING, APPROVED, REJECTED }
+    enum Status {
+        PENDING, APPROVED, REJECTED
+    }
 
-    record WithEnum(Status status) {}
+    record WithEnum(Status status) {
+    }
 
     @Test
     void buildJsonSchema_withEnum() {
@@ -97,7 +102,8 @@ class JsonSchemaHelperTest {
         assertTrue(enumValues.toString().contains("REJECTED"));
     }
 
-    record WithList(List<String> items) {}
+    record WithList(List<String> items) {
+    }
 
     @Test
     void buildJsonSchema_withList() {
@@ -108,7 +114,8 @@ class JsonSchemaHelperTest {
         assertEquals("string", itemsSchema.getJsonObject("items").getString("type"));
     }
 
-    record WithArray(int[] numbers) {}
+    record WithArray(int[] numbers) {
+    }
 
     @Test
     void buildJsonSchema_withArray() {
@@ -119,8 +126,11 @@ class JsonSchemaHelperTest {
         assertEquals("integer", numbersSchema.getJsonObject("items").getString("type"));
     }
 
-    record Inner(String value) {}
-    record Outer(Inner inner) {}
+    record Inner(String value) {
+    }
+
+    record Outer(Inner inner) {
+    }
 
     @Test
     void buildJsonSchema_nested() {
@@ -131,7 +141,8 @@ class JsonSchemaHelperTest {
         assertEquals("string", innerSchema.getJsonObject("properties").getJsonObject("value").getString("type"));
     }
 
-    record WithOptional(String required, Optional<String> optional) {}
+    record WithOptional(String required, Optional<String> optional) {
+    }
 
     @Test
     void buildJsonSchema_withOptional() {
@@ -146,7 +157,8 @@ class JsonSchemaHelperTest {
         assertFalse(required.toString().contains("optional"));
     }
 
-    record ProductReview(String sentiment, int rating, List<String> pros, List<String> cons) {}
+    record ProductReview(String sentiment, int rating, List<String> pros, List<String> cons) {
+    }
 
     @Test
     void buildJsonSchema_productReview() {
@@ -161,7 +173,8 @@ class JsonSchemaHelperTest {
         assertEquals("string", properties.getJsonObject("cons").getJsonObject("items").getString("type"));
     }
 
-    record WithMap(Map<String, Double> scores) {}
+    record WithMap(Map<String, Double> scores) {
+    }
 
     @Test
     void buildJsonSchema_withMap() {
@@ -206,7 +219,7 @@ class JsonSchemaHelperTest {
         var json = "{\"numbers\":[1,2,3]}";
         var result = JsonSchemaHelper.fromJson(json, WithArray.class);
 
-        assertArrayEquals(new int[]{1, 2, 3}, result.numbers());
+        assertArrayEquals(new int[] { 1, 2, 3 }, result.numbers());
     }
 
     @Test
@@ -269,12 +282,26 @@ class JsonSchemaHelperTest {
     // =================================================================================================================
 
     public static class SimpleBean {
+
         private String name;
         private int age;
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public int getAge() { return age; }
-        public void setAge(int age) { this.age = age; }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+
     }
 
     @Test
@@ -293,9 +320,17 @@ class JsonSchemaHelperTest {
     }
 
     public static class BeanWithBoolean {
+
         private boolean active;
-        public boolean isActive() { return active; }
-        public void setActive(boolean active) { this.active = active; }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public void setActive(boolean active) {
+            this.active = active;
+        }
+
     }
 
     @Test
@@ -307,9 +342,17 @@ class JsonSchemaHelperTest {
     }
 
     public static class BeanWithList {
+
         private List<Integer> scores;
-        public List<Integer> getScores() { return scores; }
-        public void setScores(List<Integer> scores) { this.scores = scores; }
+
+        public List<Integer> getScores() {
+            return scores;
+        }
+
+        public void setScores(List<Integer> scores) {
+            this.scores = scores;
+        }
+
     }
 
     @Test
@@ -320,4 +363,5 @@ class JsonSchemaHelperTest {
         assertEquals("array", scoresSchema.getString("type"));
         assertEquals("integer", scoresSchema.getJsonObject("items").getString("type"));
     }
+
 }

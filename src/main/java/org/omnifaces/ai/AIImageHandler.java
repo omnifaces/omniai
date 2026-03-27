@@ -41,8 +41,8 @@ import org.omnifaces.ai.model.GenerateImageOptions;
 public interface AIImageHandler extends Serializable {
 
     /**
-     * Builds the default system prompt to use when no custom user prompt is provided to
-     * {@link AIService#analyzeImage(byte[], String)} or {@link AIService#analyzeImageAsync(byte[], String)}.
+     * Builds the default system prompt to use when no custom user prompt is provided to {@link AIService#analyzeImage(byte[], String)} or
+     * {@link AIService#analyzeImageAsync(byte[], String)}.
      *
      * @return The general-purpose image analysis prompt.
      */
@@ -57,6 +57,7 @@ public interface AIImageHandler extends Serializable {
 
     /**
      * Builds the JSON request payload for all generate image operations.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
      * @param prompt The image generation prompt.
@@ -64,11 +65,14 @@ public interface AIImageHandler extends Serializable {
      * @return The JSON request payload.
      */
     default JsonObject buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) {
-        throw new UnsupportedOperationException("Please implement buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) for this AI provider");
+        throw new UnsupportedOperationException(
+            "Please implement buildGenerateImagePayload(AIService service, String prompt, GenerateImageOptions options) for this AI provider"
+        );
     }
 
     /**
      * Parses image content from the API response JSON of generate image operation.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param responseJson The API response JSON.
      * @return The extracted image content from the API response JSON.
@@ -77,4 +81,5 @@ public interface AIImageHandler extends Serializable {
     default byte[] parseImageContent(JsonObject responseJson) throws AIResponseException {
         throw new UnsupportedOperationException("Please implement parseImageContent(JsonObject responseJson) for this AI provider");
     }
+
 }

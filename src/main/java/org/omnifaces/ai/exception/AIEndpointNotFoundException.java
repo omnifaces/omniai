@@ -38,4 +38,5 @@ public class AIEndpointNotFoundException extends AIHttpException {
     public AIEndpointNotFoundException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

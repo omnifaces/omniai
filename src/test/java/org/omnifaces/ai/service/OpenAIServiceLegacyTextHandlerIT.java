@@ -37,4 +37,5 @@ class OpenAIServiceLegacyTextHandlerIT extends BaseAIServiceTextHandlerIT {
     protected String getModel() {
         return "gpt-3.5-turbo-0125";
     }
+
 }

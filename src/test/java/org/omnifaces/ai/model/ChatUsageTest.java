@@ -193,4 +193,5 @@ class ChatUsageTest {
             assertEquals(original, deserialized);
         }
     }
+
 }

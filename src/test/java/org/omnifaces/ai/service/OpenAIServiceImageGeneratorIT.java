@@ -34,4 +34,5 @@ class OpenAIServiceImageGeneratorIT extends BaseAIServiceImageGeneratorIT {
     protected String getModel() {
         return "gpt-image-1-mini";
     }
+
 }

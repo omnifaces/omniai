@@ -36,4 +36,5 @@ public class MistralAITextHandler extends OpenAITextHandler {
         metadata.put("purpose", "ocr");
         return metadata;
     }
+
 }

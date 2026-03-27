@@ -112,4 +112,5 @@ class AIHttpClientTest {
     void isRetryable_nonRetryableMessageInAllCauses_returnsFalse() {
         assertFalse(AIHttpClient.isRetryable(new IOException("outer", new IOException("inner"))));
     }
+
 }

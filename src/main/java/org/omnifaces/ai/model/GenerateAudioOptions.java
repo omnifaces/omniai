@@ -59,8 +59,9 @@ public class GenerateAudioOptions implements Serializable {
     }
 
     /**
-     * Gets the voice of the generated audio. Defaults to {@value #DEFAULT_VOICE}, which lets the {@link AIAudioHandler#buildGenerateAudioPayload(org.omnifaces.ai.AIService, String, GenerateAudioOptions)} choose its own default.
-     * The available values depend on the AI provider used.
+     * Gets the voice of the generated audio. Defaults to {@value #DEFAULT_VOICE}, which lets the
+     * {@link AIAudioHandler#buildGenerateAudioPayload(org.omnifaces.ai.AIService, String, GenerateAudioOptions)} choose its own default. The available values
+     * depend on the AI provider used.
      *
      * @return The voice name string.
      */
@@ -69,8 +70,7 @@ public class GenerateAudioOptions implements Serializable {
     }
 
     /**
-     * Gets the playback speed of the generated audio. Defaults to {@value #DEFAULT_SPEED}.
-     * The allowed values depend on the AI provider used.
+     * Gets the playback speed of the generated audio. Defaults to {@value #DEFAULT_SPEED}. The allowed values depend on the AI provider used.
      *
      * @return The playback speed.
      */
@@ -79,8 +79,8 @@ public class GenerateAudioOptions implements Serializable {
     }
 
     /**
-     * Gets the output format of the generated audio. Defaults to {@value #DEFAULT_OUTPUT_FORMAT}.
-     * The available values depend on the AI provider used, or it may even be ignored.
+     * Gets the output format of the generated audio. Defaults to {@value #DEFAULT_OUTPUT_FORMAT}. The available values depend on the AI provider used, or it
+     * may even be ignored.
      *
      * @return The output format string.
      */
@@ -99,7 +99,9 @@ public class GenerateAudioOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link GenerateAudioOptions} instances. For example:
+     * 
      * <pre>
+     * 
      * GenerateAudioOptions options = GenerateAudioOptions.newBuilder()
      *     .voice("breeze")
      *     .speed(1.5)
@@ -118,15 +120,16 @@ public class GenerateAudioOptions implements Serializable {
      * Use {@link GenerateAudioOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
+
         private String voice = GenerateAudioOptions.DEFAULT_VOICE;
         private double speed = GenerateAudioOptions.DEFAULT_SPEED;
         private String outputFormat = GenerateAudioOptions.DEFAULT_OUTPUT_FORMAT;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
-         * Sets the voice of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_VOICE}.
-         * The available values depend on the AI provider used.
+         * Sets the voice of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_VOICE}. The available values depend on the AI provider used.
          *
          * @param voice The voice name string.
          * @return This builder instance for chaining.
@@ -138,8 +141,8 @@ public class GenerateAudioOptions implements Serializable {
         }
 
         /**
-         * Sets the playback speed of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_SPEED}.
-         * The allowed values depend on the AI provider used.
+         * Sets the playback speed of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_SPEED}. The allowed values depend on the AI provider
+         * used.
          *
          * @param speed The playback speed, must be positive.
          * @return This builder instance for chaining.
@@ -154,8 +157,8 @@ public class GenerateAudioOptions implements Serializable {
         }
 
         /**
-         * Sets the output format of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_OUTPUT_FORMAT}.
-         * The available values depend on the AI provider used, or it may even be ignored.
+         * Sets the output format of the generated audio. Defaults to {@value GenerateAudioOptions#DEFAULT_OUTPUT_FORMAT}. The available values depend on the AI
+         * provider used, or it may even be ignored.
          *
          * @param outputFormat The output format string.
          * @return This builder instance for chaining.
@@ -174,5 +177,7 @@ public class GenerateAudioOptions implements Serializable {
         public GenerateAudioOptions build() {
             return new GenerateAudioOptions(this);
         }
+
     }
+
 }

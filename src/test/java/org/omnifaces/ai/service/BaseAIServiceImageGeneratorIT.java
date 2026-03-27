@@ -47,4 +47,5 @@ abstract class BaseAIServiceImageGeneratorIT extends AIServiceIT {
         assertTrue(image.getWidth() >= 512 && image.getHeight() >= 512, "Image size should be at least 512x512: " + size);
         assertTrue(image.getWidth() * image.getHeight() <= 2048 * 2048 * 2, "Image resolution is not supposed to exceed 8k: " + size);
     }
+
 }

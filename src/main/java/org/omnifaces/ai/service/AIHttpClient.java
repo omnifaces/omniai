@@ -112,8 +112,8 @@ final class AIHttpClient {
     }
 
     /**
-     * Sends a GET request for the specified {@link BaseAIService}.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a GET request for the specified {@link BaseAIService}. Will retry at most {@value #MAX_RETRIES} times in case of a connection error with
+     * exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -123,12 +123,13 @@ final class AIHttpClient {
      * @since 1.1
      */
     public CompletableFuture<JsonObject> get(BaseAIService service, String path) throws AIHttpException {
-        return sendWithRetryAsync(service, path, GET, newRequest(service, path, GET, null, APPLICATION_JSON, BodyPublishers.noBody())).thenApply(JsonHelper::parseJson);
+        return sendWithRetryAsync(service, path, GET, newRequest(service, path, GET, null, APPLICATION_JSON, BodyPublishers.noBody()))
+            .thenApply(JsonHelper::parseJson);
     }
 
     /**
-     * Sends a POST request for the specified {@link BaseAIService} with JSON payload and returns response as string.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a POST request for the specified {@link BaseAIService} with JSON payload and returns response as string. Will retry at most {@value #MAX_RETRIES}
+     * times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -142,8 +143,8 @@ final class AIHttpClient {
     }
 
     /**
-     * Sends a POST request for the specified {@link BaseAIService} with raw payload and returns response as string.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a POST request for the specified {@link BaseAIService} with raw payload and returns response as string. Will retry at most {@value #MAX_RETRIES}
+     * times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -154,12 +155,14 @@ final class AIHttpClient {
      * @since 1.1
      */
     public CompletableFuture<JsonObject> post(BaseAIService service, String path, Attachment attachment) throws AIHttpException {
-        return sendWithRetryAsync(service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, toBody(attachment))).thenApply(JsonHelper::parseJson);
+        return sendWithRetryAsync(
+            service, path, attachment, newRequest(service, path, POST, attachment.mimeType().value(), APPLICATION_JSON, toBody(attachment))
+        ).thenApply(JsonHelper::parseJson);
     }
 
     /**
-     * Sends a POST request for the specified {@link BaseAIService} with JSON payload and returns response as stream.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a POST request for the specified {@link BaseAIService} with JSON payload and returns response as stream. Will retry at most {@value #MAX_RETRIES}
+     * times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -174,8 +177,8 @@ final class AIHttpClient {
     }
 
     /**
-     * Sends a STREAM (SSE) request for the specified {@link BaseAIService}.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a STREAM (SSE) request for the specified {@link BaseAIService}. Will retry at most {@value #MAX_RETRIES} times in case of a connection error with
+     * exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -191,8 +194,8 @@ final class AIHttpClient {
     }
 
     /**
-     * Sends a UPLOAD (multipart/form-data) request for the specified {@link BaseAIService}.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a UPLOAD (multipart/form-data) request for the specified {@link BaseAIService}. Will retry at most {@value #MAX_RETRIES} times in case of a
+     * connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -206,8 +209,8 @@ final class AIHttpClient {
     }
 
     /**
-     * Sends a DELETE request for the specified {@link BaseAIService}.
-     * Will retry at most {@value #MAX_RETRIES} times in case of a connection error with exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
+     * Sends a DELETE request for the specified {@link BaseAIService}. Will retry at most {@value #MAX_RETRIES} times in case of a connection error with
+     * exponentially incremental backoff of {@value #INITIAL_BACKOFF_MS}ms.
      *
      * @param service The {@link BaseAIService} to extract URI and headers from.
      * @param path the API path
@@ -217,7 +220,8 @@ final class AIHttpClient {
      * @since 1.1
      */
     public CompletableFuture<JsonObject> delete(BaseAIService service, String path) throws AIHttpException {
-        return sendWithRetryAsync(service, path, DELETE, newRequest(service, path, DELETE, null, APPLICATION_JSON, BodyPublishers.noBody())).thenApply(JsonHelper::parseJson);
+        return sendWithRetryAsync(service, path, DELETE, newRequest(service, path, DELETE, null, APPLICATION_JSON, BodyPublishers.noBody()))
+            .thenApply(JsonHelper::parseJson);
     }
 
     private static BodyPublisher toBody(Attachment attachment) {
@@ -233,7 +237,10 @@ final class AIHttpClient {
         return sendWithRetryAsync(service, path, payload, request, AIHttpClient::readBody);
     }
 
-    private <R> CompletableFuture<R> sendWithRetryAsync(BaseAIService service, String path, Object payload, HttpRequest request, Function<HttpResponse<InputStream>, R> bodyExtractor) {
+    private <R> CompletableFuture<R> sendWithRetryAsync(
+        BaseAIService service, String path, Object payload, HttpRequest request, Function<HttpResponse<InputStream>, R> bodyExtractor
+    )
+    {
         final int requestId = logRequest(service, path, payload);
         return sendWithRetryAsync(requestId, request, r -> completedFuture(bodyExtractor.apply(r)), 0).thenApply(response -> {
             logger.log(FINER, () -> "Response for #" + requestId + ": " + response);
@@ -274,11 +281,19 @@ final class AIHttpClient {
         return builder.build();
     }
 
-    private <R> CompletableFuture<R> sendWithRetryAsync(int requestId, HttpRequest request, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler, int attempt) {
-        return withRetry(() -> client.sendAsync(request, ofInputStream()).thenCompose(response -> handleResponse(requestId, request, response, successHandler)), attempt);
+    private <R> CompletableFuture<R> sendWithRetryAsync(
+        int requestId, HttpRequest request, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler, int attempt
+    )
+    {
+        return withRetry(
+            () -> client.sendAsync(request, ofInputStream()).thenCompose(response -> handleResponse(requestId, request, response, successHandler)), attempt
+        );
     }
 
-    private static <R> CompletableFuture<R> handleResponse(int requestId, HttpRequest request, HttpResponse<InputStream> response, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler) {
+    private static <R> CompletableFuture<R> handleResponse(
+        int requestId, HttpRequest request, HttpResponse<InputStream> response, Function<HttpResponse<InputStream>, CompletableFuture<R>> successHandler
+    )
+    {
         logger.log(FINER, () -> "Response headers for #" + requestId + ": " + response.headers().map());
         var statusCode = response.statusCode();
 
@@ -427,9 +442,8 @@ final class AIHttpClient {
     /**
      * Determines whether a failed request should be retried based on the exception.
      * <p>
-     * Retryable errors are transient connection issues indicated by an {@link IOException} which is either an instance
-     * of {@link ConnectException} or has a message containing "timed", "terminated", "reset", "refused", or "goaway"
-     * anywhere in the cause chain.
+     * Retryable errors are transient connection issues indicated by an {@link IOException} which is either an instance of {@link ConnectException} or has a
+     * message containing "timed", "terminated", "reset", "refused", or "goaway" anywhere in the cause chain.
      *
      * @param throwable The exception to check.
      * @return {@code true} if the error is transient and the request should be retried.
@@ -442,16 +456,19 @@ final class AIHttpClient {
         return iterate(throwable, Objects::nonNull, Throwable::getCause)
             .filter(IOException.class::isInstance)
             .findFirst()
-            .map(ioException -> ioException instanceof java.net.ConnectException
-                || iterate(ioException, Objects::nonNull, Throwable::getCause)
-                      .map(Throwable::getMessage)
-                      .filter(Objects::nonNull)
-                      .map(String::toLowerCase)
-                      .anyMatch(msg -> msg.contains("timed")
-                              || msg.contains("terminated")
-                              || msg.contains("reset")
-                              || msg.contains("refused")
-                              || msg.contains("goaway"))
+            .map(
+                ioException -> ioException instanceof java.net.ConnectException
+                    || iterate(ioException, Objects::nonNull, Throwable::getCause)
+                        .map(Throwable::getMessage)
+                        .filter(Objects::nonNull)
+                        .map(String::toLowerCase)
+                        .anyMatch(
+                            msg -> msg.contains("timed")
+                                || msg.contains("terminated")
+                                || msg.contains("reset")
+                                || msg.contains("refused")
+                                || msg.contains("goaway")
+                        )
             )
             .orElse(false);
     }
@@ -506,5 +523,7 @@ final class AIHttpClient {
         private static void appendLine(StringBuilder sb, String line) {
             sb.append(line + "\r\n");
         }
+
     }
+
 }

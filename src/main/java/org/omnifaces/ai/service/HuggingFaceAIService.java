@@ -31,17 +31,16 @@ import org.omnifaces.ai.model.ChatInput.Attachment;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#HUGGINGFACE}</li>
- *     <li>apiKey: your Hugging Face API key</li>
+ * <li>provider: {@link AIProvider#HUGGINGFACE}</li>
+ * <li>apiKey: your Hugging Face API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#HUGGINGFACE} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#HUGGINGFACE} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -116,11 +115,13 @@ public class HuggingFaceAIService extends OpenAIService {
     @Override
     public CompletableFuture<String> transcribeAsync(byte[] audio) throws AIException {
         var mimeType = MimeType.guessMimeType(audio);
-        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), new Attachment(audio, mimeType, "audio." + mimeType.extension())).thenApply(this::parseOpenAITranscribeResponse);
+        return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), new Attachment(audio, mimeType, "audio." + mimeType.extension()))
+            .thenApply(this::parseOpenAITranscribeResponse);
     }
 
     @Override
     public CompletableFuture<String> transcribeAsync(Path source) throws AIException {
         return HTTP_CLIENT.post(this, "../hf-inference/models/" + getModelName(), new Attachment(source)).thenApply(this::parseOpenAITranscribeResponse);
     }
+
 }

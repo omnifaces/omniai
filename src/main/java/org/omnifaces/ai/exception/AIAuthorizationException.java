@@ -17,7 +17,8 @@ import java.net.URI;
 /**
  * Exception thrown when the AI API returns HTTP 403 Forbidden.
  * <p>
- * This typically indicates insufficient permissions for the requested operation, such as accessing a model or feature not included in your subscription or wrong country.
+ * This typically indicates insufficient permissions for the requested operation, such as accessing a model or feature not included in your subscription or
+ * wrong country.
  *
  * @author Bauke Scholtz
  * @since 1.0
@@ -38,4 +39,5 @@ public class AIAuthorizationException extends AIHttpException {
     public AIAuthorizationException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

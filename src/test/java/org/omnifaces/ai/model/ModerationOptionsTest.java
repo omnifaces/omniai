@@ -103,8 +103,10 @@ class ModerationOptionsTest {
 
     @Test
     void category_allCategoryNames_isImmutable() {
-        assertThrows(UnsupportedOperationException.class,
-                () -> Category.ALL_CATEGORY_NAMES.add("new-category"));
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> Category.ALL_CATEGORY_NAMES.add("new-category")
+        );
     }
 
     // =================================================================================================================
@@ -114,8 +116,8 @@ class ModerationOptionsTest {
     @Test
     void builder_categories_single() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE)
-                .build();
+            .categories(Category.HATE)
+            .build();
 
         assertEquals(Set.of("hate"), options.getCategories());
     }
@@ -123,8 +125,8 @@ class ModerationOptionsTest {
     @Test
     void builder_categories_multiple() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE, Category.VIOLENCE, Category.HARASSMENT)
-                .build();
+            .categories(Category.HATE, Category.VIOLENCE, Category.HARASSMENT)
+            .build();
 
         assertEquals(3, options.getCategories().size());
         assertTrue(options.getCategories().contains("hate"));
@@ -146,8 +148,8 @@ class ModerationOptionsTest {
     @Test
     void builder_addCategories_validCustom() {
         var options = ModerationOptions.newBuilder()
-                .addCategories("custom-category")
-                .build();
+            .addCategories("custom-category")
+            .build();
 
         assertTrue(options.getCategories().contains("custom-category"));
     }
@@ -155,8 +157,8 @@ class ModerationOptionsTest {
     @Test
     void builder_addCategories_convertedToLowercase() {
         var options = ModerationOptions.newBuilder()
-                .addCategories("UPPERCASE", "MixedCase")
-                .build();
+            .addCategories("UPPERCASE", "MixedCase")
+            .build();
 
         assertTrue(options.getCategories().contains("uppercase"));
         assertTrue(options.getCategories().contains("mixedcase"));
@@ -166,8 +168,10 @@ class ModerationOptionsTest {
     void builder_addCategories_invalidFormat_throwsException() {
         var builder = ModerationOptions.newBuilder();
 
-        var exception = assertThrows(IllegalArgumentException.class,
-                () -> builder.addCategories("category123"));
+        var exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> builder.addCategories("category123")
+        );
         assertTrue(exception.getMessage().contains("may only contain alphabetic characters or hyphens"));
     }
 
@@ -175,8 +179,10 @@ class ModerationOptionsTest {
     void builder_addCategories_null_throwsException() {
         var builder = ModerationOptions.newBuilder();
 
-        assertThrows(NullPointerException.class,
-                () -> builder.addCategories((String) null));
+        assertThrows(
+            NullPointerException.class,
+            () -> builder.addCategories((String) null)
+        );
     }
 
     // =================================================================================================================
@@ -211,9 +217,9 @@ class ModerationOptionsTest {
     @Test
     void builder_chaining_allOptions() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE, Category.VIOLENCE)
-                .threshold(0.3)
-                .build();
+            .categories(Category.HATE, Category.VIOLENCE)
+            .threshold(0.3)
+            .build();
 
         assertEquals(2, options.getCategories().size());
         assertEquals(0.3, options.getThreshold());
@@ -222,9 +228,9 @@ class ModerationOptionsTest {
     @Test
     void builder_categoriesOverwrite() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE)
-                .categories(Category.VIOLENCE, Category.HARASSMENT)
-                .build();
+            .categories(Category.HATE)
+            .categories(Category.VIOLENCE, Category.HARASSMENT)
+            .build();
 
         assertEquals(2, options.getCategories().size());
         assertFalse(options.getCategories().contains("hate"));
@@ -233,10 +239,10 @@ class ModerationOptionsTest {
     @Test
     void builder_addCategoriesAccumulates() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE)
-                .addCategories("custom-one")
-                .addCategories("custom-two")
-                .build();
+            .categories(Category.HATE)
+            .addCategories("custom-one")
+            .addCategories("custom-two")
+            .build();
 
         assertEquals(3, options.getCategories().size());
     }
@@ -253,9 +259,9 @@ class ModerationOptionsTest {
     @Test
     void serialization_preservesAllFields() throws Exception {
         var original = ModerationOptions.newBuilder()
-                .categories(Category.HATE, Category.VIOLENCE)
-                .threshold(0.3)
-                .build();
+            .categories(Category.HATE, Category.VIOLENCE)
+            .threshold(0.3)
+            .build();
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -278,22 +284,25 @@ class ModerationOptionsTest {
     @Test
     void categories_isImmutable() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.HATE)
-                .build();
+            .categories(Category.HATE)
+            .build();
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> options.getCategories().add("new-category"));
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> options.getCategories().add("new-category")
+        );
     }
 
     @Test
     void categories_areSorted() {
         var options = ModerationOptions.newBuilder()
-                .categories(Category.VIOLENCE, Category.HATE, Category.SEXUAL)
-                .build();
+            .categories(Category.VIOLENCE, Category.HATE, Category.SEXUAL)
+            .build();
 
         var categories = options.getCategories().toArray(new String[0]);
         assertEquals("hate", categories[0]);
         assertEquals("sexual", categories[1]);
         assertEquals("violence", categories[2]);
     }
+
 }

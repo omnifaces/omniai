@@ -26,8 +26,8 @@ import org.opentest4j.TestAbortedException;
 /**
  * JUnit 5 extension that fails fast on AI API rate limit errors.
  * <p>
- * When an {@link AIRateLimitExceededException} is thrown during a test, this extension marks the provider as rate-limited and aborts (skips) all
- * subsequent tests for this provider to prevent unnecessary API calls and wasted time / quota.
+ * When an {@link AIRateLimitExceededException} is thrown during a test, this extension marks the provider as rate-limited and aborts (skips) all subsequent
+ * tests for this provider to prevent unnecessary API calls and wasted time / quota.
  *
  * @see AIRateLimitExceededException
  */
@@ -59,4 +59,5 @@ public class FailFastOnRateLimitExtension implements BeforeEachCallback, TestExe
 
         return instance.getProvider();
     }
+
 }

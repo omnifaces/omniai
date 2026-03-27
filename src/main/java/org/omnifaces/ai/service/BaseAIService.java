@@ -129,7 +129,11 @@ public abstract class BaseAIService implements AIService {
 
         this.apiKey = provider.isApiKeyRequired() ? config.require(PROPERTY_API_KEY) : config.apiKey();
         this.model = ofNullable(config.model()).or(() -> ofNullable(provider.getDefaultModel())).orElseGet(() -> config.require(PROPERTY_MODEL));
-        this.endpoint = URI.create(ensureTrailingSlash(ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))));
+        this.endpoint = URI.create(
+            ensureTrailingSlash(
+                ofNullable(config.endpoint()).or(() -> ofNullable(provider.getDefaultEndpoint())).orElseGet(() -> config.require(PROPERTY_ENDPOINT))
+            )
+        );
         this.prompt = config.prompt();
         this.textHandler = createHandler(config.strategy().textHandler(), provider.getDefaultTextHandler(), "text");
         this.imageHandler = createHandler(config.strategy().imageHandler(), provider.getDefaultImageHandler(), "image");
@@ -140,7 +144,9 @@ public abstract class BaseAIService implements AIService {
         var handlerClass = configuredHandler == null ? defaultHandler : configuredHandler;
 
         if (handlerClass == null) {
-            throw new IllegalArgumentException("No " + handlerName + " handler configured. Custom providers must supply handlers via AIConfig.withStrategy(AIStrategy).");
+            throw new IllegalArgumentException(
+                "No " + handlerName + " handler configured. Custom providers must supply handlers via AIConfig.withStrategy(AIStrategy)."
+            );
         }
 
         try {
@@ -166,11 +172,11 @@ public abstract class BaseAIService implements AIService {
         return prompt;
     }
 
-
     // Chat Implementation --------------------------------------------------------------------------------------------
 
     /**
      * Returns the path of the chat endpoint. E.g. {@code chat/completions} or {@code responses}.
+     * 
      * @param streaming Whether this is for chat streaming endpoint.
      * @return the path of the chat endpoint.
      */
@@ -218,24 +224,25 @@ public abstract class BaseAIService implements AIService {
 
         var callerStackTrace = new Exception("Caller stack trace");
 
-        return asyncPostAndProcessStreamEvents(getChatPath(true), payload, event -> textHandler.processChatStreamEvent(this, options, event, effectiveOnToken)).handle((result, exception) -> {
-            if (exception == null) {
-                if (responseAccumulator != null) {
-                    options.recordMessage(Role.ASSISTANT, responseAccumulator.toString());
+        return asyncPostAndProcessStreamEvents(getChatPath(true), payload, event -> textHandler.processChatStreamEvent(this, options, event, effectiveOnToken))
+            .handle((result, exception) -> {
+                if (exception == null) {
+                    if (responseAccumulator != null) {
+                        options.recordMessage(Role.ASSISTANT, responseAccumulator.toString());
+                    }
+
+                    return result;
                 }
 
-                return result;
-            }
-
-            throw AIException.asyncRequestFailed(exception, callerStackTrace);
-        });
+                throw AIException.asyncRequestFailed(exception, callerStackTrace);
+            });
     }
-
 
     // Files Implementation (for attaching files to chat) -------------------------------------------------------------
 
     /**
      * Returns the path of the files endpoint. E.g. {@code files}.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return the path of the files endpoint.
      */
@@ -244,8 +251,8 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * This also cleans up uploaded files older than 2 days if {@link #getUploadedFileJsonStructure()} returns non-{@code null}.
-     * This is called as a fire-and-forget task after each upload. Failures are logged at WARNING level and never propagated.
+     * This also cleans up uploaded files older than 2 days if {@link #getUploadedFileJsonStructure()} returns non-{@code null}. This is called as a
+     * fire-and-forget task after each upload. Failures are logged at WARNING level and never propagated.
      */
     @Override
     public String upload(Attachment attachment, ChatOptions options) throws AIException {
@@ -275,8 +282,8 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Describes the JSON structure of the file listing response, used by the clean up task of
-     * {@link BaseAIService#upload(Attachment, ChatOptions)} to identify and delete stale uploads.
+     * Describes the JSON structure of the file listing response, used by the clean up task of {@link BaseAIService#upload(Attachment, ChatOptions)} to identify
+     * and delete stale uploads.
      *
      * @param filesArrayProperty JSON property name of the array containing file objects.
      * @param fileNameProperty JSON property name of the file name within each file object.
@@ -299,10 +306,12 @@ public abstract class BaseAIService implements AIService {
             fileIdProperty = requireNonBlank(fileIdProperty, "fileIdProperty");
             createdAtProperty = requireNonBlank(createdAtProperty, "createdAtProperty");
         }
+
     }
 
     /**
      * Returns the uploaded file JSON structure which will be used for automatic cleanup of stale files.
+     * 
      * @implNote The default implementation returns {@code null}, indicating that cleanup is not needed.
      * @return The uploaded file JSON structure, or {@code null} if cleanup is not needed (i.e. the AI provider already automatically does that).
      */
@@ -370,7 +379,6 @@ public abstract class BaseAIService implements AIService {
         }
     }
 
-
     // Text Analysis Implementation (delegates to chat) ---------------------------------------------------------------
 
     @Override
@@ -390,9 +398,9 @@ public abstract class BaseAIService implements AIService {
             .temperature(textHandler.getDefaultCreativeTemperature())
             .build();
 
-        return chatAsync(requireNonBlank(text, "text"), options).thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
+        return chatAsync(requireNonBlank(text, "text"), options)
+            .thenApply(response -> Arrays.asList(response.split("\n")).stream().map(String::strip).filter(not(TextHelper::isBlank)).toList());
     }
-
 
     // Text Translation Implementation (delegates to chat) ------------------------------------------------------------
 
@@ -409,9 +417,11 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException {
-        return chatAsync(requireNonBlank(text, "text"), DETERMINISTIC.withSystemPrompt(textHandler.buildTranslatePrompt(sourceLang, requireNonBlank(targetLang, "target language"))));
+        return chatAsync(
+            requireNonBlank(text, "text"),
+            DETERMINISTIC.withSystemPrompt(textHandler.buildTranslatePrompt(sourceLang, requireNonBlank(targetLang, "target language")))
+        );
     }
-
 
     // Text Proofreading Implementation (delegates to chat) -----------------------------------------------------------
 
@@ -419,7 +429,6 @@ public abstract class BaseAIService implements AIService {
     public CompletableFuture<String> proofreadAsync(String text) throws AIException {
         return chatAsync(requireNonBlank(text, "text"), DETERMINISTIC.withSystemPrompt(textHandler.buildProofreadPrompt()));
     }
-
 
     // Text Moderation Implementation (delegates to chat) -------------------------------------------------------------
 
@@ -435,7 +444,8 @@ public abstract class BaseAIService implements AIService {
             .temperature(DETERMINISTIC_TEMPERATURE)
             .build();
 
-        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(JsonHelper::parseJson).thenApply(response -> parseModerationResult(response, options));
+        return chatAsync(requireNonBlank(content, "content"), chatOptions).thenApply(JsonHelper::parseJson)
+            .thenApply(response -> parseModerationResult(response, options));
     }
 
     private static JsonObject buildModerationJsonSchema(ModerationOptions options) {
@@ -479,7 +489,6 @@ public abstract class BaseAIService implements AIService {
         return new ModerationResult(flagged, scores);
     }
 
-
     // Image Analysis Implementation (delegates to chat) --------------------------------------------------------------
 
     @Override
@@ -494,11 +503,11 @@ public abstract class BaseAIService implements AIService {
         return analyzeImageAsync(image, imageHandler.buildGenerateAltTextPrompt());
     }
 
-
     // Image Generator Implementation ---------------------------------------------------------------------------------
 
     /**
      * Returns the path of the image generation endpoint. E.g. {@code images/generations}.
+     * 
      * @implNote The default implementation delegates to {@link #getChatPath(boolean)} with {@code false}.
      * @return the path of the image generation endpoint.
      */
@@ -510,7 +519,6 @@ public abstract class BaseAIService implements AIService {
     public CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException {
         return asyncPostAndParseImageContent(getGenerateImagePath(), imageHandler.buildGenerateImagePayload(this, requireNonBlank(prompt, "prompt"), options));
     }
-
 
     // Audio Transcription Implementation ------------------------------------------------------------------------------
 
@@ -531,11 +539,11 @@ public abstract class BaseAIService implements AIService {
         return asyncPostAndParseChatResponse(getChatPath(false), textHandler.buildChatPayload(this, input.build(), options, false), null);
     }
 
-
     // Audio Generator Implementation -------------------------------------------------------------------------------------------
 
     /**
      * Returns the path of the audio generation (text-to-speech) endpoint.
+     * 
      * @implNote The default implementation delegates to {@link #getChatPath(boolean)} with {@code false}.
      * @return the path of the audio generation endpoint.
      * @since 1.2
@@ -546,29 +554,30 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<byte[]> generateAudioAsync(String text, GenerateAudioOptions options) {
-        return asyncPostAndStreamAudioContent(getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options)).thenApply(stream -> {
-            try {
-                return stream.readAllBytes();
-            }
-            catch (IOException e) {
-                throw new UncheckedIOException("Cannot read all bytes from response body", e);
-            }
-        });
+        return asyncPostAndStreamAudioContent(getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options))
+            .thenApply(stream -> {
+                try {
+                    return stream.readAllBytes();
+                }
+                catch (IOException e) {
+                    throw new UncheckedIOException("Cannot read all bytes from response body", e);
+                }
+            });
     }
 
     @Override
     public CompletableFuture<Void> generateAudioAsync(String text, Path path, GenerateAudioOptions options) {
-        return asyncPostAndStreamAudioContent(getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options)).thenApply(stream -> {
-            try {
-                Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
-                return null;
-            }
-            catch (IOException e) {
-                throw new CompletionException("Cannot stream response body to path " + path, e);
-            }
-        });
+        return asyncPostAndStreamAudioContent(getGenerateAudioPath(), audioHandler.buildGenerateAudioPayload(this, requireNonBlank(text, "text"), options))
+            .thenApply(stream -> {
+                try {
+                    Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
+                    return null;
+                }
+                catch (IOException e) {
+                    throw new CompletionException("Cannot stream response body to path " + path, e);
+                }
+            });
     }
-
 
     // HTTP Helper Methods --------------------------------------------------------------------------------------------
 
@@ -577,8 +586,9 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Returns additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject, ChatOptions)}, e.g. authorization or version headers.
-     * These headers are added on top of the default request headers: {@code User-Agent}, {@code Content-Type} and {@code Accept}.
+     * Returns additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject, ChatOptions)}, e.g. authorization or version
+     * headers. These headers are added on top of the default request headers: {@code User-Agent}, {@code Content-Type} and {@code Accept}.
+     * 
      * @implNote The default implementation returns an empty map.
      * @return Additional request headers to use at {@link #asyncPostAndParseChatResponse(String, JsonObject, ChatOptions)}.
      */
@@ -588,6 +598,7 @@ public abstract class BaseAIService implements AIService {
 
     /**
      * Resolve URI of the given path based on endpoint URI.
+     * 
      * @param path The path to resolve the URI for based on endpoint URI.
      * @return Resolved URI of the given path based on endpoint URI.
      */
@@ -596,11 +607,13 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * chat response from the POST response with help of {@link AITextHandler#parseChatResponse(JsonObject)}.
+     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse chat response
+     * from the POST response with help of {@link AITextHandler#parseChatResponse(JsonObject)}.
+     * 
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
-     * @param options The user-supplied chat options, or {@code null} if there is none. Implementations should call {@link ChatOptions#recordUsage(ChatUsage)} when usage data is available in the response.
+     * @param options The user-supplied chat options, or {@code null} if there is none. Implementations should call {@link ChatOptions#recordUsage(ChatUsage)}
+     * when usage data is available in the response.
      * @return The message content of the POST request.
      * @throws AIException if anything fails during the process.
      */
@@ -615,8 +628,8 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Upload file attachment to API at given path along with request headers obtained from {@link #getRequestHeaders()},
-     * and parse file ID from the response with help of {@link AITextHandler#parseFileResponse(JsonObject)}.
+     * Upload file attachment to API at given path along with request headers obtained from {@link #getRequestHeaders()}, and parse file ID from the response
+     * with help of {@link AITextHandler#parseFileResponse(JsonObject)}.
      *
      * @param path API path, relative to {@link #endpoint}.
      * @param attachment The file attachment to upload.
@@ -628,8 +641,9 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
+     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse image content
+     * from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
+     * 
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
      * @return The image content of the POST request.
@@ -640,11 +654,13 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Send SSE request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and process
-     * each reveived stream event using supplied {@code eventProcessor}.
+     * Send SSE request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and process each reveived
+     * stream event using supplied {@code eventProcessor}.
+     * 
      * @param path API path, relative to {@link #endpoint}.
      * @param payload Initial SSE POST request payload.
-     * @param eventProcessor Callback invoked for each stream event; it must return {@code true} to continue processing the stream, or {@code false} to stop processing the stream.
+     * @param eventProcessor Callback invoked for each stream event; it must return {@code true} to continue processing the stream, or {@code false} to stop
+     * processing the stream.
      * @return A future that completes when stream ends normally, is stopped by the processor, or fails exceptionally.
      * @throws AIException if anything fails during the process.
      */
@@ -653,8 +669,9 @@ public abstract class BaseAIService implements AIService {
     }
 
     /**
-     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse
-     * image content from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
+     * Send POST request to API at given path with given payload along with request headers obtained from {@link #getRequestHeaders()}, and parse image content
+     * from the POST response with help of {@link AIImageHandler#parseImageContent(JsonObject)}.
+     * 
      * @param path API path, relative to {@link #endpoint}.
      * @param payload POST request payload.
      * @return The image content of the POST request.

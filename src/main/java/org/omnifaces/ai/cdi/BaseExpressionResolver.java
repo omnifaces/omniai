@@ -30,6 +30,7 @@ abstract class BaseExpressionResolver {
 
     /**
      * Returns {@code true} if the given string looks like an expression, i.e. it contains <code>${</code> or <code>#{</code>.
+     * 
      * @param value The string to check.
      * @return {@code true} if the given string looks like an expression.
      */
@@ -39,6 +40,7 @@ abstract class BaseExpressionResolver {
 
     /**
      * Returns {@code true} if the given string looks like a MicroProfile Config expression, i.e. it contains <code>${config:</code>.
+     * 
      * @param value The string to check.
      * @return {@code true} if the given string looks like an expression.
      */
@@ -51,13 +53,13 @@ abstract class BaseExpressionResolver {
      * <p>
      * The pattern is expected to define the following capturing groups:
      * <ul>
-     *   <li>Group 1: the expression prefix (e.g. <code>${</code> or <code>#{</code>)</li>
-     *   <li>Group 2: the expression body to be evaluated</li>
-     *   <li>Group 3: the expression suffix (e.g. <code>}</code>)</li>
+     * <li>Group 1: the expression prefix (e.g. <code>${</code> or <code>#{</code>)</li>
+     * <li>Group 2: the expression body to be evaluated</li>
+     * <li>Group 3: the expression suffix (e.g. <code>}</code>)</li>
      * </ul>
      * <p>
-     * For every matched expression, the evaluator function will be invoked with the extracted expression body and its result will replace the original expression in the returned value.
-     * If the evaluator throws an exception, then the original expression will be retained as-is.
+     * For every matched expression, the evaluator function will be invoked with the extracted expression body and its result will replace the original
+     * expression in the returned value. If the evaluator throws an exception, then the original expression will be retained as-is.
      *
      * @param pattern The regular expression pattern to identify expressions to be resolved.
      * @param value The value containing expressions to resolve.
@@ -83,4 +85,5 @@ abstract class BaseExpressionResolver {
         matcher.appendTail(stringBuilder);
         return stringBuilder.toString();
     }
+
 }

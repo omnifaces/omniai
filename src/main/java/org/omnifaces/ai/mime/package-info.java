@@ -14,17 +14,15 @@
 /**
  * MIME type detection based on magic bytes.
  * <p>
- * AI API endpoints require a valid MIME type header when uploading file attachments. File extensions cannot be relied
- * upon for MIME type detection as they may be missing, incorrect, or intentionally spoofed. Magic byte detection
- * provides reliable content-based identification without additional dependencies.
+ * AI API endpoints require a valid MIME type header when uploading file attachments. File extensions cannot be relied upon for MIME type detection as they may
+ * be missing, incorrect, or intentionally spoofed. Magic byte detection provides reliable content-based identification without additional dependencies.
  * <p>
- * The {@link org.omnifaces.ai.mime.MimeType} interface represents a detected MIME type with its media type value
- * and file extension. Implementations are organized by content category (image, document, audio/video).
+ * The {@link org.omnifaces.ai.mime.MimeType} interface represents a detected MIME type with its media type value and file extension. Implementations are
+ * organized by content category (image, document, audio/video).
  * <p>
- * OmniHai supports both {@code byte[]}- and {@link java.nio.file.Path}-backed file content via
- * {@link org.omnifaces.ai.model.ChatInput.Attachment}. {@link java.io.File} and {@link java.io.InputStream} are not
- * used directly: not all environments support filesystem access (e.g., serverless, read-only containers) and streams
- * risk resource leaks if not properly closed.
+ * OmniHai supports both {@code byte[]}- and {@link java.nio.file.Path}-backed file content via {@link org.omnifaces.ai.model.ChatInput.Attachment}.
+ * {@link java.io.File} and {@link java.io.InputStream} are not used directly: not all environments support filesystem access (e.g., serverless, read-only
+ * containers) and streams risk resource leaks if not properly closed.
  *
  * @see org.omnifaces.ai.mime.MimeType
  */

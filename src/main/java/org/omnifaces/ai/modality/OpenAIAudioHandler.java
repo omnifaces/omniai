@@ -36,10 +36,10 @@ public class OpenAIAudioHandler extends DefaultAIAudioHandler {
     @Override
     public JsonObject buildGenerateAudioPayload(AIService service, String text, GenerateAudioOptions options) {
         var payload = Json.createObjectBuilder()
-                .add("model", service.getModelName())
-                .add("input", text)
-                .add("voice", options.useDefaultVoice() ? "alloy" : options.getVoice())
-                .add("speed", options.getSpeed());
+            .add("model", service.getModelName())
+            .add("input", text)
+            .add("voice", options.useDefaultVoice() ? "alloy" : options.getVoice())
+            .add("speed", options.getSpeed());
 
         if (options.getOutputFormat() != null) {
             payload.add("format", options.getOutputFormat());
@@ -47,4 +47,5 @@ public class OpenAIAudioHandler extends DefaultAIAudioHandler {
 
         return payload.build();
     }
+
 }

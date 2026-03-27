@@ -99,7 +99,8 @@ public final class JsonHelper {
      */
     public static JsonObject parseJson(String json) throws AIResponseException {
         try {
-            var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some chat APIs stubbornly put JSON in markdown formatting like ```json\n{...}\n``` when asking for JSON-only output.
+            var sanitizedJson = json.substring(json.indexOf('{'), json.lastIndexOf('}') + 1); // Some chat APIs stubbornly put JSON in markdown formatting like
+                                                                                              // ```json\n{...}\n``` when asking for JSON-only output.
 
             try (var reader = Json.createReader(new StringReader(sanitizedJson))) {
                 return reader.readObject();
@@ -129,8 +130,8 @@ public final class JsonHelper {
     /**
      * Finds all string values from a JSON object found at the given dot-separated path.
      * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}. Also supports wildcard array indexes, e.g.
+     * {@code "output[*].content[*].text"}.
      *
      * @param root JSON root value (usually a {@link JsonObject})
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
@@ -177,8 +178,8 @@ public final class JsonHelper {
     /**
      * Finds the string value from a JSON object found at the given dot-separated path.
      * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}. Also supports wildcard array indexes, e.g.
+     * {@code "output[*].content[*].text"}.
      *
      * @param root JSON root value (usually a {@link JsonObject})
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
@@ -191,8 +192,8 @@ public final class JsonHelper {
     /**
      * Finds the non-blank string value from a JSON object found at the given dot-separated path.
      * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}. Also supports wildcard array indexes, e.g.
+     * {@code "output[*].content[*].text"}.
      *
      * @param root JSON root value (usually a {@link JsonObject})
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
@@ -220,8 +221,8 @@ public final class JsonHelper {
     /**
      * Recursively adds {@code "additionalProperties": false} to all object-type schemas in the given JSON schema.
      * <p>
-     * This is required by some AI providers (e.g., OpenAI, Anthropic) to enforce strict schema validation,
-     * ensuring the model only returns the specified properties.
+     * This is required by some AI providers (e.g., OpenAI, Anthropic) to enforce strict schema validation, ensuring the model only returns the specified
+     * properties.
      *
      * @param schema The JSON schema object to transform.
      * @return A new JSON schema with {@code additionalProperties: false} added to all object schemas.
@@ -236,8 +237,10 @@ public final class JsonHelper {
                 if (value instanceof JsonObject object && "object".equals(object.getString("type", null))) {
                     properties.add(key, addStrictAdditionalProperties(object));
                 }
-                else if (value instanceof JsonObject object && "array".equals(object.getString("type", null))
-                        && object.containsKey("items") && "object".equals(object.getJsonObject("items").getString("type", null))) {
+                else if (
+                    value instanceof JsonObject object && "array".equals(object.getString("type", null))
+                        && object.containsKey("items") && "object".equals(object.getJsonObject("items").getString("type", null))
+                ) {
                     properties.add(key, Json.createObjectBuilder(object).add("items", addStrictAdditionalProperties(object.getJsonObject("items"))));
                 }
                 else {
@@ -284,17 +287,17 @@ public final class JsonHelper {
      * @since 1.3
      */
     public static void checkErrors(Path jsonFile, List<String> errorMessagePaths) throws AIResponseException {
-        errorMessagePaths.stream().map(path -> findByPath(jsonFile, path).map(TextHelper::stripToNull).orElse(null)).filter(Objects::nonNull).findFirst().ifPresent(errorMessage -> {
-            throw new AIResponseException(errorMessage, jsonFile);
-        });
+        errorMessagePaths.stream().map(path -> findByPath(jsonFile, path).map(TextHelper::stripToNull).orElse(null)).filter(Objects::nonNull).findFirst()
+            .ifPresent(errorMessage -> {
+                throw new AIResponseException(errorMessage, jsonFile);
+            });
     }
 
     /**
-     * Finds the string value from a JSON file at the given dot-separated path within the file at {@code source},
-     * without loading the whole file into memory.
+     * Finds the string value from a JSON file at the given dot-separated path within the file at {@code source}, without loading the whole file into memory.
      * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}. Also supports wildcard array indexes, e.g.
+     * {@code "output[*].content[*].text"}.
      *
      * @param jsonFile The JSON file to read from, must not be {@code null}.
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
@@ -310,13 +313,12 @@ public final class JsonHelper {
     }
 
     /**
-     * Opens an {@link InputStream} over the raw bytes of the JSON value found at the given dot-separated path
-     * within the file at {@code source}, without loading the whole file into memory.
+     * Opens an {@link InputStream} over the raw bytes of the JSON value found at the given dot-separated path within the file at {@code source}, without
+     * loading the whole file into memory.
      * <p>
-     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}.
-     * Also supports wildcard array indexes, e.g. {@code "output[*].content[*].text"}.
-     * For string values, the surrounding double-quotes are stripped so the caller receives only the value content.
-     * The caller is responsible for closing the returned stream.
+     * Supports array indexing with bracket notation, e.g. {@code "choices[0].message.content"}. Also supports wildcard array indexes, e.g.
+     * {@code "output[*].content[*].text"}. For string values, the surrounding double-quotes are stripped so the caller receives only the value content. The
+     * caller is responsible for closing the returned stream.
      *
      * @param jsonFile The JSON file to read from, must not be {@code null}.
      * @param path dot-separated path, may contain {@code [index]} or {@code [*]} segments
@@ -467,4 +469,5 @@ public final class JsonHelper {
 
         return null;
     }
+
 }

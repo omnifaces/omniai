@@ -34,4 +34,5 @@ class OpenAIServiceAudioGeneratorIT extends BaseAIServiceAudioGeneratorIT {
     protected String getModel() {
         return "gpt-4o-mini-tts";
     }
+
 }

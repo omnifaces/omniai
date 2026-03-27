@@ -63,17 +63,32 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         var voiceName = options.useDefaultVoice() ? "Kore" : options.getVoice();
 
         return Json.createObjectBuilder()
-            .add("contents", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("parts", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder()
-                            .add("text", text)))))
-            .add("generationConfig", Json.createObjectBuilder()
-                .add("responseModalities", Json.createArrayBuilder().add("AUDIO"))
-                .add("speechConfig", Json.createObjectBuilder()
-                    .add("voiceConfig", Json.createObjectBuilder()
-                        .add("prebuiltVoiceConfig", Json.createObjectBuilder()
-                            .add("voiceName", voiceName))))
+            .add(
+                "contents", Json.createArrayBuilder()
+                    .add(
+                        Json.createObjectBuilder()
+                            .add(
+                                "parts", Json.createArrayBuilder()
+                                    .add(
+                                        Json.createObjectBuilder()
+                                            .add("text", text)
+                                    )
+                            )
+                    )
+            )
+            .add(
+                "generationConfig", Json.createObjectBuilder()
+                    .add("responseModalities", Json.createArrayBuilder().add("AUDIO"))
+                    .add(
+                        "speechConfig", Json.createObjectBuilder()
+                            .add(
+                                "voiceConfig", Json.createObjectBuilder()
+                                    .add(
+                                        "prebuiltVoiceConfig", Json.createObjectBuilder()
+                                            .add("voiceName", voiceName)
+                                    )
+                            )
+                    )
             )
             .build();
     }
@@ -81,7 +96,8 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
     /**
      * In Google AI, the response body represents a JSON with audio content as Base64-encoded PCM file.
      * <p>
-     * If {@link FileHelper#tempFilesSupported()} returns {@code true}, then the current implementation will parse via temp files else it will parse fully in memory.
+     * If {@link FileHelper#tempFilesSupported()} returns {@code true}, then the current implementation will parse via temp files else it will parse fully in
+     * memory.
      */
     @Override
     public InputStream parseAudioContent(InputStream responseStream) throws AIResponseException {
@@ -111,7 +127,7 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         checkErrors(responseJson, getAudioResponseErrorMessagePaths());
         var paths = getAudioResponseContentPaths();
         var audioContentBase64 = findFirstNonBlankByPaths(responseJson, paths)
-                .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseBody));
+            .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, responseBody));
 
         try {
             var audioContent = Base64.getDecoder().decode(audioContentBase64);
@@ -129,8 +145,8 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
      * <li>JSON-B JsonParser doesn't support getInputStream() of value; it only supports getString(), getInt(), etc.</li>
      * <li>Potential corner cases in JSON format (esp. undefined white space between key and value) which require offset based file channel access.</li>
      * </ol>
-     * Hence, temp file approach is best for now (without resorting to yet another JSON library such as Jackson and/or a specialized/unreusable impl of JSON parsing).
-     * In long term we could perhaps make Jackson an optional dependency and prefer over temp files.
+     * Hence, temp file approach is best for now (without resorting to yet another JSON library such as Jackson and/or a specialized/unreusable impl of JSON
+     * parsing). In long term we could perhaps make Jackson an optional dependency and prefer over temp files.
      */
     private InputStream parseAudioContentViaTempFiles(InputStream responseStream) throws AIResponseException {
         Path responseJsonTempFile = null;
@@ -142,16 +158,21 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
             checkErrors(responseJsonTempFile, getAudioResponseErrorMessagePaths());
             var paths = getAudioResponseContentPaths();
 
-            try (var audioContent = Base64.getDecoder().wrap(paths.stream()
-                    .map(path -> streamByPath(source, path))
-                    .filter(Objects::nonNull).findFirst()
-                    .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, source))))
-            {
+            try (
+                var audioContent = Base64.getDecoder().wrap(
+                    paths.stream()
+                        .map(path -> streamByPath(source, path))
+                        .filter(Objects::nonNull).findFirst()
+                        .orElseThrow(() -> new AIResponseException("No audio content found at paths " + paths, source))
+                )
+            ) {
                 audioContentTempFile = Files.createTempFile(OmniHai.name() + "-gemini-audio-content-", ".pcm");
                 Files.copy(audioContent, audioContentTempFile, REPLACE_EXISTING);
             }
 
-            var stream = new SequenceInputStream(new ByteArrayInputStream(createWavHeader(Files.size(audioContentTempFile))), newDeleteOnCloseInputStream(audioContentTempFile));
+            var stream = new SequenceInputStream(
+                new ByteArrayInputStream(createWavHeader(Files.size(audioContentTempFile))), newDeleteOnCloseInputStream(audioContentTempFile)
+            );
             cleanupFiles(responseJsonTempFile);
             return stream;
         }
@@ -166,8 +187,9 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
     }
 
     /**
-     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseAudioContent(InputStream)}.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseAudioContent(InputStream)}. The first path that matches a
+     * value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
@@ -176,9 +198,9 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
     }
 
     /**
-     * Returns all possible paths to the image content in the JSON response parsed by {@link #parseAudioContent(InputStream)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the image content in the JSON response parsed by {@link #parseAudioContent(InputStream)}. May not be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns {@code "candidates[0].content.parts[0].inlineData.data"}.
      * @return all possible paths to the image content in the JSON response.
      */
@@ -191,9 +213,10 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
     private static final int DEFAULT_GEMINI_AUDIO_WAV_BITS_PER_SAMPLE = 16;
 
     /**
-     * Gemini TTS returns a PCM file which is basically a WAV without 44-byte magic header. We need to manually add that header.
-     * Technical reason is, Gemini supports streaming JSON responses, and therefore content length is unknown beforehand.
-     * OmniHai doesn't yet support parsing streaming JSON responses, OmniHai only supports SSE, so this could be a future improvement.
+     * Gemini TTS returns a PCM file which is basically a WAV without 44-byte magic header. We need to manually add that header. Technical reason is, Gemini
+     * supports streaming JSON responses, and therefore content length is unknown beforehand. OmniHai doesn't yet support parsing streaming JSON responses,
+     * OmniHai only supports SSE, so this could be a future improvement.
+     * 
      * @see <a href="https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html">WAV spec</a>
      */
     private static byte[] createWavHeader(long pcmContentLength) {
@@ -201,15 +224,26 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         var totalDataLength = pcmContentLength + 36;
         var byteRate = (long) DEFAULT_GEMINI_AUDIO_WAV_SAMPLE_RATE * DEFAULT_GEMINI_AUDIO_WAV_CHANNELS * DEFAULT_GEMINI_AUDIO_WAV_BITS_PER_SAMPLE / 8;
 
-        header[0] = 'R'; header[1] = 'I'; header[2] = 'F'; header[3] = 'F';
+        header[0] = 'R';
+        header[1] = 'I';
+        header[2] = 'F';
+        header[3] = 'F';
         header[4] = (byte) (totalDataLength & 0xff);
         header[5] = (byte) ((totalDataLength >> 8) & 0xff);
         header[6] = (byte) ((totalDataLength >> 16) & 0xff);
         header[7] = (byte) ((totalDataLength >> 24) & 0xff);
-        header[8] = 'W'; header[9] = 'A'; header[10] = 'V'; header[11] = 'E';
-        header[12] = 'f'; header[13] = 'm'; header[14] = 't'; header[15] = ' ';
+        header[8] = 'W';
+        header[9] = 'A';
+        header[10] = 'V';
+        header[11] = 'E';
+        header[12] = 'f';
+        header[13] = 'm';
+        header[14] = 't';
+        header[15] = ' ';
         header[16] = 16;
-        header[17] = 0; header[18] = 0; header[19] = 0;
+        header[17] = 0;
+        header[18] = 0;
+        header[19] = 0;
         header[20] = 1;
         header[21] = 0;
         header[22] = (byte) DEFAULT_GEMINI_AUDIO_WAV_CHANNELS;
@@ -226,7 +260,10 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
         header[33] = 0;
         header[34] = (byte) DEFAULT_GEMINI_AUDIO_WAV_BITS_PER_SAMPLE;
         header[35] = 0;
-        header[36] = 'd'; header[37] = 'a'; header[38] = 't'; header[39] = 'a';
+        header[36] = 'd';
+        header[37] = 'a';
+        header[38] = 't';
+        header[39] = 'a';
         header[40] = (byte) (pcmContentLength & 0xff);
         header[41] = (byte) ((pcmContentLength >> 8) & 0xff);
         header[42] = (byte) ((pcmContentLength >> 16) & 0xff);
@@ -234,4 +271,5 @@ public class GoogleAIAudioHandler extends DefaultAIAudioHandler {
 
         return header;
     }
+
 }

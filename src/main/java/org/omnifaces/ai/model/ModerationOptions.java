@@ -37,6 +37,7 @@ public class ModerationOptions implements Serializable {
      * Standard categories for content moderation.
      */
     public enum Category {
+
         /** Sexual content (OpenAI supported). */
         SEXUAL("sexual", true),
         /** Harassment content (OpenAI supported). */
@@ -60,7 +61,8 @@ public class ModerationOptions implements Serializable {
         public static final Set<String> ALL_CATEGORY_NAMES = Set.copyOf(Arrays.stream(values()).map(Category::getName).collect(toCollection(TreeSet::new)));
 
         /** Category names supported by OpenAI v1 moderation API. */
-        public static final Set<String> OPENAI_SUPPORTED_CATEGORY_NAMES = Set.copyOf(Arrays.stream(values()).filter(Category::isOpenAISupported).map(Category::getName).collect(toCollection(TreeSet::new)));
+        public static final Set<String> OPENAI_SUPPORTED_CATEGORY_NAMES = Set
+            .copyOf(Arrays.stream(values()).filter(Category::isOpenAISupported).map(Category::getName).collect(toCollection(TreeSet::new)));
 
         private final String name;
         private final boolean openAISupported;
@@ -72,6 +74,7 @@ public class ModerationOptions implements Serializable {
 
         /**
          * Returns the category name.
+         * 
          * @return The category name.
          */
         public String getName() {
@@ -80,11 +83,13 @@ public class ModerationOptions implements Serializable {
 
         /**
          * Returns whether this category is supported by OpenAI v1 moderation API.
+         * 
          * @return {@code true} if supported by OpenAI v1 moderation API.
          */
         public boolean isOpenAISupported() {
             return openAISupported;
         }
+
     }
 
     /** Default threshold: {@value}. */
@@ -127,8 +132,8 @@ public class ModerationOptions implements Serializable {
     /**
      * Gets the threshold for flagging content (0.0 to 1.0). Defaults to {@value #DEFAULT_THRESHOLD}.
      * <p>
-     * Content is flagged when any category score exceeds this threshold.
-     * Lower values (e.g., {@value #STRICT_THRESHOLD}) are stricter, higher values (e.g., {@value #LENIENT_THRESHOLD}) are more lenient.
+     * Content is flagged when any category score exceeds this threshold. Lower values (e.g., {@value #STRICT_THRESHOLD}) are stricter, higher values (e.g.,
+     * {@value #LENIENT_THRESHOLD}) are more lenient.
      *
      * @return The threshold value.
      */
@@ -138,7 +143,9 @@ public class ModerationOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link ModerationOptions} instances. For example:
+     * 
      * <pre>
+     * 
      * ModerationOptions options = ModerationOptions.newBuilder()
      *     .categories(Category.HATE, Category.VIOLENCE)
      *     .threshold(0.8)
@@ -157,10 +164,12 @@ public class ModerationOptions implements Serializable {
      * Use {@link ModerationOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
+
         private Set<String> categories = new TreeSet<>(Category.OPENAI_SUPPORTED_CATEGORY_NAMES);
         private double threshold = DEFAULT_THRESHOLD;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the categories to check. Defaults to {@link Category#OPENAI_SUPPORTED_CATEGORY_NAMES}.
@@ -198,8 +207,8 @@ public class ModerationOptions implements Serializable {
         /**
          * Sets the threshold. Defaults to {@value ModerationOptions#DEFAULT_THRESHOLD}.
          * <p>
-         * Content is flagged when any category score exceeds this threshold.
-         * Lower values (e.g., {@value #STRICT_THRESHOLD}) are stricter, higher values (e.g., {@value #LENIENT_THRESHOLD}) are more lenient.
+         * Content is flagged when any category score exceeds this threshold. Lower values (e.g., {@value #STRICT_THRESHOLD}) are stricter, higher values (e.g.,
+         * {@value #LENIENT_THRESHOLD}) are more lenient.
          *
          * @param threshold The threshold value, typically between 0.0 and 1.0.
          * @return This builder instance for chaining.
@@ -226,5 +235,7 @@ public class ModerationOptions implements Serializable {
 
             return new ModerationOptions(this);
         }
+
     }
+
 }

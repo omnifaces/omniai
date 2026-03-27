@@ -38,4 +38,5 @@ public class AIAuthenticationException extends AIHttpException {
     public AIAuthenticationException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

@@ -81,9 +81,9 @@ class GenerateImageOptionsTest {
     @Test
     void builder_aspectRatio_resetsSizeToDefault() {
         var options = GenerateImageOptions.newBuilder()
-                .size("1920x1080")
-                .aspectRatio("1:1")
-                .build();
+            .size("1920x1080")
+            .aspectRatio("1:1")
+            .build();
 
         assertEquals(GenerateImageOptions.DEFAULT_SIZE, options.getSize());
         assertEquals("1:1", options.getAspectRatio());
@@ -107,9 +107,9 @@ class GenerateImageOptionsTest {
     @Test
     void builder_sizeAfterAspectRatio_recalculatesAspectRatio() {
         var options = GenerateImageOptions.newBuilder()
-                .aspectRatio("16:9")
-                .size("1024x1024")
-                .build();
+            .aspectRatio("16:9")
+            .size("1024x1024")
+            .build();
 
         assertEquals("1024x1024", options.getSize());
         assertEquals("1:1", options.getAspectRatio());
@@ -136,10 +136,10 @@ class GenerateImageOptionsTest {
     @Test
     void builder_chaining_allOptions() {
         var options = GenerateImageOptions.newBuilder()
-                .size("1920x1080")
-                .quality("hd")
-                .outputFormat("jpeg")
-                .build();
+            .size("1920x1080")
+            .quality("hd")
+            .outputFormat("jpeg")
+            .build();
 
         assertEquals("1920x1080", options.getSize());
         assertEquals("16:9", options.getAspectRatio());
@@ -159,10 +159,10 @@ class GenerateImageOptionsTest {
     @Test
     void serialization_preservesAllFields() throws Exception {
         var original = GenerateImageOptions.newBuilder()
-                .size("1920x1080")
-                .quality("hd")
-                .outputFormat("jpeg")
-                .build();
+            .size("1920x1080")
+            .quality("hd")
+            .outputFormat("jpeg")
+            .build();
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -179,4 +179,5 @@ class GenerateImageOptionsTest {
             assertEquals(original.getOutputFormat(), deserialized.getOutputFormat());
         }
     }
+
 }

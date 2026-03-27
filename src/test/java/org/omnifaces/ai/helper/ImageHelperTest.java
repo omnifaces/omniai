@@ -29,35 +29,35 @@ class ImageHelperTest {
 
     @Test
     void isSupportedAsImageAttachment_jpeg_shouldBeTrue() {
-        var content = new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF, (byte)0xE0, 0, 0, 0, 0};
+        var content = new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0, 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertTrue(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_png_shouldBeTrue() {
-        var content = new byte[]{(byte)0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+        var content = new byte[] { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A };
         var mimeType = MimeType.guessMimeType(content);
         assertTrue(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_gif_shouldBeTrue() {
-        var content = new byte[]{'G', 'I', 'F', '8', '9', 'a', 0, 0};
+        var content = new byte[] { 'G', 'I', 'F', '8', '9', 'a', 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertTrue(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_bmp_shouldBeTrue() {
-        var content = new byte[]{'B', 'M', 0, 0, 0, 0, 0, 0};
+        var content = new byte[] { 'B', 'M', 0, 0, 0, 0, 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertTrue(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_webp_shouldBeTrue() {
-        var content = new byte[]{'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'};
+        var content = new byte[] { 'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P' };
         var mimeType = MimeType.guessMimeType(content);
         assertTrue(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
@@ -71,28 +71,28 @@ class ImageHelperTest {
 
     @Test
     void isSupportedAsImageAttachment_ico_shouldBeFalse() {
-        var content = new byte[]{0x00, 0x00, 0x01, 0x00, 0, 0, 0, 0};
+        var content = new byte[] { 0x00, 0x00, 0x01, 0x00, 0, 0, 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertFalse(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_heic_shouldBeFalse() {
-        var content = new byte[]{0, 0, 0, 0, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c', 0, 0, 0, 0};
+        var content = new byte[] { 0, 0, 0, 0, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c', 0, 0, 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertFalse(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_tiff_shouldBeFalse() {
-        var content = new byte[]{'I', 'I', '*', 0, 0, 0, 0, 0};
+        var content = new byte[] { 'I', 'I', '*', 0, 0, 0, 0, 0 };
         var mimeType = MimeType.guessMimeType(content);
         assertFalse(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
 
     @Test
     void isSupportedAsImageAttachment_nonImageMimeType_shouldBeFalse() {
-        var content = new byte[]{'%', 'P', 'D', 'F', '-', '1', '.', '4'};
+        var content = new byte[] { '%', 'P', 'D', 'F', '-', '1', '.', '4' };
         var mimeType = MimeType.guessMimeType(content);
         assertFalse(ImageHelper.isSupportedAsImageAttachment(mimeType));
     }
@@ -103,19 +103,20 @@ class ImageHelperTest {
 
     @Test
     void sanitizeImageAttachment_unsupportedFormat_shouldThrow() {
-        var content = new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+        var content = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
         assertThrows(AIException.class, () -> ImageHelper.sanitizeImageAttachment(content));
     }
 
     @Test
     void sanitizeImageAttachment_ico_shouldThrow() {
-        var content = new byte[]{0x00, 0x00, 0x01, 0x00, 0, 0, 0, 0};
+        var content = new byte[] { 0x00, 0x00, 0x01, 0x00, 0, 0, 0, 0 };
         assertThrows(AIException.class, () -> ImageHelper.sanitizeImageAttachment(content));
     }
 
     @Test
     void sanitizeImageAttachment_heic_shouldThrow() {
-        var content = new byte[]{0, 0, 0, 0, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c', 0, 0, 0, 0};
+        var content = new byte[] { 0, 0, 0, 0, 'f', 't', 'y', 'p', 'h', 'e', 'i', 'c', 0, 0, 0, 0 };
         assertThrows(AIException.class, () -> ImageHelper.sanitizeImageAttachment(content));
     }
+
 }

@@ -99,4 +99,5 @@ abstract class AIServiceIT {
     void clearTestMethod() {
         currentTestMethod.remove();
     }
+
 }

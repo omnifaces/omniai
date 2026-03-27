@@ -38,4 +38,5 @@ public class AIRateLimitExceededException extends AIHttpException {
     public AIRateLimitExceededException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

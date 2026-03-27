@@ -34,4 +34,5 @@ class OpenRouterAIServiceImageHandlerIT extends BaseAIServiceImageHandlerIT {
     protected String getModel() {
         return "google/gemma-3-27b-it";
     }
+
 }

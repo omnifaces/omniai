@@ -63,7 +63,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         var supportsResponsesApi = supportsResponsesApi(service);
         var messages = Json.createArrayBuilder();
         var payload = Json.createObjectBuilder()
-                .add("model", service.getModelName());
+            .add("model", service.getModelName());
 
         if (supportsResponsesApi) {
             buildChatPayloadToolsWithResponsesApi(service, payload, options);
@@ -90,6 +90,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to payload as top-level {@code tools} field for Responses API.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -113,6 +114,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to payload as top-level {@code instructions} field for Responses API.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -126,6 +128,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to messages array as {@code system} role for Chat Completions API.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
@@ -133,14 +136,17 @@ public class OpenAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadSystemPromptWithChatCompletionsApi(AIService service, JsonArrayBuilder messages, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
-            messages.add(Json.createObjectBuilder()
-                .add("role", "system")
-                .add("content", options.getSystemPrompt()));
+            messages.add(
+                Json.createObjectBuilder()
+                    .add("role", "system")
+                    .add("content", options.getSystemPrompt())
+            );
         }
     }
 
     /**
      * Add conversation history messages to the input array for Responses API.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -152,6 +158,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array for Chat Completions API.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -166,27 +173,36 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             if (supportsFilesApi(service)) {
                 var content = Json.createArrayBuilder();
                 for (var uploadedFile : historyMessage.uploadedFiles()) {
-                    content.add(Json.createObjectBuilder()
-                        .add("type", supportsResponsesApi ? "input_file" : "file")
-                        .add("file_id", uploadedFile.id()));
+                    content.add(
+                        Json.createObjectBuilder()
+                            .add("type", supportsResponsesApi ? "input_file" : "file")
+                            .add("file_id", uploadedFile.id())
+                    );
                 }
-                content.add(Json.createObjectBuilder()
-                    .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
-                    .add("text", historyMessage.content()));
-                messages.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", content));
+                content.add(
+                    Json.createObjectBuilder()
+                        .add("type", supportsResponsesApi ? (historyMessage.role() == Role.USER) ? "input_text" : "output_text" : "text")
+                        .add("text", historyMessage.content())
+                );
+                messages.add(
+                    Json.createObjectBuilder()
+                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                        .add("content", content)
+                );
             }
             else {
-                messages.add(Json.createObjectBuilder()
-                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                    .add("content", historyMessage.content()));
+                messages.add(
+                    Json.createObjectBuilder()
+                        .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                        .add("content", historyMessage.content())
+                );
             }
         }
     }
 
     /**
      * Add user content (images, audio files, other files, and text message) to the input array for Responses API.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -199,6 +215,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, audio files, other files, and text message) to the messages array for Chat Completions API.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -209,7 +226,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         addUserContent(service, messages, input, options, file -> getFileUploadMetadata(service, file), false);
     }
 
-    private static void addUserContent(AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options, Function<Attachment, Map<String, String>> getFileUploadMetadata, boolean supportsResponsesApi) {
+    private static void addUserContent(
+        AIService service, JsonArrayBuilder messages, ChatInput input, ChatOptions options, Function<Attachment, Map<String, String>> getFileUploadMetadata,
+        boolean supportsResponsesApi
+    )
+    {
         var audioFiles = input.getFiles().stream().filter(attachment -> attachment.mimeType().isAudio()).toList();
         var remainingFiles = input.getFiles().stream().filter(attachment -> !attachment.mimeType().isAudio()).toList();
         var content = Json.createArrayBuilder();
@@ -228,10 +249,14 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         }
 
         for (var audioFile : audioFiles) {
-            content.add(Json.createObjectBuilder().add("type", "input_audio")
-                .add("input_audio", Json.createObjectBuilder()
-                    .add(supportsResponsesApi ? "audio_base64" : "data", audioFile.toBase64())
-                    .add("format", audioFile.mimeType().extension())));
+            content.add(
+                Json.createObjectBuilder().add("type", "input_audio")
+                    .add(
+                        "input_audio", Json.createObjectBuilder()
+                            .add(supportsResponsesApi ? "audio_base64" : "data", audioFile.toBase64())
+                            .add("format", audioFile.mimeType().extension())
+                    )
+            );
         }
 
         if (!remainingFiles.isEmpty()) {
@@ -241,37 +266,50 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 if (supportsFilesApi(service)) {
                     var fileId = service.upload(file.withMetadata(getFileUploadMetadata.apply(file)), options);
 
-                    content.add(Json.createObjectBuilder()
-                        .add("type", supportsResponsesApi ? "input_file" : "file")
-                        .add("file_id", fileId));
+                    content.add(
+                        Json.createObjectBuilder()
+                            .add("type", supportsResponsesApi ? "input_file" : "file")
+                            .add("file_id", fileId)
+                    );
                 }
                 else if (supportsResponsesApi) {
-                    content.add(Json.createObjectBuilder()
-                        .add("type", "input_file")
-                        .add("filename", file.fileName())
-                        .add("file_data", file.toDataUri()));
+                    content.add(
+                        Json.createObjectBuilder()
+                            .add("type", "input_file")
+                            .add("filename", file.fileName())
+                            .add("file_data", file.toDataUri())
+                    );
                 }
                 else {
-                    content.add(Json.createObjectBuilder()
-                        .add("type", "file")
-                        .add("file", Json.createObjectBuilder()
-                            .add("filename", file.fileName())
-                            .add("file_data", file.toDataUri())));
+                    content.add(
+                        Json.createObjectBuilder()
+                            .add("type", "file")
+                            .add(
+                                "file", Json.createObjectBuilder()
+                                    .add("filename", file.fileName())
+                                    .add("file_data", file.toDataUri())
+                            )
+                    );
                 }
             }
         }
 
-        content.add(Json.createObjectBuilder()
-            .add("type", supportsResponsesApi ? "input_text" : "text")
-            .add("text", input.getMessage()));
+        content.add(
+            Json.createObjectBuilder()
+                .add("type", supportsResponsesApi ? "input_text" : "text")
+                .add("text", input.getMessage())
+        );
 
-        messages.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("content", content));
+        messages.add(
+            Json.createObjectBuilder()
+                .add("role", "user")
+                .add("content", content)
+        );
     }
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Responses API.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -284,17 +322,24 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Chat Completions API.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
      * @param streaming Whether streaming is enabled.
      * @since 1.2
      */
-    protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming) {
+    protected void buildChatPayloadGenerationConfigWithChatCompletionsApi(
+        AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming
+    )
+    {
         addGenerationConfig(service, payload, options, streaming, false);
     }
 
-    private static void addGenerationConfig(AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming, boolean supportsResponsesApi) {
+    private static void addGenerationConfig(
+        AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming, boolean supportsResponsesApi
+    )
+    {
         if (options.getMaxTokens() != null) {
             if (supportsResponsesApi) {
                 payload.add("max_output_tokens", options.getMaxTokens());
@@ -336,18 +381,23 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 payload.add("text", Json.createObjectBuilder().add("format", format));
             }
             else {
-                payload.add("response_format", Json.createObjectBuilder()
-                    .add("type", "json_schema")
-                    .add("json_schema", Json.createObjectBuilder()
-                        .add("name", "response_schema")
-                        .add("strict", true)
-                        .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))));
+                payload.add(
+                    "response_format", Json.createObjectBuilder()
+                        .add("type", "json_schema")
+                        .add(
+                            "json_schema", Json.createObjectBuilder()
+                                .add("name", "response_schema")
+                                .add("strict", true)
+                                .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))
+                        )
+                );
             }
         }
     }
 
     /**
      * Returns file upload metadata. This basically represents additional form data during file upload request.
+     * 
      * @param service The visiting AI service.
      * @param file The file to upload.
      * @return File upload metadata.
@@ -389,6 +439,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Process chat stream event with {@code responses} API.
+     * 
      * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
@@ -404,7 +455,10 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 throw new AITokenLimitExceededException();
             }
         }
-        else if (event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed") || event.value().contains("response.completed"))) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
+        else if (
+            event.type() == DATA && (event.value().contains("response.output_text.delta") || event.value().contains("response.failed")
+                || event.value().contains("response.completed"))
+        ) { // Cheap pre-filter before expensive parse because OpenAI returns pretty a lot of events.
             return tryParseEventDataJson(event.value(), json -> {
                 var type = json.getString("type", null);
 
@@ -431,6 +485,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Process chat stream event with {@code chat/completions} API.
+     * 
      * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
@@ -445,7 +500,9 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                 return tryParseEventDataJson(event.value(), json -> {
                     if ("chat.completion.chunk".equals(json.getString("object", null))) {
                         findByPath(json, "choices[0].delta.content").ifPresent(onToken);
-                        findByPath(json, "choices[0].finish_reason").filter("length"::equals).ifPresent(__ -> { throw new AITokenLimitExceededException(); });
+                        findByPath(json, "choices[0].finish_reason").filter("length"::equals).ifPresent(__ -> {
+                            throw new AITokenLimitExceededException();
+                        });
 
                         if (!options.isDefault() && json.containsKey("usage")) {
                             options.recordUsage(parseChatUsage(json));
@@ -462,6 +519,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Returns web search tool name.
+     * 
      * @return Web search tool name.
      * @since 1.3
      */
@@ -478,8 +536,9 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     /**
-     * Builds an OpenAI-compatible {@code user_location} object from the given {@link Location}.
-     * Returns {@code null} if the location is {@link Location#isGlobal() global}.
+     * Builds an OpenAI-compatible {@code user_location} object from the given {@link Location}. Returns {@code null} if the location is
+     * {@link Location#isGlobal() global}.
+     * 
      * @param location The location to build the user location object from.
      * @return An OpenAI-compatible {@code user_location} JSON object, or {@code null} if the location is global.
      * @since 1.3
@@ -505,4 +564,5 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
         return null;
     }
+
 }

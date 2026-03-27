@@ -43,4 +43,5 @@ public class XAIImageHandler extends OpenAIImageHandler {
             .add("response_format", "b64_json")
             .build();
     }
+
 }

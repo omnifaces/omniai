@@ -41,4 +41,5 @@ class MicroProfileConfigExpressionResolver extends BaseExpressionResolver {
         var config = ConfigProvider.getConfig();
         return resolve(CONFIG_PATTERN, value, key -> config.getOptionalValue(key, String.class).orElse(""));
     }
+
 }

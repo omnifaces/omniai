@@ -48,9 +48,9 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
         buildChatPayloadHistoryMessages(service, messages, input);
         buildChatPayloadUserContent(service, messages, input);
         var payload = Json.createObjectBuilder()
-                .add("model", service.getModelName())
-                .add("messages", messages)
-                .add("stream", false);
+            .add("model", service.getModelName())
+            .add("messages", messages)
+            .add("stream", false);
         buildChatPayloadGenerationConfig(service, payload, options);
 
         return payload.build();
@@ -58,34 +58,41 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the messages array as a {@code system} role message.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
      */
     protected void buildChatPayloadSystemPrompt(AIService service, JsonArrayBuilder messages, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
-            messages.add(Json.createObjectBuilder()
-                .add("role", "system")
-                .add("content", options.getSystemPrompt()));
+            messages.add(
+                Json.createObjectBuilder()
+                    .add("role", "system")
+                    .add("content", options.getSystemPrompt())
+            );
         }
     }
 
     /**
      * Add conversation history messages to the messages array.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
      */
     protected void buildChatPayloadHistoryMessages(AIService service, JsonArrayBuilder messages, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
-            messages.add(Json.createObjectBuilder()
-                .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                .add("content", historyMessage.content()));
+            messages.add(
+                Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add("content", historyMessage.content())
+            );
         }
     }
 
     /**
      * Add user content (images and text message) to the messages array.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -103,12 +110,15 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
             message.add("images", images);
         }
 
-        messages.add(message
-            .add("content", input.getMessage()));
+        messages.add(
+            message
+                .add("content", input.getMessage())
+        );
     }
 
     /**
      * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -146,4 +156,5 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
     public List<String> getChatUsageOutputTokensPaths() {
         return List.of("eval_count");
     }
+
 }

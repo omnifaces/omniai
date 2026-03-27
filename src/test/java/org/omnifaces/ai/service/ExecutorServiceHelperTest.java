@@ -43,7 +43,6 @@ class ExecutorServiceHelperTest {
         SERVICE_LOGGER.setLevel(savedLevel);
     }
 
-
     // =================================================================================================================
     // runAsync - successful task
     // =================================================================================================================
@@ -106,4 +105,5 @@ class ExecutorServiceHelperTest {
 
         assertTrue(latch.await(5, TimeUnit.SECONDS));
     }
+
 }

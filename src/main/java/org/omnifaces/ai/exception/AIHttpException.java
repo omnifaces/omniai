@@ -50,8 +50,8 @@ public class AIHttpException extends AIException {
     /**
      * Creates and returns the most specific {@link AIHttpException} subclass that matches the given HTTP status code.
      * <p>
-     * If no specific exception type is defined for the status code, a generic {@link AIHttpException} is returned.
-     * The created exception includes the request URI, status code, and response body (when available) to help with debugging.
+     * If no specific exception type is defined for the status code, a generic {@link AIHttpException} is returned. The created exception includes the request
+     * URI, status code, and response body (when available) to help with debugging.
      *
      * @param uri The URI of the HTTP request that caused the error (used in exception messages).
      * @param statusCode The HTTP status code returned by the server.
@@ -100,6 +100,7 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP request URI.
+     * 
      * @return The HTTP request URI.
      */
     public URI getUri() {
@@ -108,6 +109,7 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP status code.
+     * 
      * @return The HTTP status code.
      */
     public int getStatusCode() {
@@ -116,9 +118,11 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP response body.
+     * 
      * @return The HTTP response body.
      */
     public String getResponseBody() {
         return responseBody;
     }
+
 }

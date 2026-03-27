@@ -25,17 +25,16 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#META}</li>
- *     <li>apiKey: your Meta API key</li>
+ * <li>provider: {@link AIProvider#META}</li>
+ * <li>apiKey: your Meta API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#META} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#META} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -69,4 +68,5 @@ public class MetaAIService extends OpenAIService {
     public boolean supportsOpenAIModerationCapability(Set<String> categories) {
         return false;
     }
+
 }

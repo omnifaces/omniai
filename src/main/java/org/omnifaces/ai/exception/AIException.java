@@ -37,9 +37,8 @@ public class AIException extends RuntimeException {
     /**
      * Unwraps an {@link AIException} from a {@link CompletionException} propagated to the caller thread.
      * <p>
-     * If the cause is already an {@code AIException}, it is returned directly.
-     * Otherwise, a new {@code AIException} wrapping the cause is created.
-     * Then a suppressed exception is added, preserving the stack trace of the current thread.
+     * If the cause is already an {@code AIException}, it is returned directly. Otherwise, a new {@code AIException} wrapping the cause is created. Then a
+     * suppressed exception is added, preserving the stack trace of the current thread.
      *
      * @param exception The completion exception from an async operation.
      * @return The unwrapped or newly created AI exception.
@@ -51,8 +50,7 @@ public class AIException extends RuntimeException {
     /**
      * Unwraps an {@link AIException} from an exception thrown during async operation and adds given exception as suppressed one.
      * <p>
-     * If the cause is already an {@code AIException}, it is returned directly.
-     * Otherwise, a new {@code AIException} wrapping the cause is created.
+     * If the cause is already an {@code AIException}, it is returned directly. Otherwise, a new {@code AIException} wrapping the cause is created.
      *
      * @param exception The exception from an async operation.
      * @param suppressed The suppressed exception, preserving the stack trace of the thread wherein the async operation was initiated.
@@ -83,4 +81,5 @@ public class AIException extends RuntimeException {
     public AIException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

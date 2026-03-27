@@ -29,17 +29,16 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#ANTHROPIC}</li>
- *     <li>apiKey: your Anthropic API key</li>
+ * <li>provider: {@link AIProvider#ANTHROPIC}</li>
+ * <li>apiKey: your Anthropic API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#ANTHROPIC} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#ANTHROPIC} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -134,4 +133,5 @@ public class AnthropicAIService extends BaseAIService {
     protected UploadedFileJsonStructure getUploadedFileJsonStructure() {
         return new UploadedFileJsonStructure("data", "filename", "id", "created_at");
     }
+
 }

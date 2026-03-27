@@ -52,7 +52,8 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         var payload = Json.createObjectBuilder();
         var contents = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Google API doesn't support user_location in payload.
+        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Google API doesn't support user_location in
+                                                                                                             // payload.
         buildChatPayloadHistoryMessages(service, contents, input);
         buildChatPayloadUserContent(service, contents, input, options);
         payload.add("contents", contents);
@@ -62,6 +63,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to the payload as a top-level {@code tools} field.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -70,14 +72,19 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
-            payload.add("tools", Json.createArrayBuilder()
-                .add(Json.createObjectBuilder()
-                    .add("google_search", Json.createObjectBuilder().build()).build()));
+            payload.add(
+                "tools", Json.createArrayBuilder()
+                    .add(
+                        Json.createObjectBuilder()
+                            .add("google_search", Json.createObjectBuilder().build()).build()
+                    )
+            );
         }
     }
 
     /**
      * Add system prompt to the payload as a {@code system_instruction} field.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -85,15 +92,22 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadSystemPrompt(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (!isBlank(options.getSystemPrompt())) {
-            payload.add("system_instruction", Json.createObjectBuilder()
-                .add("parts", Json.createArrayBuilder()
-                    .add(Json.createObjectBuilder()
-                        .add("text", options.getSystemPrompt()))));
+            payload.add(
+                "system_instruction", Json.createObjectBuilder()
+                    .add(
+                        "parts", Json.createArrayBuilder()
+                            .add(
+                                Json.createObjectBuilder()
+                                    .add("text", options.getSystemPrompt())
+                            )
+                    )
+            );
         }
     }
 
     /**
      * Add conversation history messages to the contents array.
+     * 
      * @param service The visiting AI service.
      * @param contents The contents array builder.
      * @param input The chat input.
@@ -104,23 +118,32 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
             var parts = Json.createArrayBuilder();
 
             for (var uploadedFile : historyMessage.uploadedFiles()) {
-                parts.add(Json.createObjectBuilder()
-                    .add("file_data", Json.createObjectBuilder()
-                        .add("mime_type", uploadedFile.mimeType().value())
-                        .add("file_uri", uploadedFile.id())));
+                parts.add(
+                    Json.createObjectBuilder()
+                        .add(
+                            "file_data", Json.createObjectBuilder()
+                                .add("mime_type", uploadedFile.mimeType().value())
+                                .add("file_uri", uploadedFile.id())
+                        )
+                );
             }
 
-            parts.add(Json.createObjectBuilder()
-                .add("text", historyMessage.content()));
+            parts.add(
+                Json.createObjectBuilder()
+                    .add("text", historyMessage.content())
+            );
 
-            contents.add(Json.createObjectBuilder()
-                .add("role", historyMessage.role() == Role.USER ? "user" : "model")
-                .add("parts", parts));
+            contents.add(
+                Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "model")
+                    .add("parts", parts)
+            );
         }
     }
 
     /**
      * Add user content (images, files, and text message) to the contents array.
+     * 
      * @param service The visiting AI service.
      * @param contents The contents array builder.
      * @param input The chat input.
@@ -131,10 +154,14 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         var parts = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            parts.add(Json.createObjectBuilder()
-                .add("inline_data", Json.createObjectBuilder()
-                    .add("mime_type", image.mimeType().value())
-                    .add("data", image.toBase64())));
+            parts.add(
+                Json.createObjectBuilder()
+                    .add(
+                        "inline_data", Json.createObjectBuilder()
+                            .add("mime_type", image.mimeType().value())
+                            .add("data", image.toBase64())
+                    )
+            );
         }
 
         if (!input.getFiles().isEmpty()) {
@@ -143,23 +170,32 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
             for (var file : input.getFiles()) {
                 var fileId = service.upload(file, options);
 
-                parts.add(Json.createObjectBuilder()
-                    .add("file_data", Json.createObjectBuilder()
-                        .add("mime_type", file.mimeType().value())
-                        .add("file_uri", fileId)));
+                parts.add(
+                    Json.createObjectBuilder()
+                        .add(
+                            "file_data", Json.createObjectBuilder()
+                                .add("mime_type", file.mimeType().value())
+                                .add("file_uri", fileId)
+                        )
+                );
             }
         }
 
-        parts.add(Json.createObjectBuilder()
-            .add("text", input.getMessage()));
+        parts.add(
+            Json.createObjectBuilder()
+                .add("text", input.getMessage())
+        );
 
-        contents.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("parts", parts));
+        contents.add(
+            Json.createObjectBuilder()
+                .add("role", "user")
+                .add("parts", parts)
+        );
     }
 
     /**
      * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -241,11 +277,14 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
                     return false;
                 }
 
-                finishReason.filter("MAX_TOKENS"::equals).ifPresent(__ -> { throw new AITokenLimitExceededException(); });
+                finishReason.filter("MAX_TOKENS"::equals).ifPresent(__ -> {
+                    throw new AITokenLimitExceededException();
+                });
                 return true;
             });
         }
 
         return true;
     }
+
 }

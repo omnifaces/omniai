@@ -245,8 +245,7 @@ class ELExpressionResolverTest {
     // =================================================================================================================
 
     /**
-     * Asserts that the input is resolved to the expected output using real EL evaluation
-     * with the given beans registered in the EL context.
+     * Asserts that the input is resolved to the expected output using real EL evaluation with the given beans registered in the EL context.
      */
     private static void assertResolved(String input, Map<String, ?> beans, String expectedOutput) {
         var beanManager = mockBeanManager(beans);
@@ -272,9 +271,8 @@ class ELExpressionResolverTest {
     // =================================================================================================================
 
     /**
-     * EL resolver that resolves top-level bean names from a map.
-     * Nested property access (e.g. {@code config.apiKey}) is handled by the built-in {@code MapELResolver}
-     * when the bean value is a {@code Map}, or by {@code BeanELResolver} when it is a POJO.
+     * EL resolver that resolves top-level bean names from a map. Nested property access (e.g. {@code config.apiKey}) is handled by the built-in
+     * {@code MapELResolver} when the bean value is a {@code Map}, or by {@code BeanELResolver} when it is a POJO.
      */
     private static class TestBeanELResolver extends ELResolver {
 
@@ -294,16 +292,34 @@ class ELExpressionResolverTest {
             return null;
         }
 
-        @Override public Class<?> getType(ELContext context, Object base, Object property) { return null; }
-        @Override public void setValue(ELContext context, Object base, Object property, Object value) {}
-        @Override public boolean isReadOnly(ELContext context, Object base, Object property) { return true; }
-        @Override public Class<?> getCommonPropertyType(ELContext context, Object base) { return null; }
+        @Override
+        public Class<?> getType(ELContext context, Object base, Object property) {
+            return null;
+        }
+
+        @Override
+        public void setValue(ELContext context, Object base, Object property, Object value) {
+        }
+
+        @Override
+        public boolean isReadOnly(ELContext context, Object base, Object property) {
+            return true;
+        }
+
+        @Override
+        public Class<?> getCommonPropertyType(ELContext context, Object base) {
+            return null;
+        }
+
     }
 
     /** Bean whose property access throws, for testing error handling in ELExpressionResolver. */
     public static class FailingBean {
+
         public Object getValue() {
             throw new RuntimeException("EL evaluation failed");
         }
+
     }
+
 }

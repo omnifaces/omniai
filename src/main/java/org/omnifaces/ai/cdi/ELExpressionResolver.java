@@ -47,4 +47,5 @@ class ELExpressionResolver extends BaseExpressionResolver {
         elProcessor.getELManager().addELResolver(((ELAwareBeanManager) beanManager).getELResolver());
         return resolve(EL_PATTERN, value, expr -> ofNullable(elProcessor.eval(expr)).map(Object::toString).orElse(""));
     }
+
 }

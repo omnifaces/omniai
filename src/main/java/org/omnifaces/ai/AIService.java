@@ -43,8 +43,8 @@ import org.omnifaces.ai.service.AIServiceWrapper;
 /**
  * Generic interface for AI service providers.
  * <p>
- * This interface provides a unified abstraction for various AI capabilities including
- * chat, summarization, translation, proofreading, content moderation, image analysis, and more.
+ * This interface provides a unified abstraction for various AI capabilities including chat, summarization, translation, proofreading, content moderation, image
+ * analysis, and more.
  * <p>
  * The implementations must be stateless and able to be {@link ApplicationScoped}.
  *
@@ -63,9 +63,12 @@ public interface AIService extends Serializable {
      * Sends a message to the AI with default system prompt from {@link #getChatPrompt()}.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var response = service.chat(message);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(String)}.
      * @param message The user's message to send to the AI.
      * @return The AI's response, never {@code null}.
@@ -80,13 +83,16 @@ public interface AIService extends Serializable {
      * Sends input to the AI with default system prompt from {@link #getChatPrompt()}.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var input = ChatInput.newBuilder()
      *     .message(message)
      *     .attach(imageBytes)
      *     .build();
      * var response = service.chat(input);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput)}.
      * @param input The user's input containing message and optional file attachments.
      * @return The AI's response, never {@code null}.
@@ -100,15 +106,19 @@ public interface AIService extends Serializable {
     /**
      * Sends a message to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var review = service.chat("Analyze this review: " + reviewText, ProductReview.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(String, Class)}.
      * @param <T> The target type.
      * @param message The user's message to send to the AI.
@@ -127,12 +137,15 @@ public interface AIService extends Serializable {
     /**
      * Sends input to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var input = ChatInput.newBuilder()
      *     .message("Analyze this review: " + reviewText)
@@ -140,6 +153,7 @@ public interface AIService extends Serializable {
      *     .build();
      * var review = service.chat(input, ProductReview.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, Class)}.
      * @param <T> The target type.
      * @param input The user's input containing message and file attachments.
@@ -161,9 +175,12 @@ public interface AIService extends Serializable {
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var response = service.chat(message, options);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)}.
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -181,13 +198,16 @@ public interface AIService extends Serializable {
      * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var input = ChatInput.newBuilder()
      *     .message(message)
      *     .attach(imageBytes)
      *     .build();
      * var response = service.chat(input, options);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
      * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -202,18 +222,22 @@ public interface AIService extends Serializable {
     /**
      * Sends a message to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a product review analyzer.")
      *     .build();
      * var review = service.chat("Analyze this review: " + reviewText, options, ProductReview.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param message The user's message to send to the AI.
@@ -233,12 +257,15 @@ public interface AIService extends Serializable {
     /**
      * Sends input to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var input = ChatInput.newBuilder()
      *     .message("Analyze this review: " + reviewText)
@@ -249,6 +276,7 @@ public interface AIService extends Serializable {
      *     .build();
      * var review = service.chat(input, options, ProductReview.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param input The user's input containing message and file attachments.
@@ -269,6 +297,7 @@ public interface AIService extends Serializable {
      * Asynchronously sends a message to the AI with default system prompt from {@link #getChatPrompt()}.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * service.chatAsync(message).thenAccept(response -> {
      *     // handle full response
@@ -277,6 +306,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput)}.
      * @param message The user's message to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
@@ -291,6 +321,7 @@ public interface AIService extends Serializable {
      * Asynchronously sends input to the AI with default system prompt from {@link #getChatPrompt()}.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
@@ -303,6 +334,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
      * @param input The user's input containing message and file attachments.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
@@ -316,12 +348,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a message to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * service.chatAsync("Analyze this review: " + reviewText, ProductReview.class).thenAccept(review -&gt; {
      *     // handle typed response
@@ -330,6 +364,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param message The user's message to send to the AI.
@@ -348,12 +383,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends input to the AI with default system prompt from {@link #getChatPrompt()} and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var input = ChatInput.newBuilder()
      *     .message("Analyze this review: " + reviewText)
@@ -366,6 +403,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions, Class)}.
      * @param <T> The target type.
      * @param input The user's input containing message and file attachments.
@@ -387,6 +425,7 @@ public interface AIService extends Serializable {
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * service.chatAsync(message, options).thenAccept(response -> {
      *     // handle full response
@@ -395,6 +434,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatAsync(ChatInput, ChatOptions)}.
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -409,12 +449,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a message to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a product review analyzer.")
@@ -426,10 +468,10 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
-     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
-     * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
-     * delegates to {@link #chatAsync(String, ChatOptions)},
-     * and parses the response via {@link JsonSchemaHelper#fromJson(String, Class)}.
+     * 
+     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)}, merges it into the options via
+     * {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}, delegates to {@link #chatAsync(String, ChatOptions)}, and parses the response via
+     * {@link JsonSchemaHelper#fromJson(String, Class)}.
      * @param <T> The target type.
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -448,12 +490,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends input to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * var input = ChatInput.newBuilder()
      *     .message("Analyze this review: " + reviewText)
@@ -469,10 +513,10 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
-     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)},
-     * merges it into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)},
-     * delegates to {@link #chatAsync(ChatInput, ChatOptions)},
-     * and parses the response via {@link JsonSchemaHelper#fromJson(String, Class)}.
+     * 
+     * @implNote The default implementation generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)}, merges it into the options via
+     * {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}, delegates to {@link #chatAsync(ChatInput, ChatOptions)}, and parses the response via
+     * {@link JsonSchemaHelper#fromJson(String, Class)}.
      * @param <T> The target type.
      * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -494,6 +538,7 @@ public interface AIService extends Serializable {
      * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
@@ -509,8 +554,8 @@ public interface AIService extends Serializable {
      * <p>
      * This is the core method for chat-based AI interactions.
      * <p>
-     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
-     * included in the request and updated with the user message and assistant response.
+     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically included in the request and updated
+     * with the user message and assistant response.
      *
      * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
@@ -520,13 +565,13 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException;
 
-
     // Chat Streaming capabilities -------------------------------------------------------------------------------------
 
     /**
      * Send a message to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * service.chatStream(message, token -> {
      *     // handle partial response
@@ -537,6 +582,7 @@ public interface AIService extends Serializable {
      *     // handle completion
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatStream(ChatInput, Consumer)}.
      * @param message The user's message to send to the AI.
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
@@ -553,6 +599,7 @@ public interface AIService extends Serializable {
      * Send input to the AI with default system prompt from {@link #getChatPrompt()} and retrieve an asynchronous stream of tokens.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
@@ -567,6 +614,7 @@ public interface AIService extends Serializable {
      *     // handle completion
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatStream(ChatInput, ChatOptions, Consumer)}.
      * @param input The user's input containing message and file attachments.
      * @param onToken The token consumer, this will be invoked for every chat response token in the stream.
@@ -585,6 +633,7 @@ public interface AIService extends Serializable {
      * The message represents the user's input, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * service.chatStream(message, options, token -> {
      *     // handle partial response
@@ -595,6 +644,7 @@ public interface AIService extends Serializable {
      *     // handle completion
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #chatStream(ChatInput, ChatOptions, Consumer)}.
      * @param message The user's message to send to the AI.
      * @param options Chat options (system prompt, temperature, max tokens, etc.).
@@ -614,6 +664,7 @@ public interface AIService extends Serializable {
      * The input contains the user's message and file attachments, while the system prompt in options defines the AI's behavior.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * var input = ChatInput.newBuilder()
      *     .message(message)
@@ -631,13 +682,12 @@ public interface AIService extends Serializable {
      * <p>
      * This is the core method for streaming chat-based AI interactions with images.
      * <p>
-     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically
-     * included in the request and updated with the user message and the accumulated assistant response upon completion.
+     * If the options are {@link ChatOptions#hasMemory() memory-enabled}, the conversation history will be automatically included in the request and updated
+     * with the user message and the accumulated assistant response upon completion.
      * <p>
-     * When {@link ChatOptions#useWebSearch() web search} is enabled, streaming is supported but intermediate tool-use
-     * activity (e.g., the model fetching search results) produces no tokens in the {@code onToken} callback. The stream
-     * will appear paused during that phase and resume once the model begins writing its response. This behaviour is
-     * provider-dependent and may vary across AI implementations.
+     * When {@link ChatOptions#useWebSearch() web search} is enabled, streaming is supported but intermediate tool-use activity (e.g., the model fetching search
+     * results) produces no tokens in the {@code onToken} callback. The stream will appear paused during that phase and resume once the model begins writing its
+     * response. This behaviour is provider-dependent and may vary across AI implementations.
      *
      * @param input The user's input containing message and file attachments.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
@@ -647,19 +697,18 @@ public interface AIService extends Serializable {
      * @throws UnsupportedOperationException if chat streaming is not supported by the implementation.
      * @throws AIException if the chat request fails.
      */
-    CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) throws AIException ;
-
+    CompletableFuture<Void> chatStream(ChatInput input, ChatOptions options, Consumer<String> onToken) throws AIException;
 
     // File Attachment Capabilities -----------------------------------------------------------------------------------
 
     /**
      * Uploads a file attachment to the AI provider and retrieves a file ID to attach to chat payload.
      * <p>
-     * This is the core method for sending file attachments to AI providers that require file attachments to be uploaded
-     * separately before being referenced in chat requests.
+     * This is the core method for sending file attachments to AI providers that require file attachments to be uploaded separately before being referenced in
+     * chat requests.
      * <p>
-     * The implementation should also attempt to ensure that any stale files are cleaned up in case the AI provider does
-     * not automatically do that or does not allow configuring that via file upload metadata.
+     * The implementation should also attempt to ensure that any stale files are cleaned up in case the AI provider does not automatically do that or does not
+     * allow configuring that via file upload metadata.
      *
      * @param attachment The file attachment to upload.
      * @param options Chat options (system prompt, temperature, max tokens, memory, etc.).
@@ -669,11 +718,11 @@ public interface AIService extends Serializable {
      */
     String upload(Attachment attachment, ChatOptions options) throws AIException;
 
-
     // Text Analysis Capabilities -------------------------------------------------------------------------------------
 
     /**
      * Summarizes text to given maximum word count.
+     * 
      * @implNote The default implementation delegates to {@link #summarizeAsync(String, int)}.
      * @param text The text to summarize.
      * @param maxWords Maximum number of words in the summary.
@@ -701,6 +750,7 @@ public interface AIService extends Serializable {
 
     /**
      * Extracts key points from text as a list.
+     * 
      * @implNote The default implementation delegates to {@link #extractKeyPointsAsync(String, int)}.
      * @param text The text to extract key points from.
      * @param maxPoints Maximum number of key points to extract.
@@ -727,11 +777,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<List<String>> extractKeyPointsAsync(String text, int maxPoints) throws AIException;
 
-
     // Text Translation Capabilities --------------------------------------------------------------------------------------
 
     /**
      * Detects the language of the given text.
+     * 
      * @implNote The default implementation delegates to {@link #detectLanguageAsync(String)}.
      * @param text The text to analyze.
      * @return The detected language code (ISO 639-1), never {@code null}.
@@ -758,6 +808,7 @@ public interface AIService extends Serializable {
 
     /**
      * Translates text from source language to target language while preserving any markup and placeholders.
+     * 
      * @implNote The default implementation delegates to {@link #translateAsync(String, String, String)}.
      * @param text The text to translate.
      * @param sourceLang Source language code (ISO 639-1), or {@code null} for auto-detection.
@@ -786,11 +837,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<String> translateAsync(String text, String sourceLang, String targetLang) throws AIException;
 
-
     // Text Proofreading Capabilities ---------------------------------------------------------------------------------
 
     /**
      * Proofreads text by correcting grammar and spelling errors while preserving the original meaning, tone, and style.
+     * 
      * @implNote The default implementation delegates to {@link #proofreadAsync(String)}.
      * @param text The text to proofread.
      * @return The proofread text with corrections applied, never {@code null}.
@@ -815,11 +866,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<String> proofreadAsync(String text) throws AIException;
 
-
     // Text Moderation Capabilities -----------------------------------------------------------------------------------
 
     /**
      * Moderates content with default options.
+     * 
      * @implNote The default implementation delegates to {@link #moderateContentAsync(String)}.
      * @param content The content to moderate.
      * @return Moderation result with detected violations, never {@code null}.
@@ -833,6 +884,7 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously moderates content with default options.
+     * 
      * @implNote The default implementation delegates to {@link #moderateContentAsync(String)} with {@link ModerationOptions#DEFAULT}.
      * @param content The content to moderate.
      * @return A CompletableFuture that will contain the moderation result with detected violations, never {@code null}.
@@ -846,6 +898,7 @@ public interface AIService extends Serializable {
 
     /**
      * Moderates content to detect violations per {@link Category}.
+     * 
      * @implNote The default implementation delegates to {@link #moderateContentAsync(String, ModerationOptions)}.
      * @param content The content to moderate.
      * @param options Moderation options (categories to check, threshold, etc.).
@@ -872,7 +925,6 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<ModerationResult> moderateContentAsync(String content, ModerationOptions options) throws AIException;
 
-
     // Web Search Capabilities ----------------------------------------------------------------------------------------
 
     /**
@@ -881,9 +933,12 @@ public interface AIService extends Serializable {
      * Useful if you need the model to access up-to-date information from the internet.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var response = service.webSearch("What is the latest news about Jakarta EE?");
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String)}.
      * @param query The user's web search query to send to the AI.
      * @return The AI's response, never {@code null}.
@@ -899,10 +954,13 @@ public interface AIService extends Serializable {
      * Sends a web search query with location context to the AI and returns a response.
      * <p>
      * Usage example:
+     * 
      * <pre>
+     * 
      * var miami = new Location("US", "Florida", "Miami");
      * var weather = service.webSearch("What is the weather like?", miami);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)}.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
@@ -918,15 +976,19 @@ public interface AIService extends Serializable {
     /**
      * Sends a web search query to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+     * 
+     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {
+     * }
      *
      * var price = service.webSearch("What is the current stock price of: " + companyName, StockPrice.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Class)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
@@ -946,16 +1008,20 @@ public interface AIService extends Serializable {
     /**
      * Sends a web search query with location context to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {}
+     * 
+     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {
+     * }
      *
      * var miami = new Location("US", "Florida", "Miami");
      * var forecast = service.webSearch("What is the weather forecast for this weekend?", miami, WeatherForecast.class);
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
@@ -979,6 +1045,7 @@ public interface AIService extends Serializable {
      * Useful if you need the model to access up-to-date information from the internet.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * service.webSearchAsync("What is the latest news about Jakarta EE?").thenAccept(response -&gt; {
      *     // handle response
@@ -987,6 +1054,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location)} with {@link Location#GLOBAL}.
      * @param query The user's web search query to send to the AI.
      * @return A CompletableFuture that will contain the AI's response, never {@code null}.
@@ -1002,6 +1070,7 @@ public interface AIService extends Serializable {
      * Asynchronously sends a web search query with location context to the AI and returns a response.
      * <p>
      * Usage example:
+     * 
      * <pre>
      * var miami = new Location("US", "Florida", "Miami");
      * service.webSearchAsync("What is the weather like?", miami).thenAccept(response -&gt; {
@@ -1011,7 +1080,9 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
-     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location.
+     * 
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given
+     * location.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
      * @return A CompletableFuture that will contain the AI's response parsed into the specified type, never {@code null}.
@@ -1026,12 +1097,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a web search query to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+     * record StockPrice(String ticker, BigDecimal price, String currencyCode) {
+     * }
      *
      * service.webSearchAsync("What is the current stock price of: " + companyName, StockPrice.class).thenAccept(price -&gt; {
      *     // handle typed response
@@ -1040,6 +1113,7 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
+     * 
      * @implNote The default implementation delegates to {@link #webSearchAsync(String, Location, Class)} with {@link ChatOptions#DEFAULT}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
@@ -1059,12 +1133,14 @@ public interface AIService extends Serializable {
     /**
      * Asynchronously sends a web search query with location context to the AI and returns a typed response.
      * <p>
-     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output
-     * conforming to that schema, and parses the response back into the specified type.
+     * This method auto-generates a JSON schema from the given type, instructs the AI to return structured output conforming to that schema, and parses the
+     * response back into the specified type.
      * <p>
      * Usage example:
+     * 
      * <pre>
-     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {}
+     * record WeatherForecast(String summary, int highCelsius, int lowCelsius, String precipitation) {
+     * }
      *
      * var miami = new Location("US", "Florida", "Miami");
      * service.webSearchAsync("What is the weather forecast for this weekend?", miami, WeatherForecast.class).thenAccept(forecast -&gt; {
@@ -1074,8 +1150,10 @@ public interface AIService extends Serializable {
      *     return null;
      * });
      * </pre>
-     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given location
-     * and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
+     * 
+     * @implNote The default implementation delegates to {@link #chatAsync(String, ChatOptions)} with {@link ChatOptions#withWebSearch(Location)} on the given
+     * location and generates a JSON schema via {@link JsonSchemaHelper#buildJsonSchema(Class)} which is merged into the options via
+     * {@link ChatOptions#withJsonSchema(jakarta.json.JsonObject)}.
      * @param <T> The target type.
      * @param query The user's web search query to send to the AI.
      * @param location The location context for web search, or {@link Location#GLOBAL} for global search.
@@ -1089,9 +1167,9 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default <T> CompletableFuture<T> webSearchAsync(String query, Location location, Class<T> type) throws AIException {
-        return chatAsync(query, DEFAULT.withWebSearch(requireNonNull(location, "location")).withJsonSchema(buildJsonSchema(type))).thenApply(json -> fromJson(json, type));
+        return chatAsync(query, DEFAULT.withWebSearch(requireNonNull(location, "location")).withJsonSchema(buildJsonSchema(type)))
+            .thenApply(json -> fromJson(json, type));
     }
-
 
     // Image Analysis Capabilities ------------------------------------------------------------------------------------
 
@@ -1099,10 +1177,11 @@ public interface AIService extends Serializable {
      * Analyzes an image and generates a description based on the given prompt.
      * <p>
      * Useful for generating alt text for accessibility, extracting information from images, or describing visual content.
+     * 
      * @implNote The default implementation delegates to {@link #analyzeImageAsync(byte[], String)}.
      * @param image The image bytes to analyze.
-     * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"),
-     * or {@code null} for a general description.
+     * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"), or {@code null} for a general
+     * description.
      * @return Description of the image, never {@code null}.
      * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image analysis is not supported by the implementation.
@@ -1120,8 +1199,8 @@ public interface AIService extends Serializable {
      * This is the core method for image analysis.
      *
      * @param image The image bytes to analyze.
-     * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"),
-     * or {@code null} for a general description.
+     * @param prompt The prompt describing what to focus on (e.g., "describe the product", "what's the main subject"), or {@code null} for a general
+     * description.
      * @return A CompletableFuture that will contain the description of the image, never {@code null}.
      * @throws IllegalArgumentException if prompt is blank.
      * @throws UnsupportedOperationException if image analysis is not supported by the implementation.
@@ -1131,6 +1210,7 @@ public interface AIService extends Serializable {
 
     /**
      * Generates alt text for an image suitable for accessibility purposes.
+     * 
      * @implNote The default implementation delegates to {@link #generateAltTextAsync(byte[])}.
      * @param image The image bytes to analyze.
      * @return Alt text description, never {@code null}.
@@ -1153,11 +1233,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<String> generateAltTextAsync(byte[] image) throws AIException;
 
-
     // Image Generation Capabilities ----------------------------------------------------------------------------------
 
     /**
      * Generates an image based on a text prompt with default options.
+     * 
      * @implNote The default implementation delegates to {@link #generateImageAsync(String)}.
      * @param prompt The text prompt describing the image to generate.
      * @return Generated image bytes, never {@code null}.
@@ -1173,6 +1253,7 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates an image based on a text prompt with default options.
+     * 
      * @implNote The default implementation delegates to {@link #generateImageAsync(String, GenerateImageOptions)} with {@link GenerateImageOptions#DEFAULT}.
      * @param prompt The text prompt describing the image to generate.
      * @return A CompletableFuture that will contain the generated image bytes, never {@code null}.
@@ -1186,6 +1267,7 @@ public interface AIService extends Serializable {
 
     /**
      * Generates an image based on a text prompt.
+     * 
      * @implNote The default implementation delegates to {@link #generateImageAsync(String, GenerateImageOptions)}.
      * @param prompt The text prompt describing the image to generate.
      * @param options Image generation options (size, quality, style, etc.).
@@ -1212,11 +1294,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<byte[]> generateImageAsync(String prompt, GenerateImageOptions options) throws AIException;
 
-
     // Audio Transcription Capabilities ---------------------------------------------------------------------------------
 
     /**
      * Transcribes audio to text.
+     * 
      * @implNote The default implementation delegates to {@link #transcribeAsync(byte[])}.
      * @param audio The audio bytes to transcribe.
      * @return The transcription text, never {@code null}.
@@ -1230,6 +1312,7 @@ public interface AIService extends Serializable {
 
     /**
      * Transcribes audio to text.
+     * 
      * @implNote The default implementation delegates to {@link #transcribeAsync(Path)}.
      * @param audio The audio source to transcribe.
      * @return The transcription text, never {@code null}.
@@ -1267,11 +1350,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<String> transcribeAsync(Path audio) throws AIException;
 
-
     // Audio generation capabilities ----------------------------------------------------------------------------------
 
     /**
      * Generates audio from text and returns it as a byte array.
+     * 
      * @implNote The default implementation delegates to {@link #generateAudioAsync(String)}.
      * @param text The text to convert to audio.
      * @return Generated audio bytes, never {@code null}.
@@ -1286,6 +1369,7 @@ public interface AIService extends Serializable {
 
     /**
      * Generates audio from text and returns it as a byte array.
+     * 
      * @implNote The default implementation delegates to {@link #generateAudioAsync(String, GenerateAudioOptions)}.
      * @param text The text to convert to audio.
      * @param options Audio generation options (voice, speed, output format, etc.).
@@ -1301,6 +1385,7 @@ public interface AIService extends Serializable {
 
     /**
      * Generates audio from text and saves it to the specified path.
+     * 
      * @implNote The default implementation delegates to {@link #generateAudioAsync(String, Path)}.
      * @param text The text to convert to audio.
      * @param path The path where the audio file should be saved.
@@ -1315,6 +1400,7 @@ public interface AIService extends Serializable {
 
     /**
      * Generates audio from text and saves it to the specified path.
+     * 
      * @implNote The default implementation delegates to {@link #generateAudioAsync(String, Path, GenerateAudioOptions)}.
      * @param text The text to convert to audio.
      * @param path The path where the audio file should be saved.
@@ -1330,6 +1416,7 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates audio from text and returns it as a byte array.
+     * 
      * @implNote The default implementation delegates to {@link #generateAudioAsync(String, GenerateAudioOptions)} with {@link GenerateAudioOptions#DEFAULT}.
      * @param text The text to convert to audio.
      * @return A CompletableFuture that will contain the generated audio bytes, never {@code null}.
@@ -1344,7 +1431,9 @@ public interface AIService extends Serializable {
 
     /**
      * Asynchronously generates audio from text and saves it to the specified path.
-     * @implNote The default implementation delegates to {@link #generateAudioAsync(String, Path, GenerateAudioOptions)} with {@link GenerateAudioOptions#DEFAULT}.
+     * 
+     * @implNote The default implementation delegates to {@link #generateAudioAsync(String, Path, GenerateAudioOptions)} with
+     * {@link GenerateAudioOptions#DEFAULT}.
      * @param text The text to convert to audio.
      * @param path The path where the audio file should be saved.
      * @return An empty CompletableFuture which only completes when the end of stream is reached, never {@code null}.
@@ -1388,11 +1477,11 @@ public interface AIService extends Serializable {
      */
     CompletableFuture<Void> generateAudioAsync(String text, Path path, GenerateAudioOptions options) throws AIException;
 
-
     // Service Metadata -----------------------------------------------------------------------------------------------
 
     /**
      * Returns the name of this AI service.
+     * 
      * @return The name of this AI service (e.g. AnthropicAIService (Anthropic claude-sonnet-4-5-20250929)).
      */
     default String getName() {
@@ -1401,26 +1490,28 @@ public interface AIService extends Serializable {
 
     /**
      * Returns the AI provider name of this AI service.
+     * 
      * @return The AI provider name of this AI service (e.g., "OpenAI", "Anthropic", "Google AI", etc).
      */
     String getProviderName();
 
     /**
      * Returns the (full) AI model name being used by this AI service.
+     * 
      * @return The (full) AI model name being used by this AI service (e.g., "gpt-5-mini", "claude-sonnet-4-5-20250929", "gemini-2.5-flash", etc)
      */
     String getModelName();
 
     /**
      * Returns the chat prompt being used by this AI service.
+     * 
      * @return The chat prompt being used by this AI service.
      */
     String getChatPrompt();
 
     /**
-     * Returns the AI model version information for this AI service.
-     * The version is extracted from {@link #getModelName()} and includes the model name prefix, major version, and
-     * minor version.
+     * Returns the AI model version information for this AI service. The version is extracted from {@link #getModelName()} and includes the model name prefix,
+     * major version, and minor version.
      *
      * @return The AI model version for this AI service.
      * @see AIModelVersion#of(AIService)
@@ -1431,6 +1522,7 @@ public interface AIService extends Serializable {
 
     /**
      * Returns whether this AI service implementation supports chat streaming via SSE.
+     * 
      * @implNote The default implementation returns false.
      * @return Whether this AI service implementation supports chat streaming via SSE.
      */
@@ -1440,6 +1532,7 @@ public interface AIService extends Serializable {
 
     /**
      * Returns whether this AI service implementation supports file attachments for chat.
+     * 
      * @implNote The default implementation returns false.
      * @return Whether this AI service implementation supports file attachments for chat.
      */
@@ -1449,6 +1542,7 @@ public interface AIService extends Serializable {
 
     /**
      * Returns whether this AI service implementation supports structured (JSON schema) outputs.
+     * 
      * @implNote The default implementation returns false.
      * @return Whether this AI service implementation supports structured (JSON schema) outputs.
      */
@@ -1458,6 +1552,7 @@ public interface AIService extends Serializable {
 
     /**
      * Returns whether this AI service implementation supports web search.
+     * 
      * @implNote The default implementation returns false.
      * @return Whether this AI service implementation supports web search.
      * @since 1.3
@@ -1467,12 +1562,10 @@ public interface AIService extends Serializable {
     }
 
     /**
-     * Checks whether the given modality is supported by this AI service, which is usually determined by
-     * {@link #getModelName()} or {@link #getModelVersion()}.
+     * Checks whether the given modality is supported by this AI service, which is usually determined by {@link #getModelName()} or {@link #getModelVersion()}.
      * <p>
-     * <strong>Important:</strong> This method provides a <em>hint</em> rather than a strict guarantee. Implementations
-     * are <em>not required</em> to enforce this check before performing operations such as
-     * {@link #analyzeImage(byte[], String)}, {@link #generateImage(String)}, or other modality-specific calls.
+     * <strong>Important:</strong> This method provides a <em>hint</em> rather than a strict guarantee. Implementations are <em>not required</em> to enforce
+     * this check before performing operations such as {@link #analyzeImage(byte[], String)}, {@link #generateImage(String)}, or other modality-specific calls.
      * <p>
      * The primary purposes of this method are to allow callers to:
      * <ul>
@@ -1481,23 +1574,19 @@ public interface AIService extends Serializable {
      * <li>dynamically select a fallback provider or model at runtime.</li>
      * </ul>
      * <p>
-     * If a modality-specific operation is invoked despite {@code supports(AIModality)} returning {@code false},
-     * the implementation <strong>may</strong> fail fast, typically by throwing {@code UnsupportedOperationException}
-     * or a provider-specific exception.
+     * If a modality-specific operation is invoked despite {@code supports(AIModality)} returning {@code false}, the implementation <strong>may</strong> fail
+     * fast, typically by throwing {@code UnsupportedOperationException} or a provider-specific exception.
      *
      * @param modality The modality (input analysis or output generation type) to check
-     * @return {@code true} If this service is expected to support the given modality with the current model and
-     * configuration, {@code false} otherwise.
+     * @return {@code true} If this service is expected to support the given modality with the current model and configuration, {@code false} otherwise.
      * @see AIModality
      */
     boolean supportsModality(AIModality modality);
 
-
     // Private Helpers ------------------------------------------------------------------------------------------------
 
     /**
-     * Joins a {@link CompletableFuture}, unwrapping any {@link CompletionException} into the appropriate
-     * {@link AIException} subclass.
+     * Joins a {@link CompletableFuture}, unwrapping any {@link CompletionException} into the appropriate {@link AIException} subclass.
      */
     private static <T> T joinAsync(CompletableFuture<T> future) throws AIException {
         try {
@@ -1507,4 +1596,5 @@ public interface AIService extends Serializable {
             throw AIException.asyncRequestFailed(e);
         }
     }
+
 }

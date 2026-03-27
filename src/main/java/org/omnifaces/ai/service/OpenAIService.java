@@ -45,17 +45,16 @@ import org.omnifaces.ai.model.ModerationResult;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#OPENAI}</li>
- *     <li>apiKey: your OpenAI API key</li>
+ * <li>provider: {@link AIProvider#OPENAI}</li>
+ * <li>apiKey: your OpenAI API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#OPENAI} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#OPENAI} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -99,9 +98,9 @@ public class OpenAIService extends BaseAIService {
     }
 
     /**
-     * Returns whether this OpenAI based service supports native moderation for the given categories.
-     * When {@code true}, {@link #moderateContentAsync(String, ModerationOptions)} will use OpenAI's moderation API.
-     * When {@code false}, it falls back to the chat-based moderation in {@link BaseAIService}.
+     * Returns whether this OpenAI based service supports native moderation for the given categories. When {@code true},
+     * {@link #moderateContentAsync(String, ModerationOptions)} will use OpenAI's moderation API. When {@code false}, it falls back to the chat-based moderation
+     * in {@link BaseAIService}.
      *
      * @implNote The default implementation checks if all categories are {@link Category#isOpenAISupported()}.
      * @param categories The moderation categories to check.
@@ -112,9 +111,8 @@ public class OpenAIService extends BaseAIService {
     }
 
     /**
-     * Returns whether this OpenAI based service supports the OpenAI native transcription API.
-     * When {@code true}, {@link #transcribeAsync(byte[])} will use OpenAI native transcription API.
-     * When {@code false}, it falls back to the chat-based transcription in {@link BaseAIService}.
+     * Returns whether this OpenAI based service supports the OpenAI native transcription API. When {@code true}, {@link #transcribeAsync(byte[])} will use
+     * OpenAI native transcription API. When {@code false}, it falls back to the chat-based transcription in {@link BaseAIService}.
      *
      * @implNote The default implementation returns true.
      * @return {@code true} if this service supports OpenAI's transcription API.
@@ -124,9 +122,12 @@ public class OpenAIService extends BaseAIService {
     }
 
     /**
-     * Returns whether this OpenAI based service implementation supports the OpenAI {@code responses} API as replacement for the legacy {@code chat/completions} API.
+     * Returns whether this OpenAI based service implementation supports the OpenAI {@code responses} API as replacement for the legacy {@code chat/completions}
+     * API.
+     * 
      * @implNote The default implementation returns true if {@link #getModelVersion()} is at least {@code GPT-4}.
-     * @return Whether this OpenAI based service implementation supports the OpenAI {@code responses} API as replacement for the legacy {@code chat/completions} API.
+     * @return Whether this OpenAI based service implementation supports the OpenAI {@code responses} API as replacement for the legacy {@code chat/completions}
+     * API.
      */
     public boolean supportsOpenAIResponsesApi() {
         return getModelVersion().gte(GPT_4);
@@ -134,6 +135,7 @@ public class OpenAIService extends BaseAIService {
 
     /**
      * Returns whether this OpenAI based service implementation supports the OpenAI {@code files} API for file attachments.
+     * 
      * @implNote The default implementation delegates to {@link #supportsOpenAIResponsesApi()}.
      * @return Whether this OpenAI based service implementation supports the OpenAI {@code files} API for file attachments.
      */
@@ -268,7 +270,8 @@ public class OpenAIService extends BaseAIService {
     }
 
     private CompletableFuture<String> transcribeOpenAIAsync(Attachment attachment) {
-        return HTTP_CLIENT.upload(this, "audio/transcriptions", attachment.withMetadata(Map.of("model", getModelName(), "response_format", "json"))).thenApply(this::parseOpenAITranscribeResponse);
+        return HTTP_CLIENT.upload(this, "audio/transcriptions", attachment.withMetadata(Map.of("model", getModelName(), "response_format", "json")))
+            .thenApply(this::parseOpenAITranscribeResponse);
     }
 
     /**
@@ -290,4 +293,5 @@ public class OpenAIService extends BaseAIService {
     protected String getGenerateAudioPath() {
         return "audio/speech";
     }
+
 }

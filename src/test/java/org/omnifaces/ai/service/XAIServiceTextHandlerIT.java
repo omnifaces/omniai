@@ -29,4 +29,5 @@ class XAIServiceTextHandlerIT extends BaseAIServiceTextHandlerIT {
     protected String getApiKeyEnvName() {
         return API_KEY_ENV_NAME;
     }
+
 }

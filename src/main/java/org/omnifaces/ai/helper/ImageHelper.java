@@ -58,8 +58,8 @@ public final class ImageHelper {
     /**
      * Sanitizes the given image for use as an AI attachment.
      * <p>
-     * This will automatically remove any alpha channel from PNG and GIF images, and convert legacy formats
-     * like GIF and BMP to PNG for broader AI model compatibility.
+     * This will automatically remove any alpha channel from PNG and GIF images, and convert legacy formats like GIF and BMP to PNG for broader AI model
+     * compatibility.
      *
      * @param image The image bytes.
      * @return The sanitized image bytes (may be converted to PNG).
@@ -120,4 +120,5 @@ public final class ImageHelper {
         ImageIO.write(image, "PNG", output);
         return output.toByteArray();
     }
+
 }

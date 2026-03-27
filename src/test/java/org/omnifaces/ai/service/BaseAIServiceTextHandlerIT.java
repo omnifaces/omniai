@@ -181,8 +181,10 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
         if (options.getHistory().get(0).uploadedFiles().isEmpty()) {
             switch (getProvider()) {
-                case OPENAI, ANTHROPIC, GOOGLE, MISTRAL, XAI: fail(getProvider() + " is supposed to support files API!");
-                default: throw new TestAbortedException("Not supported by " + getProvider());
+                case OPENAI, ANTHROPIC, GOOGLE, MISTRAL, XAI :
+                    fail(getProvider() + " is supposed to support files API!");
+                default :
+                    throw new TestAbortedException("Not supported by " + getProvider());
             }
         }
 
@@ -194,8 +196,11 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         assertTrue(response2.contains("1") || response2.toLowerCase().contains("one"), "response must contain '1' or 'one'");
     }
 
-    public record Capital(String city, String country) {}
-    public record Capitals(List<Capital> capitals) {}
+    public record Capital(String city, String country) {
+    }
+
+    public record Capitals(List<Capital> capitals) {
+    }
 
     @Test
     void chatWithStructuredOutput() {
@@ -245,7 +250,8 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         );
     }
 
-    public record StockPrice(String ticker, BigDecimal price, String currencyCode) {}
+    public record StockPrice(String ticker, BigDecimal price, String currencyCode) {
+    }
 
     @Test
     void webSearchWithStructuredOutput() {
@@ -304,14 +310,16 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
 
     @Test
     void translate() {
-        var response = service.translate("<section style='color:blue'>The cat #{bean.verb} on the chair.</section><script>{'key':'value'}</script>", "en", "nl");
+        var response = service
+            .translate("<section style='color:blue'>The cat #{bean.verb} on the chair.</section><script>{'key':'value'}</script>", "en", "nl");
         log(response);
         assertEquals("<section style='color:blue'>De kat #{bean.verb} op de stoel.</section><script>{'key':'value'}</script>", response);
     }
 
     @Test
     void translateAutomatically() {
-        var response = service.translate("<section style='color:blauw'>De kat #{boon.werkwoord} op de stoel.</section><script>{'sleutel':'waarde'}</script>", null, "en");
+        var response = service
+            .translate("<section style='color:blauw'>De kat #{boon.werkwoord} op de stoel.</section><script>{'sleutel':'waarde'}</script>", null, "en");
         log(response);
         assertEquals("<section style='color:blauw'>The cat #{boon.werkwoord} on the chair.</section><script>{'sleutel':'waarde'}</script>", response);
     }
@@ -344,4 +352,5 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertTrue(harassmentScore > 0.5, "harassment score " + harassmentScore + " must be above half")
         );
     }
+
 }

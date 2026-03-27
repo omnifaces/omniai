@@ -27,9 +27,8 @@ import java.util.Map;
 /**
  * Configuration for AI services.
  * <p>
- * This record holds the configuration properties needed to create an {@link AIService} instance.
- * The core properties are {@code provider}, {@code apiKey}, {@code model}, {@code endpoint}, {@code prompt} and {@code strategy}.
- * Additional provider-specific properties can be stored in the {@code properties} map.
+ * This record holds the configuration properties needed to create an {@link AIService} instance. The core properties are {@code provider}, {@code apiKey},
+ * {@code model}, {@code endpoint}, {@code prompt} and {@code strategy}. Additional provider-specific properties can be stored in the {@code properties} map.
  * <p>
  * Use the static {@code of(...)} factory methods to create instances, and the {@code withXxx(...)} methods to create modified copies.
  *
@@ -46,7 +45,9 @@ import java.util.Map;
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, AIStrategy strategy, Map<String, String> properties) implements Serializable {
+public final record AIConfig(String provider, String apiKey, String model, String endpoint, String prompt, AIStrategy strategy, Map<String, String> properties)
+    implements
+        Serializable {
 
     // Just future-proofing potential Jakarta/MicroProfile config.
     private static final String PROPERTY_PREFIX = "org.omnifaces.ai.";
@@ -84,15 +85,17 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
         model = stripToNull(model);
         endpoint = stripToNull(endpoint);
         prompt = stripToNull(prompt);
-        properties = properties == null ? emptyMap() : properties.entrySet().stream()
+        properties = properties == null
+            ? emptyMap()
+            : properties.entrySet().stream()
                 .filter(e -> !isBlank(e.getKey()) && !isBlank(e.getValue()))
                 .collect(toUnmodifiableMap(e -> e.getKey().strip(), e -> e.getValue().strip()));
         strategy = ofNullable(strategy).orElseGet(() -> AIStrategy.empty());
     }
 
     /**
-     * Creates a new {@code AIConfig} using the given provider and API key, with model, endpoint, prompt, and strategy left unset (to use provider defaults or be set
-     * later via {@code withXxx} methods).
+     * Creates a new {@code AIConfig} using the given provider and API key, with model, endpoint, prompt, and strategy left unset (to use provider defaults or
+     * be set later via {@code withXxx} methods).
      * <p>
      * This is the most common entry point when working with one of the built-in providers (e.g. {@link AIProvider#OPENAI}, {@link AIProvider#ANTHROPIC}).
      *
@@ -111,7 +114,8 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * <p>
      * For custom providers that still require an API key at construction time, prefer {@link #of(Class, String)} instead.
      *
-     * @param serviceClass The custom class that implements {@link AIService} and has a public constructor accepting {@code AIConfig} (must not be {@code null}).
+     * @param serviceClass The custom class that implements {@link AIService} and has a public constructor accepting {@code AIConfig} (must not be
+     * {@code null}).
      * @return A new configuration instance ready for further customization or service creation.
      * @throws NullPointerException If {@code serviceClass} is {@code null}.
      * @throws IllegalArgumentException If the class does not implement {@link AIService} (checked at service creation time).
@@ -124,7 +128,8 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      * Creates a new {@code AIConfig} for a custom {@link AIService} implementation using the provided service class and API key, with all other properties
      * (model, endpoint, prompt, and strategy) left unset (to be set later via {@code withXxx} methods).
      *
-     * @param serviceClass The custom class that implements {@link AIService} and has a public constructor accepting {@code AIConfig} (must not be {@code null}).
+     * @param serviceClass The custom class that implements {@link AIService} and has a public constructor accepting {@code AIConfig} (must not be
+     * {@code null}).
      * @param apiKey The authentication API key or token (recommended to be non-null; may be set later via {@link #withProperty} if obtained dynamically).
      * @return A new configuration instance ready for further customization or service creation.
      * @throws NullPointerException If {@code serviceClass} is {@code null}.
@@ -271,8 +276,8 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
     /**
      * Resolves the configured provider to an {@link AIProvider} enum value.
      * <p>
-     * If the provider string matches a known {@link AIProvider} name, that enum value is returned.
-     * Otherwise, {@link AIProvider#CUSTOM} is returned, indicating a custom service class name.
+     * If the provider string matches a known {@link AIProvider} name, that enum value is returned. Otherwise, {@link AIProvider#CUSTOM} is returned, indicating
+     * a custom service class name.
      *
      * @return The resolved AI provider.
      * @throws IllegalStateException If the provider property is not configured.
@@ -286,7 +291,8 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
      *
      * @return The AI service instance.
      * @throws IllegalStateException If the provider is not configured or the service cannot be created.
-     * @throws IllegalArgumentException If a custom provider class does not implement {@link AIService} or does not have a public constructor taking {@link AIConfig}.
+     * @throws IllegalArgumentException If a custom provider class does not implement {@link AIService} or does not have a public constructor taking
+     * {@link AIConfig}.
      */
     public AIService createService() {
         var provider = resolveProvider();
@@ -318,14 +324,18 @@ public final record AIConfig(String provider, String apiKey, String model, Strin
         }
 
         if (!AIService.class.isAssignableFrom(serviceClass)) {
-            throw new IllegalArgumentException("Cannot create custom AI service class " + provider() + ", because it does not implement " + AIService.class.getName());
+            throw new IllegalArgumentException(
+                "Cannot create custom AI service class " + provider() + ", because it does not implement " + AIService.class.getName()
+            );
         }
 
         try {
             return (AIService) serviceClass.getDeclaredConstructor(AIConfig.class).newInstance(this);
         }
         catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Cannot create custom AI service class " + provider() + ", because it does not have a constructor taking " + AIConfig.class.getName());
+            throw new IllegalArgumentException(
+                "Cannot create custom AI service class " + provider() + ", because it does not have a constructor taking " + AIConfig.class.getName()
+            );
         }
         catch (Exception e) {
             throw new IllegalStateException("Cannot create custom AI service class " + provider(), e);

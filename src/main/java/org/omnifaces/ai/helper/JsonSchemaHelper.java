@@ -81,18 +81,23 @@ import jakarta.json.JsonValue;
  * </ul>
  * <p>
  * Example usage:
+ * 
  * <pre>
- * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+ * 
+ * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+ * }
  *
  * // Simplest: use the typed chat overload (handles schema generation and parsing automatically)
  * ProductReview review = service.chat("Analyze this review: " + reviewText, ProductReview.class);
  *
  * // Manual: generate schema, chat with it, and parse the response yourself
  * JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
- * String responseJson = service.chat("Analyze this review: " + reviewText,
+ * String responseJson = service.chat(
+ *     "Analyze this review: " + reviewText,
  *     ChatOptions.newBuilder()
  *         .jsonSchema(schema)
- *         .build());
+ *         .build()
+ * );
  * ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
  * </pre>
  *
@@ -155,8 +160,11 @@ public final class JsonSchemaHelper {
      * </ul>
      * <p>
      * Example usage:
+     * 
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * // Generate schema for AI structured output
      * JsonObject schema = JsonSchemaHelper.buildJsonSchema(ProductReview.class);
@@ -227,8 +235,7 @@ public final class JsonSchemaHelper {
     /**
      * Parses a JSON string into an instance of the specified type.
      * <p>
-     * This method is the inverse of {@link #buildJsonSchema(Class)}.
-     * It converts JSON that conforms to the generated schema back into a Java object.
+     * This method is the inverse of {@link #buildJsonSchema(Class)}. It converts JSON that conforms to the generated schema back into a Java object.
      * <p>
      * Supported types:
      * <ul>
@@ -250,13 +257,15 @@ public final class JsonSchemaHelper {
      * Example usage:
      *
      * <pre>
-     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {}
+     * 
+     * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
+     * }
      *
      * String responseJson = "{\"sentiment\":\"positive\",\"rating\":5,\"pros\":[\"great\"],\"cons\":[]}";
      * ProductReview review = JsonSchemaHelper.fromJson(responseJson, ProductReview.class);
      * </pre>
      *
-     * @param <T>  The target type.
+     * @param <T> The target type.
      * @param json The JSON string to parse.
      * @param type The target class.
      * @return An instance of the target type populated from the JSON.
@@ -362,7 +371,8 @@ public final class JsonSchemaHelper {
         return bean;
     }
 
-    private record Property(String name, Class<?> rawType, Type genericType, Method writeMethod) {}
+    private record Property(String name, Class<?> rawType, Type genericType, Method writeMethod) {
+    }
 
     private static List<Property> getProperties(Class<?> clazz) {
         if (clazz.isRecord()) {
@@ -371,9 +381,13 @@ public final class JsonSchemaHelper {
 
         try {
             return stream(Introspector.getBeanInfo(clazz).getPropertyDescriptors())
-                    .filter(descriptor -> descriptor.getReadMethod() != null && !"class".equals(descriptor.getName()))
-                    .map(descriptor -> new Property(descriptor.getName(), descriptor.getPropertyType(), descriptor.getReadMethod().getGenericReturnType(), descriptor.getWriteMethod()))
-                    .toList();
+                .filter(descriptor -> descriptor.getReadMethod() != null && !"class".equals(descriptor.getName()))
+                .map(
+                    descriptor -> new Property(
+                        descriptor.getName(), descriptor.getPropertyType(), descriptor.getReadMethod().getGenericReturnType(), descriptor.getWriteMethod()
+                    )
+                )
+                .toList();
         }
         catch (Exception e) {
             throw new IllegalArgumentException(format(ERROR_INVALID_BEAN, clazz.getName()), e);
@@ -435,4 +449,5 @@ public final class JsonSchemaHelper {
         json.entrySet().stream().forEach(entry -> map.put(entry.getKey(), parseValue(entry.getValue(), getRawType(valueType), valueType)));
         return map;
     }
+
 }

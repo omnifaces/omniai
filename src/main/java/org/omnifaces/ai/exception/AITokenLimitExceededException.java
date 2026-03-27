@@ -32,4 +32,5 @@ public class AITokenLimitExceededException extends AIException {
     public AITokenLimitExceededException() {
         super("max tokens reached");
     }
+
 }

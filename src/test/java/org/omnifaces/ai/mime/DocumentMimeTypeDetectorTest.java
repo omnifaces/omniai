@@ -29,7 +29,7 @@ class DocumentMimeTypeDetectorTest {
 
     @Test
     void guessDocumentMimeType_pdf() {
-        var content = new byte[]{'%', 'P', 'D', 'F', '-', '1', '.', '4'};
+        var content = new byte[] { '%', 'P', 'D', 'F', '-', '1', '.', '4' };
         var result = DocumentMimeTypeDetector.guessDocumentMimeType(content);
         assertEquals("pdf", result.extension());
     }
@@ -299,21 +299,21 @@ class DocumentMimeTypeDetectorTest {
 
     @Test
     void guessDocumentMimeType_binary() {
-        var content = new byte[]{0x00, 0x01, 0x02, 0x03, (byte)0xFF, (byte)0xFE};
+        var content = new byte[] { 0x00, 0x01, 0x02, 0x03, (byte) 0xFF, (byte) 0xFE };
         var result = DocumentMimeTypeDetector.guessDocumentMimeType(content);
         assertEquals("bin", result.extension());
     }
 
     @Test
     void guessDocumentMimeType_binary_withControlCharacters() {
-        var content = new byte[]{'H', 'e', 'l', 'l', 'o', 0x07, 'W', 'o', 'r', 'l', 'd'};
+        var content = new byte[] { 'H', 'e', 'l', 'l', 'o', 0x07, 'W', 'o', 'r', 'l', 'd' };
         var result = DocumentMimeTypeDetector.guessDocumentMimeType(content);
         assertEquals("bin", result.extension());
     }
 
     @Test
     void guessDocumentMimeType_binary_invalidUtf8() {
-        var content = new byte[]{(byte)0xC0, (byte)0x80};
+        var content = new byte[] { (byte) 0xC0, (byte) 0x80 };
         var result = DocumentMimeTypeDetector.guessDocumentMimeType(content);
         assertEquals("bin", result.extension());
     }
@@ -336,18 +336,18 @@ class DocumentMimeTypeDetectorTest {
 
     @Test
     void guessDocumentMimeType_corruptedZip_shouldReturnBinary() {
-        var content = new byte[]{
-                'P', 'K', 0x03, 0x04,       // Local file header signature
-                0x00, 0x00,                 // Version needed
-                0x00, 0x00,                 // Flags
-                0x00, 0x00,                 // Compression method
-                0x00, 0x00,                 // Last mod time
-                0x00, 0x00,                 // Last mod date
-                0x00, 0x00, 0x00, 0x00,     // CRC-32
-                0x00, 0x00, 0x00, 0x00,     // Compressed size
-                0x00, 0x00, 0x00, 0x00,     // Uncompressed size
-                (byte)0xFF, (byte)0xFF,     // File name length = 65535 (but data is truncated, hence corrupted)
-                0x00, 0x00                  // Extra field length
+        var content = new byte[] {
+            'P', 'K', 0x03, 0x04, // Local file header signature
+            0x00, 0x00, // Version needed
+            0x00, 0x00, // Flags
+            0x00, 0x00, // Compression method
+            0x00, 0x00, // Last mod time
+            0x00, 0x00, // Last mod date
+            0x00, 0x00, 0x00, 0x00, // CRC-32
+            0x00, 0x00, 0x00, 0x00, // Compressed size
+            0x00, 0x00, 0x00, 0x00, // Uncompressed size
+            (byte) 0xFF, (byte) 0xFF, // File name length = 65535 (but data is truncated, hence corrupted)
+            0x00, 0x00 // Extra field length
         };
         var result = DocumentMimeTypeDetector.guessDocumentMimeType(content);
         assertEquals("bin", result.extension());
@@ -373,4 +373,5 @@ class DocumentMimeTypeDetectorTest {
         }
         return baos.toByteArray();
     }
+
 }

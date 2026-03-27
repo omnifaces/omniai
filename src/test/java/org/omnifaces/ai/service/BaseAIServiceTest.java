@@ -62,4 +62,5 @@ class BaseAIServiceTest {
     void uploadedFileJsonStructure_nullFilesArrayProperty_throwsException() {
         assertThrows(IllegalArgumentException.class, () -> new UploadedFileJsonStructure(null, "filename", "id", "created_at"));
     }
+
 }

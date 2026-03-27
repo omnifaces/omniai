@@ -34,4 +34,5 @@ class GoogleAIServiceImageGeneratorIT extends BaseAIServiceImageGeneratorIT {
     protected String getModel() {
         return "gemini-2.5-flash-image";
     }
+
 }

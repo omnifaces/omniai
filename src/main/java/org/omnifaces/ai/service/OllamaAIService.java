@@ -25,16 +25,15 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#OLLAMA}</li>
+ * <li>provider: {@link AIProvider#OLLAMA}</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#OLLAMA} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#OLLAMA} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -66,7 +65,8 @@ public class OllamaAIService extends BaseAIService {
         var fullModelName = getModelName().toLowerCase();
 
         return switch (modality) {
-            case IMAGE_ANALYSIS -> currentModelVersion.gte(LLAMA_4) || fullModelName.contains("vision") || fullModelName.contains("llava") || fullModelName.contains("gemma");
+            case IMAGE_ANALYSIS ->
+                currentModelVersion.gte(LLAMA_4) || fullModelName.contains("vision") || fullModelName.contains("llava") || fullModelName.contains("gemma");
             default -> false;
         };
     }
@@ -88,4 +88,5 @@ public class OllamaAIService extends BaseAIService {
     public boolean supportsStructuredOutput() {
         return true;
     }
+
 }

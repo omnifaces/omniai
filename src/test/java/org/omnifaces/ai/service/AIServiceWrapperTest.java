@@ -43,9 +43,8 @@ class AIServiceWrapperTest {
     /**
      * Validates that AIServiceWrapper implements all non-default methods declared in AIService.
      * <p>
-     * This test uses reflection to compare all non-default methods declared in the AIService interface against the
-     * methods implemented in AIServiceWrapper. When new non-default methods are added to AIService, this test will
-     * fail until AIServiceWrapper is updated to implement them.
+     * This test uses reflection to compare all non-default methods declared in the AIService interface against the methods implemented in AIServiceWrapper.
+     * When new non-default methods are added to AIService, this test will fail until AIServiceWrapper is updated to implement them.
      */
     @Test
     public void testImplementsAllNonDefaultAIServiceMethods() {
@@ -55,20 +54,22 @@ class AIServiceWrapperTest {
         missingMethods.removeAll(wrapperMethods);
 
         if (!missingMethods.isEmpty()) {
-            fail("AIServiceWrapper is missing an implementation for the following AIService methods:" + lineSeparator()
+            fail(
+                "AIServiceWrapper is missing an implementation for the following AIService methods:" + lineSeparator()
                     + missingMethods.stream()
-                            .sorted()
-                            .map(methodSignature -> "  - AIService#" + methodSignature)
-                            .collect(joining(lineSeparator())));
+                        .sorted()
+                        .map(methodSignature -> "  - AIService#" + methodSignature)
+                        .collect(joining(lineSeparator()))
+            );
         }
     }
 
     /**
-     * Validates that every delegate method in AIServiceWrapper calls {@code getWrapped()} method (and thus not the
-     * {@code wrapped} field) and delegates to the exact same method on the instance returned by {@code getWrapped()}.
+     * Validates that every delegate method in AIServiceWrapper calls {@code getWrapped()} method (and thus not the {@code wrapped} field) and delegates to the
+     * exact same method on the instance returned by {@code getWrapped()}.
      * <p>
-     * This test uses a Proxy-based recording service and an anonymous subclass that overrides {@code getWrapped()} to
-     * track calls, so neither the field nor any other method on the wrapped service is invoked.
+     * This test uses a Proxy-based recording service and an anonymous subclass that overrides {@code getWrapped()} to track calls, so neither the field nor any
+     * other method on the wrapped service is invoked.
      */
     @Test
     public void testAllDelegateMethodsCallGetWrappedAndInvokeSameName() {
@@ -84,9 +85,11 @@ class AIServiceWrapperTest {
                 (proxy, method, args) -> {
                     calledOnWrapped.add(method);
                     return defaultReturnValue(method.getReturnType());
-                });
+                }
+            );
 
             var wrapper = new AIServiceWrapper(recordingService) {
+
                 private static final long serialVersionUID = 1L;
 
                 @Override
@@ -94,6 +97,7 @@ class AIServiceWrapperTest {
                     getWrappedCalled[0] = true;
                     return super.getWrapped();
                 }
+
             };
 
             var wrapperMethodSignature = toSignature(wrapperMethod);
@@ -120,25 +124,27 @@ class AIServiceWrapperTest {
         }
 
         if (!failures.isEmpty()) {
-            fail("Delegation issues in AIServiceWrapper:" + lineSeparator()
+            fail(
+                "Delegation issues in AIServiceWrapper:" + lineSeparator()
                     + failures.stream()
-                            .sorted()
-                            .map(failure -> "  - AIService#" + failure)
-                            .collect(joining(lineSeparator())));
+                        .sorted()
+                        .map(failure -> "  - AIService#" + failure)
+                        .collect(joining(lineSeparator()))
+            );
         }
     }
 
     private static Set<Method> getNonPrivateMethods(Class<?> clazz) {
         return stream(clazz.getDeclaredMethods())
-                .filter(not(AIServiceWrapperTest::isPrivateMethod))
-                .filter(m -> !"getWrapped".equals(m.getName()))
-                .collect(toSet());
+            .filter(not(AIServiceWrapperTest::isPrivateMethod))
+            .filter(m -> !"getWrapped".equals(m.getName()))
+            .collect(toSet());
     }
 
     private static Set<String> getNonPrivateMethodSignatures(Class<?> clazz) {
         return getNonPrivateMethods(clazz).stream()
-                .map(AIServiceWrapperTest::toSignature)
-                .collect(toSet());
+            .map(AIServiceWrapperTest::toSignature)
+            .collect(toSet());
     }
 
     private static Set<String> getNonDefaultInterfaceMethodSignatures(Class<?> iface) {
@@ -147,10 +153,10 @@ class AIServiceWrapperTest {
         }
 
         return stream(iface.getMethods())
-                .filter(not(Method::isDefault))
-                .filter(not(AIServiceWrapperTest::isObjectMethod))
-                .map(AIServiceWrapperTest::toSignature)
-                .collect(toSet());
+            .filter(not(Method::isDefault))
+            .filter(not(AIServiceWrapperTest::isObjectMethod))
+            .map(AIServiceWrapperTest::toSignature)
+            .collect(toSet());
     }
 
     private static boolean isPrivateMethod(Method method) {
@@ -195,4 +201,5 @@ class AIServiceWrapperTest {
         }
         return null;
     }
+
 }

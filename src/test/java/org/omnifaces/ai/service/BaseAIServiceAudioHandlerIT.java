@@ -43,4 +43,5 @@ abstract class BaseAIServiceAudioHandlerIT extends AIServiceIT {
             () -> assertTrue(response.toLowerCase().contains("world"), "response must contain 'world'")
         );
     }
+
 }

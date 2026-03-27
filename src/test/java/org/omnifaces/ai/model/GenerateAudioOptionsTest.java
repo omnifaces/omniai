@@ -141,10 +141,10 @@ class GenerateAudioOptionsTest {
     @Test
     void builder_chaining_allOptions() {
         var options = GenerateAudioOptions.newBuilder()
-                .voice("breeze")
-                .speed(1.5)
-                .outputFormat("wav")
-                .build();
+            .voice("breeze")
+            .speed(1.5)
+            .outputFormat("wav")
+            .build();
 
         assertEquals("breeze", options.getVoice());
         assertEquals(1.5, options.getSpeed());
@@ -163,10 +163,10 @@ class GenerateAudioOptionsTest {
     @Test
     void serialization_preservesAllFields() throws Exception {
         var original = GenerateAudioOptions.newBuilder()
-                .voice("Kore")
-                .speed(1.5)
-                .outputFormat("wav")
-                .build();
+            .voice("Kore")
+            .speed(1.5)
+            .outputFormat("wav")
+            .build();
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -182,4 +182,5 @@ class GenerateAudioOptionsTest {
             assertEquals(original.getOutputFormat(), deserialized.getOutputFormat());
         }
     }
+
 }

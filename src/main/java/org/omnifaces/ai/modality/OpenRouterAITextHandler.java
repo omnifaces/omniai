@@ -38,16 +38,19 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         if (options.useWebSearch()) {
             return super.buildChatPayload(new AIServiceWrapper(service) {
+
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public String getModelName() {
                     return super.getModelName() + ":online";
                 }
+
             }, input, appendWebSearchLocationToPromptIfNecessary(options.withWebSearch(null)), streaming);
         }
         else {
             return super.buildChatPayload(service, input, options, streaming);
         }
     }
+
 }

@@ -31,4 +31,5 @@ public class MetaAITextHandler extends OpenAITextHandler {
     public List<String> getChatResponseContentPaths() {
         return List.of("choices[0].completion_message.content");
     }
+
 }

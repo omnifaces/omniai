@@ -140,12 +140,12 @@ class ChatOptionsTest {
         var schema = Json.createObjectBuilder().add("type", "object").build();
 
         var options = ChatOptions.newBuilder()
-                .systemPrompt("You are helpful.")
-                .jsonSchema(schema)
-                .temperature(0.5)
-                .maxTokens(1000)
-                .topP(0.8)
-                .build();
+            .systemPrompt("You are helpful.")
+            .jsonSchema(schema)
+            .temperature(0.5)
+            .maxTokens(1000)
+            .topP(0.8)
+            .build();
 
         assertEquals("You are helpful.", options.getSystemPrompt());
         assertEquals(schema, options.getJsonSchema());
@@ -276,9 +276,9 @@ class ChatOptionsTest {
     @Test
     void builder_history_restoresMessages() {
         var saved = List.of(
-                new Message(Role.USER, "Hello", emptyList()),
-                new Message(Role.ASSISTANT, "Hi there", emptyList()),
-                new Message(Role.USER, "How are you?", emptyList())
+            new Message(Role.USER, "Hello", emptyList()),
+            new Message(Role.ASSISTANT, "Hi there", emptyList()),
+            new Message(Role.USER, "How are you?", emptyList())
         );
 
         var options = ChatOptions.newBuilder().withMemory().history(saved).build();
@@ -297,8 +297,8 @@ class ChatOptionsTest {
     @Test
     void builder_history_implicitlyEnablesMemory() {
         var saved = List.of(
-                new Message(Role.USER, "Hello", emptyList()),
-                new Message(Role.ASSISTANT, "Hi", emptyList())
+            new Message(Role.USER, "Hello", emptyList()),
+            new Message(Role.ASSISTANT, "Hi", emptyList())
         );
 
         var options = ChatOptions.newBuilder().history(saved).build();
@@ -311,12 +311,12 @@ class ChatOptionsTest {
     @Test
     void builder_history_respectsSlidingWindow() {
         var saved = List.of(
-                new Message(Role.USER, "msg1", emptyList()),
-                new Message(Role.ASSISTANT, "reply1", emptyList()),
-                new Message(Role.USER, "msg2", emptyList()),
-                new Message(Role.ASSISTANT, "reply2", emptyList()),
-                new Message(Role.USER, "msg3", emptyList()),
-                new Message(Role.ASSISTANT, "reply3", emptyList())
+            new Message(Role.USER, "msg1", emptyList()),
+            new Message(Role.ASSISTANT, "reply1", emptyList()),
+            new Message(Role.USER, "msg2", emptyList()),
+            new Message(Role.ASSISTANT, "reply2", emptyList()),
+            new Message(Role.USER, "msg3", emptyList()),
+            new Message(Role.ASSISTANT, "reply3", emptyList())
         );
 
         var options = ChatOptions.newBuilder().withMemory(4).history(saved).build();
@@ -332,10 +332,10 @@ class ChatOptionsTest {
     @Test
     void builder_history_restoresUploadedFiles() {
         var saved = List.of(
-                new Message(Role.USER, "Analyze this", List.of(new UploadedFile("file-1", TEST_PDF))),
-                new Message(Role.ASSISTANT, "It contains data", emptyList()),
-                new Message(Role.USER, "And this", List.of(new UploadedFile("file-2", TEST_PNG), new UploadedFile("file-3", TEST_PDF))),
-                new Message(Role.ASSISTANT, "Got it", emptyList())
+            new Message(Role.USER, "Analyze this", List.of(new UploadedFile("file-1", TEST_PDF))),
+            new Message(Role.ASSISTANT, "It contains data", emptyList()),
+            new Message(Role.USER, "And this", List.of(new UploadedFile("file-2", TEST_PNG), new UploadedFile("file-3", TEST_PDF))),
+            new Message(Role.ASSISTANT, "Got it", emptyList())
         );
 
         var options = ChatOptions.newBuilder().withMemory().history(saved).build();
@@ -354,10 +354,10 @@ class ChatOptionsTest {
     @Test
     void builder_history_slidingWindowCleansUpUploadedFiles() {
         var saved = List.of(
-                new Message(Role.USER, "msg1", List.of(new UploadedFile("file-1", TEST_PDF))),
-                new Message(Role.ASSISTANT, "reply1", emptyList()),
-                new Message(Role.USER, "msg2", List.of(new UploadedFile("file-2", TEST_PNG))),
-                new Message(Role.ASSISTANT, "reply2", emptyList())
+            new Message(Role.USER, "msg1", List.of(new UploadedFile("file-1", TEST_PDF))),
+            new Message(Role.ASSISTANT, "reply1", emptyList()),
+            new Message(Role.USER, "msg2", List.of(new UploadedFile("file-2", TEST_PNG))),
+            new Message(Role.ASSISTANT, "reply2", emptyList())
         );
 
         var options = ChatOptions.newBuilder().withMemory(2).history(saved).build();
@@ -373,8 +373,8 @@ class ChatOptionsTest {
     @Test
     void builder_history_continuingConversationAfterRestore() {
         var saved = List.of(
-                new Message(Role.USER, "Hello", emptyList()),
-                new Message(Role.ASSISTANT, "Hi there", emptyList())
+            new Message(Role.USER, "Hello", emptyList()),
+            new Message(Role.ASSISTANT, "Hi there", emptyList())
         );
 
         var options = ChatOptions.newBuilder().withMemory().history(saved).build();
@@ -411,11 +411,11 @@ class ChatOptionsTest {
     @Test
     void withJsonSchema_copiesAllFields() {
         var original = ChatOptions.newBuilder()
-                .systemPrompt("Test prompt")
-                .temperature(0.5)
-                .maxTokens(500)
-                .topP(0.8)
-                .build();
+            .systemPrompt("Test prompt")
+            .temperature(0.5)
+            .maxTokens(500)
+            .topP(0.8)
+            .build();
 
         var schema = Json.createObjectBuilder().add("type", "object").build();
         var copy = original.withJsonSchema(schema);
@@ -465,12 +465,12 @@ class ChatOptionsTest {
         var schema = Json.createObjectBuilder().add("type", "object").build();
 
         var original = ChatOptions.newBuilder()
-                .systemPrompt("Test prompt")
-                .jsonSchema(schema)
-                .temperature(0.8)
-                .maxTokens(500)
-                .topP(0.7)
-                .build();
+            .systemPrompt("Test prompt")
+            .jsonSchema(schema)
+            .temperature(0.8)
+            .maxTokens(500)
+            .topP(0.7)
+            .build();
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -554,13 +554,31 @@ class ChatOptionsTest {
     // =================================================================================================================
 
     private static final MimeType TEST_PDF = new MimeType() {
-        @Override public String value() { return "application/pdf"; }
-        @Override public String extension() { return "pdf"; }
+
+        @Override
+        public String value() {
+            return "application/pdf";
+        }
+
+        @Override
+        public String extension() {
+            return "pdf";
+        }
+
     };
 
     private static final MimeType TEST_PNG = new MimeType() {
-        @Override public String value() { return "image/png"; }
-        @Override public String extension() { return "png"; }
+
+        @Override
+        public String value() {
+            return "image/png";
+        }
+
+        @Override
+        public String extension() {
+            return "png";
+        }
+
     };
 
     @Test
@@ -965,4 +983,5 @@ class ChatOptionsTest {
         assertEquals("file-2", history.get(0).uploadedFiles().get(0).id());
         assertTrue(history.get(2).uploadedFiles().isEmpty()); // msg3 has no files
     }
+
 }

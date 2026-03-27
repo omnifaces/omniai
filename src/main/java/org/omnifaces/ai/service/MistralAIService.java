@@ -27,17 +27,16 @@ import org.omnifaces.ai.AIService;
  * <p>
  * The following configuration properties must be provided via {@link AIConfig}:
  * <ul>
- *     <li>provider: {@link AIProvider#MISTRAL}</li>
- *     <li>apiKey: your Mistral API key</li>
+ * <li>provider: {@link AIProvider#MISTRAL}</li>
+ * <li>apiKey: your Mistral API key</li>
  * </ul>
  *
  * <h2>Optional Configuration</h2>
  * <p>
- * The following configuration properties are optional.
- * See {@link AIProvider#MISTRAL} for defaults.
+ * The following configuration properties are optional. See {@link AIProvider#MISTRAL} for defaults.
  * <ul>
- *     <li>model: the model to use</li>
- *     <li>endpoint: the API endpoint URL</li>
+ * <li>model: the model to use</li>
+ * <li>endpoint: the API endpoint URL</li>
  * </ul>
  *
  * @author Bauke Scholtz
@@ -111,4 +110,5 @@ public class MistralAIService extends OpenAIService {
     public boolean supportsOpenAITranscriptionCapability() {
         return getModelVersion().gte(VOXTRAL_MINI);
     }
+
 }

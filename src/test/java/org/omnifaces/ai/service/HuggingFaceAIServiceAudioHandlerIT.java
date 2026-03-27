@@ -34,4 +34,5 @@ class HuggingFaceAIServiceAudioHandlerIT extends BaseAIServiceAudioHandlerIT {
     protected String getModel() {
         return "openai/whisper-large-v3";
     }
+
 }

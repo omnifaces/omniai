@@ -123,8 +123,8 @@ class JsonHelperTest {
     @Test
     void findByPath_simplePath() {
         var json = Json.createObjectBuilder()
-                .add("message", "hello")
-                .build();
+            .add("message", "hello")
+            .build();
 
         assertEquals("hello", JsonHelper.findByPath(json, "message").orElseThrow());
     }
@@ -132,9 +132,11 @@ class JsonHelperTest {
     @Test
     void findByPath_nestedPath() {
         var json = Json.createObjectBuilder()
-                .add("response", Json.createObjectBuilder()
-                        .add("content", "nested value"))
-                .build();
+            .add(
+                "response", Json.createObjectBuilder()
+                    .add("content", "nested value")
+            )
+            .build();
 
         assertEquals("nested value", JsonHelper.findByPath(json, "response.content").orElseThrow());
     }
@@ -142,10 +144,12 @@ class JsonHelperTest {
     @Test
     void findByPath_arrayIndex() {
         var json = Json.createObjectBuilder()
-                .add("choices", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder().add("text", "first"))
-                        .add(Json.createObjectBuilder().add("text", "second")))
-                .build();
+            .add(
+                "choices", Json.createArrayBuilder()
+                    .add(Json.createObjectBuilder().add("text", "first"))
+                    .add(Json.createObjectBuilder().add("text", "second"))
+            )
+            .build();
 
         assertEquals("first", JsonHelper.findByPath(json, "choices[0].text").orElseThrow());
         assertEquals("second", JsonHelper.findByPath(json, "choices[1].text").orElseThrow());
@@ -154,10 +158,12 @@ class JsonHelperTest {
     @Test
     void findByPath_wildcardArray() {
         var json = Json.createObjectBuilder()
-                .add("items", Json.createArrayBuilder()
-                        .add(Json.createObjectBuilder().add("value", "one"))
-                        .add(Json.createObjectBuilder().add("value", "two")))
-                .build();
+            .add(
+                "items", Json.createArrayBuilder()
+                    .add(Json.createObjectBuilder().add("value", "one"))
+                    .add(Json.createObjectBuilder().add("value", "two"))
+            )
+            .build();
 
         // Returns first match
         assertEquals("one", JsonHelper.findByPath(json, "items[*].value").orElseThrow());
@@ -182,8 +188,8 @@ class JsonHelperTest {
     @Test
     void findByPath_arrayIndexOutOfBounds_returnsEmpty() {
         var json = Json.createObjectBuilder()
-                .add("items", Json.createArrayBuilder().add("only"))
-                .build();
+            .add("items", Json.createArrayBuilder().add("only"))
+            .build();
 
         assertTrue(JsonHelper.findByPath(json, "items[5]").isEmpty());
     }
@@ -191,8 +197,8 @@ class JsonHelperTest {
     @Test
     void findByPath_whitespaceOnly_returnsWhitespace() {
         var json = Json.createObjectBuilder()
-                .add("token", "   ")
-                .build();
+            .add("token", "   ")
+            .build();
 
         // findByPath allows whitespace because it can be significant (e.g., streaming tokens)
         assertEquals("   ", JsonHelper.findByPath(json, "token").orElseThrow());
@@ -205,8 +211,8 @@ class JsonHelperTest {
     @Test
     void findNonBlankByPath_simplePath() {
         var json = Json.createObjectBuilder()
-                .add("message", "hello")
-                .build();
+            .add("message", "hello")
+            .build();
 
         assertEquals("hello", JsonHelper.findNonBlankByPath(json, "message").orElseThrow());
     }
@@ -214,8 +220,8 @@ class JsonHelperTest {
     @Test
     void findNonBlankByPath_stripsWhitespace() {
         var json = Json.createObjectBuilder()
-                .add("message", "  hello  ")
-                .build();
+            .add("message", "  hello  ")
+            .build();
 
         assertEquals("hello", JsonHelper.findNonBlankByPath(json, "message").orElseThrow());
     }
@@ -223,8 +229,8 @@ class JsonHelperTest {
     @Test
     void findNonBlankByPath_whitespaceOnly_returnsEmpty() {
         var json = Json.createObjectBuilder()
-                .add("token", "   ")
-                .build();
+            .add("token", "   ")
+            .build();
 
         assertTrue(JsonHelper.findNonBlankByPath(json, "token").isEmpty());
     }
@@ -232,8 +238,8 @@ class JsonHelperTest {
     @Test
     void findNonBlankByPath_emptyString_returnsEmpty() {
         var json = Json.createObjectBuilder()
-                .add("token", "")
-                .build();
+            .add("token", "")
+            .build();
 
         assertTrue(JsonHelper.findNonBlankByPath(json, "token").isEmpty());
     }
@@ -252,9 +258,9 @@ class JsonHelperTest {
     @Test
     void findFirstNonBlankByPath_returnsFirstMatch() {
         var json = Json.createObjectBuilder()
-                .add("primary", "first")
-                .add("fallback", "second")
-                .build();
+            .add("primary", "first")
+            .add("fallback", "second")
+            .build();
 
         assertEquals("first", JsonHelper.findFirstNonBlankByPaths(json, List.of("primary", "fallback")).orElseThrow());
     }
@@ -262,9 +268,9 @@ class JsonHelperTest {
     @Test
     void findFirstNonBlankByPath_skipsEmptyValues() {
         var json = Json.createObjectBuilder()
-                .add("empty", "")
-                .add("valid", "found")
-                .build();
+            .add("empty", "")
+            .add("valid", "found")
+            .build();
 
         assertEquals("found", JsonHelper.findFirstNonBlankByPaths(json, List.of("empty", "valid")).orElseThrow());
     }
@@ -272,9 +278,9 @@ class JsonHelperTest {
     @Test
     void findFirstNonBlankByPath_skipsWhitespaceOnlyValues() {
         var json = Json.createObjectBuilder()
-                .add("whitespace", "   ")
-                .add("valid", "found")
-                .build();
+            .add("whitespace", "   ")
+            .add("valid", "found")
+            .build();
 
         // findFirstNonBlankByPath skips whitespace-only because it's looking for meaningful content
         assertEquals("found", JsonHelper.findFirstNonBlankByPaths(json, List.of("whitespace", "valid")).orElseThrow());
@@ -283,8 +289,8 @@ class JsonHelperTest {
     @Test
     void findFirstNonBlankByPath_returnsFallback() {
         var json = Json.createObjectBuilder()
-                .add("fallback", "value")
-                .build();
+            .add("fallback", "value")
+            .build();
 
         assertEquals("value", JsonHelper.findFirstNonBlankByPaths(json, List.of("missing", "fallback")).orElseThrow());
     }
@@ -292,8 +298,8 @@ class JsonHelperTest {
     @Test
     void findFirstNonBlankByPath_allMissing_returnsEmpty() {
         var json = Json.createObjectBuilder()
-                .add("other", "value")
-                .build();
+            .add("other", "value")
+            .build();
 
         assertTrue(JsonHelper.findFirstNonBlankByPaths(json, List.of("missing1", "missing2")).isEmpty());
     }
@@ -313,8 +319,10 @@ class JsonHelperTest {
     void checkErrors_errorAtFirstPath_throwsException() {
         var responseJson = JsonHelper.parseJson("{\"error\":{\"message\":\"Something went wrong\"}}");
 
-        var exception = assertThrows(AIResponseException.class,
-                () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error")));
+        var exception = assertThrows(
+            AIResponseException.class,
+            () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error"))
+        );
 
         assertTrue(exception.getMessage().contains("Something went wrong"));
     }
@@ -323,8 +331,10 @@ class JsonHelperTest {
     void checkErrors_errorAtSecondPath_throwsException() {
         var responseJson = Json.createObjectBuilder().add("error", "Simple error").build();
 
-        var exception = assertThrows(AIResponseException.class,
-                () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error")));
+        var exception = assertThrows(
+            AIResponseException.class,
+            () -> JsonHelper.checkErrors(responseJson, List.of("error.message", "error"))
+        );
 
         assertTrue(exception.getMessage().contains("Simple error"));
     }
@@ -336,10 +346,12 @@ class JsonHelperTest {
     @Test
     void addStrictAdditionalProperties_simpleSchema() {
         var schema = Json.createObjectBuilder()
-                .add("type", "object")
-                .add("properties", Json.createObjectBuilder()
-                        .add("name", Json.createObjectBuilder().add("type", "string")))
-                .build();
+            .add("type", "object")
+            .add(
+                "properties", Json.createObjectBuilder()
+                    .add("name", Json.createObjectBuilder().add("type", "string"))
+            )
+            .build();
 
         var result = JsonHelper.addStrictAdditionalProperties(schema);
 
@@ -349,13 +361,19 @@ class JsonHelperTest {
     @Test
     void addStrictAdditionalProperties_nestedSchema() {
         var schema = Json.createObjectBuilder()
-                .add("type", "object")
-                .add("properties", Json.createObjectBuilder()
-                        .add("inner", Json.createObjectBuilder()
-                                .add("type", "object")
-                                .add("properties", Json.createObjectBuilder()
-                                        .add("value", Json.createObjectBuilder().add("type", "string")))))
-                .build();
+            .add("type", "object")
+            .add(
+                "properties", Json.createObjectBuilder()
+                    .add(
+                        "inner", Json.createObjectBuilder()
+                            .add("type", "object")
+                            .add(
+                                "properties", Json.createObjectBuilder()
+                                    .add("value", Json.createObjectBuilder().add("type", "string"))
+                            )
+                    )
+            )
+            .build();
 
         var result = JsonHelper.addStrictAdditionalProperties(schema);
 
@@ -367,15 +385,23 @@ class JsonHelperTest {
     @Test
     void addStrictAdditionalProperties_arrayWithNestedObjectItems() {
         var schema = Json.createObjectBuilder()
-                .add("type", "object")
-                .add("properties", Json.createObjectBuilder()
-                        .add("items", Json.createObjectBuilder()
-                                .add("type", "array")
-                                .add("items", Json.createObjectBuilder()
-                                        .add("type", "object")
-                                        .add("properties", Json.createObjectBuilder()
-                                                .add("name", Json.createObjectBuilder().add("type", "string"))))))
-                .build();
+            .add("type", "object")
+            .add(
+                "properties", Json.createObjectBuilder()
+                    .add(
+                        "items", Json.createObjectBuilder()
+                            .add("type", "array")
+                            .add(
+                                "items", Json.createObjectBuilder()
+                                    .add("type", "object")
+                                    .add(
+                                        "properties", Json.createObjectBuilder()
+                                            .add("name", Json.createObjectBuilder().add("type", "string"))
+                                    )
+                            )
+                    )
+            )
+            .build();
 
         var result = JsonHelper.addStrictAdditionalProperties(schema);
 
@@ -392,9 +418,9 @@ class JsonHelperTest {
     @Test
     void replaceField_replacesExistingField() {
         var original = Json.createObjectBuilder()
-                .add("name", "old")
-                .add("value", 1)
-                .build();
+            .add("name", "old")
+            .add("value", 1)
+            .build();
 
         var result = JsonHelper.replaceField(original, "name", Json.createValue("new")).build();
 
@@ -405,10 +431,10 @@ class JsonHelperTest {
     @Test
     void replaceField_preservesOrder() {
         var original = Json.createObjectBuilder()
-                .add("a", 1)
-                .add("b", 2)
-                .add("c", 3)
-                .build();
+            .add("a", 1)
+            .add("b", 2)
+            .add("c", 3)
+            .build();
 
         var result = JsonHelper.replaceField(original, "b", Json.createValue(99)).build();
 
@@ -422,12 +448,13 @@ class JsonHelperTest {
     @Test
     void replaceField_nonExistentField_addsNothing() {
         var original = Json.createObjectBuilder()
-                .add("key", "value")
-                .build();
+            .add("key", "value")
+            .build();
 
         var result = JsonHelper.replaceField(original, "nonexistent", Json.createValue("new")).build();
 
         assertEquals(1, result.size());
         assertEquals("value", result.getString("key"));
     }
+
 }

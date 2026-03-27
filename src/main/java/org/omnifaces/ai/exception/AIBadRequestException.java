@@ -38,4 +38,5 @@ public class AIBadRequestException extends AIHttpException {
     public AIBadRequestException(URI uri, String responseBody) {
         super(uri, STATUS_CODE, responseBody);
     }
+
 }

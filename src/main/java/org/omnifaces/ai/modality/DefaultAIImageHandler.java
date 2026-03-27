@@ -27,11 +27,10 @@ import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.exception.AIResponseException;
 
 /**
- * Default AI image handler implementation that provides general-purpose prompt templates, and response parsing
- * suitable for most current vision-capable models.
+ * Default AI image handler implementation that provides general-purpose prompt templates, and response parsing suitable for most current vision-capable models.
  * <p>
- * This class is intended as a fallback when no provider-specific implementation is available. It uses patterns that
- * work reasonably well with GPT, Claude, Gemini, Grok, Llama and similar multimodal models.
+ * This class is intended as a fallback when no provider-specific implementation is available. It uses patterns that work reasonably well with GPT, Claude,
+ * Gemini, Grok, Llama and similar multimodal models.
  *
  * <h2>When to extend or override</h2>
  * <p>
@@ -44,7 +43,7 @@ import org.omnifaces.ai.exception.AIResponseException;
  * </ul>
  * <p>
  * This implementation makes no provider-specific API calls or assumptions, it only generates default prompts.
-
+ * 
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIImageHandler
@@ -63,31 +62,30 @@ public class DefaultAIImageHandler implements AIImageHandler {
     @Override
     public String buildAnalyzeImagePrompt() {
         return """
-            You are an expert at analyzing images.
-            Describe this image in detail.
-            Rules:
-            - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
-            Output format:
-            - Plain text description only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """;
+                You are an expert at analyzing images.
+                Describe this image in detail.
+                Rules:
+                - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
+                Output format:
+                - Plain text description only.
+                - No explanations, no notes, no extra text, no markdown formatting.
+            """;
     }
 
     @Override
     public String buildGenerateAltTextPrompt() {
         return """
-            You are an expert at writing web alt text.
-            Write concise, descriptive alt text for the image in at most 2 sentences.
-            Each sentence can have at most %d words.
-            Rules:
-            - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
-            - Do not include phrases like "image of" unless necessary.
-            Output format:
-            - Plain text description only.
-            - No explanations, no notes, no extra text, no markdown formatting.
-        """.formatted(DEFAULT_MAX_WORDS_PER_ALT_TEXT_SENTENCE);
+                You are an expert at writing web alt text.
+                Write concise, descriptive alt text for the image in at most 2 sentences.
+                Each sentence can have at most %d words.
+                Rules:
+                - Focus on: main subject, key actions/details, visual style if relevant, and intended purpose.
+                - Do not include phrases like "image of" unless necessary.
+                Output format:
+                - Plain text description only.
+                - No explanations, no notes, no extra text, no markdown formatting.
+            """.formatted(DEFAULT_MAX_WORDS_PER_ALT_TEXT_SENTENCE);
     }
-
 
     // Response parsing -----------------------------------------------------------------------------------------------
 
@@ -100,7 +98,8 @@ public class DefaultAIImageHandler implements AIImageHandler {
             throw new IllegalStateException("getImageResponseContentPaths() may not return an empty list");
         }
 
-        var imageContent = findFirstNonBlankByPaths(responseJson, imageContentPaths).orElseThrow(() -> new AIResponseException("No image content found at paths " + imageContentPaths, responseJson));
+        var imageContent = findFirstNonBlankByPaths(responseJson, imageContentPaths)
+            .orElseThrow(() -> new AIResponseException("No image content found at paths " + imageContentPaths, responseJson));
 
         try {
             return Base64.getDecoder().decode(imageContent);
@@ -111,8 +110,9 @@ public class DefaultAIImageHandler implements AIImageHandler {
     }
 
     /**
-     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseImageContent(JsonObject)}.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the error message in the JSON response parsed by {@link #parseImageContent(JsonObject)}. The first path that matches a
+     * value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
@@ -121,13 +121,14 @@ public class DefaultAIImageHandler implements AIImageHandler {
     }
 
     /**
-     * Returns all possible paths to the image content in the JSON response parsed by {@link #parseImageContent(JsonObject)}.
-     * May not be empty.
-     * The first path that matches a value in the JSON response will be used; remaining paths are ignored.
+     * Returns all possible paths to the image content in the JSON response parsed by {@link #parseImageContent(JsonObject)}. May not be empty. The first path
+     * that matches a value in the JSON response will be used; remaining paths are ignored.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the image content in the JSON response.
      */
     public List<String> getImageResponseContentPaths() {
         throw new UnsupportedOperationException("Please implement getImageResponseContentPaths() method in class " + getClass().getSimpleName());
     }
+
 }

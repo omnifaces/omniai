@@ -65,11 +65,18 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     @Override
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder()
-                .add("model", service.getModelName())
-                .add("max_tokens", ofNullable(options.getMaxTokens()).orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)); // Required!
+            .add("model", service.getModelName())
+            .add(
+                "max_tokens",
+                ofNullable(options.getMaxTokens())
+                    .orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)
+            ); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility (may be respected in future model versions).
+        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running
+                                                                                                             // web search tool. The user_location field is
+                                                                                                             // still sent for forward-compatibility (may be
+                                                                                                             // respected in future model versions).
         buildChatPayloadHistoryMessages(service, messages, input);
         buildChatPayloadUserContent(service, messages, input, options);
         payload.add("messages", messages);
@@ -79,6 +86,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to the payload as a top-level {@code tools} field.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -88,8 +96,8 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     protected void buildChatPayloadTools(AIService service, JsonObjectBuilder payload, ChatOptions options) {
         if (options.useWebSearch()) {
             var webSearchTool = Json.createObjectBuilder()
-                    .add("type", service.getModelVersion().gte(CLAUDE_4_6) ? "web_search_20260209" : "web_search_20250305")
-                    .add("name", "web_search");
+                .add("type", service.getModelVersion().gte(CLAUDE_4_6) ? "web_search_20260209" : "web_search_20250305")
+                .add("name", "web_search");
             var userLocation = buildUserLocation(options.getWebSearchLocation());
 
             if (userLocation != null) {
@@ -102,6 +110,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the payload as a top-level {@code system} field.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -115,6 +124,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -122,17 +132,24 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
      */
     protected void buildChatPayloadHistoryMessages(AIService service, JsonArrayBuilder messages, ChatInput input) {
         for (var historyMessage : input.getHistory()) {
-            messages.add(Json.createObjectBuilder()
-                .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
-                .add("content", Json.createArrayBuilder()
-                    .add(Json.createObjectBuilder()
-                        .add("type", "text")
-                        .add("text", historyMessage.content()))));
+            messages.add(
+                Json.createObjectBuilder()
+                    .add("role", historyMessage.role() == Role.USER ? "user" : "assistant")
+                    .add(
+                        "content", Json.createArrayBuilder()
+                            .add(
+                                Json.createObjectBuilder()
+                                    .add("type", "text")
+                                    .add("text", historyMessage.content())
+                            )
+                    )
+            );
         }
     }
 
     /**
      * Add user content (images, files, and text message) to the messages array.
+     * 
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -143,12 +160,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
         var content = Json.createArrayBuilder();
 
         for (var image : input.getImages()) {
-            content.add(Json.createObjectBuilder()
-                .add("type", "image")
-                .add("source", Json.createObjectBuilder()
-                    .add("type", "base64")
-                    .add("media_type", image.mimeType().value())
-                    .add("data", image.toBase64())));
+            content.add(
+                Json.createObjectBuilder()
+                    .add("type", "image")
+                    .add(
+                        "source", Json.createObjectBuilder()
+                            .add("type", "base64")
+                            .add("media_type", image.mimeType().value())
+                            .add("data", image.toBase64())
+                    )
+            );
         }
 
         if (!input.getFiles().isEmpty()) {
@@ -157,25 +178,34 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             for (var file : input.getFiles()) {
                 var fileId = service.upload(file, options);
 
-                content.add(Json.createObjectBuilder()
-                    .add("type", "document")
-                    .add("source", Json.createObjectBuilder()
-                        .add("type", "file")
-                        .add("file_id", fileId)));
+                content.add(
+                    Json.createObjectBuilder()
+                        .add("type", "document")
+                        .add(
+                            "source", Json.createObjectBuilder()
+                                .add("type", "file")
+                                .add("file_id", fileId)
+                        )
+                );
             }
         }
 
-        content.add(Json.createObjectBuilder()
-            .add("type", "text")
-            .add("text", input.getMessage()));
+        content.add(
+            Json.createObjectBuilder()
+                .add("type", "text")
+                .add("text", input.getMessage())
+        );
 
-        messages.add(Json.createObjectBuilder()
-            .add("role", "user")
-            .add("content", content));
+        messages.add(
+            Json.createObjectBuilder()
+                .add("role", "user")
+                .add("content", content)
+        );
     }
 
     /**
      * Add generation config (streaming, temperature, topP, structured output) to the payload.
+     * 
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -198,9 +228,11 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
         if (options.getJsonSchema() != null) {
             checkSupportsStructuredOutput(service);
-            payload.add("output_format", Json.createObjectBuilder()
-                .add("type", "json_schema")
-                .add("schema", addStrictAdditionalProperties(options.getJsonSchema())));
+            payload.add(
+                "output_format", Json.createObjectBuilder()
+                    .add("type", "json_schema")
+                    .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))
+            );
         }
     }
 
@@ -264,7 +296,11 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                         options.recordUsage(parseChatUsage(json.getJsonObject("message")));
                     }
                     else if ("message_delta".equals(type)) {
-                        findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(outputTokens -> options.recordUsage(new ChatUsage(options.getLastUsage() != null ? options.getLastUsage().inputTokens() : -1, Integer.parseInt(outputTokens), -1)));
+                        findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(
+                            outputTokens -> options.recordUsage(
+                                new ChatUsage(options.getLastUsage() != null ? options.getLastUsage().inputTokens() : -1, Integer.parseInt(outputTokens), -1)
+                            )
+                        );
                     }
                 }
                 else if ("error".equals(type)) {
@@ -277,4 +313,5 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
         return true;
     }
+
 }

@@ -23,7 +23,8 @@ import org.omnifaces.ai.mime.MimeType;
 /**
  * Base class for IT on audio-generator-related methods of AI service.
  *
- * NOTE: this is a separate class from {@link BaseAIServiceAudioHandlerIT} because audio generation might require a different model than even audio transcription.
+ * NOTE: this is a separate class from {@link BaseAIServiceAudioHandlerIT} because audio generation might require a different model than even audio
+ * transcription.
  */
 abstract class BaseAIServiceAudioGeneratorIT extends AIServiceIT {
 
@@ -41,4 +42,5 @@ abstract class BaseAIServiceAudioGeneratorIT extends AIServiceIT {
         assertTrue(mimeType.isAudio(), "Mime type is audio");
         // TODO: how to assert content .. ?? :P
     }
+
 }

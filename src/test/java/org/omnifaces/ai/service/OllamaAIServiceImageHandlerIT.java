@@ -29,4 +29,5 @@ class OllamaAIServiceImageHandlerIT extends BaseAIServiceImageHandlerIT {
     protected String getApiKeyEnvName() {
         return API_KEY_ENV_NAME;
     }
+
 }

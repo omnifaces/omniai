@@ -62,4 +62,5 @@ public final class TextHelper {
         }
         return text;
     }
+
 }

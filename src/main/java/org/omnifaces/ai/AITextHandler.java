@@ -40,8 +40,8 @@ import org.omnifaces.ai.model.Sse.Event;
  * <li>content moderation</li>
  * </ul>
  * <p>
- * Creative / interpretive tasks use a configurable temperature ({@link #getDefaultCreativeTemperature()});
- * classification tasks use low fixed temperature of {@link ChatOptions#DETERMINISTIC_TEMPERATURE}.
+ * Creative / interpretive tasks use a configurable temperature ({@link #getDefaultCreativeTemperature()}); classification tasks use low fixed temperature of
+ * {@link ChatOptions#DETERMINISTIC_TEMPERATURE}.
  * <p>
  * The implementations must be stateless and able to be {@link ApplicationScoped}.
  *
@@ -54,21 +54,25 @@ public interface AITextHandler extends Serializable {
 
     /**
      * Builds the JSON request payload for all chat operations.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
      * @param input The chat input.
      * @param options The chat options.
      * @param streaming Whether this is for chat streaming endpoint.
      * @return The JSON request payload.
-     * @throws UnsupportedOperationException If streaming is requested but not supported as per {@link AIService#supportsStreaming()},
-     * or if structured output is requested but not supported as per {@link AIService#supportsStructuredOutput()}.
+     * @throws UnsupportedOperationException If streaming is requested but not supported as per {@link AIService#supportsStreaming()}, or if structured output
+     * is requested but not supported as per {@link AIService#supportsStructuredOutput()}.
      */
     default JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
-        throw new UnsupportedOperationException("Please implement buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) for this AI provider");
+        throw new UnsupportedOperationException(
+            "Please implement buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) for this AI provider"
+        );
     }
 
     /**
      * Processes each stream event for {@link AIService#chatStream(String, ChatOptions, Consumer)}.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
      * @param options The chat options. Implementations should call {@link ChatOptions#recordUsage(ChatUsage)} when usage data is available in the stream.
@@ -77,26 +81,28 @@ public interface AITextHandler extends Serializable {
      * @return {@code true} to continue processing the stream, or {@code false} when end of stream is reached.
      */
     default boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
-        throw new UnsupportedOperationException("Please implement processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) for this AI provider");
+        throw new UnsupportedOperationException(
+            "Please implement processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) for this AI provider"
+        );
     }
 
     /**
-     * Returns the default temperature used for creative or interpretative text analysis related operations in
-     * {@link AIService}. These operations typically use a moderate temperature (e.g. 0.3-0.7) to allow natural
-     * phrasing and reasoning.
+     * Returns the default temperature used for creative or interpretative text analysis related operations in {@link AIService}. These operations typically use
+     * a moderate temperature (e.g. 0.3-0.7) to allow natural phrasing and reasoning.
      * <ul>
      * <li>summarization</li>
      * <li>key-point extraction</li>
      * </ul>
      * <p>
-     * Deterministic / classification-style operations use by design a fixed low temperature of
-     * {@link ChatOptions#DETERMINISTIC_TEMPERATURE} to ensure consistent, factual and reproducible results:
+     * Deterministic / classification-style operations use by design a fixed low temperature of {@link ChatOptions#DETERMINISTIC_TEMPERATURE} to ensure
+     * consistent, factual and reproducible results:
      * <ul>
      * <li>language detection</li>
      * <li>translation</li>
      * <li>proofreading</li>
      * <li>content moderation</li>
      * </ul>
+     * 
      * @implNote The default implementation {@link DefaultAITextHandler} returns 0.5.
      * @return default temperature value in range 0.0-1.0 for summarization and key-point extraction.
      * @see AIService#summarize(String, int)
@@ -154,6 +160,7 @@ public interface AITextHandler extends Serializable {
 
     /**
      * Parses token usage from the API response body returned by chat operation.
+     * 
      * @implNote The default implementation returns {@code null} (usage unknown/unsupported).
      * @param responseJson The API response JSON.
      * @return The parsed {@link ChatUsage}, or {@code null} if not available or unparseable.
@@ -165,6 +172,7 @@ public interface AITextHandler extends Serializable {
 
     /**
      * Parses file ID from the API response JSON of file upload operation.
+     * 
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param responseJson The API response JSON.
      * @return The extracted file ID from the API response JSON.
@@ -175,10 +183,12 @@ public interface AITextHandler extends Serializable {
     }
 
     /**
-     * Builds the system prompt for {@link AIService#moderateContent(String, ModerationOptions)} and {@link AIService#moderateContentAsync(String, ModerationOptions)}.
+     * Builds the system prompt for {@link AIService#moderateContent(String, ModerationOptions)} and
+     * {@link AIService#moderateContentAsync(String, ModerationOptions)}.
      *
      * @param options Moderation options containing categories and threshold.
      * @return The system prompt.
      */
     String buildModerationPrompt(ModerationOptions options);
+
 }

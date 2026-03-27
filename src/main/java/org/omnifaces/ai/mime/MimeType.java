@@ -33,18 +33,21 @@ public interface MimeType {
 
     /**
      * Returns the MIME type string.
+     * 
      * @return The MIME type string (e.g., "application/pdf").
      */
     String value();
 
     /**
      * Returns the file extension.
+     * 
      * @return The file extension without a leading dot (e.g., "pdf").
      */
     String extension();
 
     /**
      * Returns whether this is an image mime type.
+     * 
      * @return whether this is an image mime type.
      * @since 1.1
      */
@@ -54,6 +57,7 @@ public interface MimeType {
 
     /**
      * Returns whether this is an audio mime type.
+     * 
      * @return whether this is an audio mime type.
      * @since 1.1
      */
@@ -63,6 +67,7 @@ public interface MimeType {
 
     /**
      * Returns whether this is a video mime type.
+     * 
      * @return whether this is a video mime type.
      * @since 1.1
      */
@@ -73,8 +78,8 @@ public interface MimeType {
     /**
      * Guesses the MIME type of the given content based on magic bytes.
      * <p>
-     * Detection order: images first, then audio/video, then documents. Falls back to {@code application/octet-stream}
-     * for unrecognized binary content or {@code text/plain} for unrecognized text content.
+     * Detection order: images first, then audio/video, then documents. Falls back to {@code application/octet-stream} for unrecognized binary content or
+     * {@code text/plain} for unrecognized text content.
      *
      * @param content The content bytes to analyze.
      * @return The detected MIME type, never {@code null}.
@@ -86,8 +91,8 @@ public interface MimeType {
     /**
      * Guesses the MIME type of the given source based on magic bytes.
      * <p>
-     * Detection order: images first, then audio/video, then documents. Falls back to {@code application/octet-stream}
-     * for unrecognized binary content or {@code text/plain} for unrecognized text content.
+     * Detection order: images first, then audio/video, then documents. Falls back to {@code application/octet-stream} for unrecognized binary content or
+     * {@code text/plain} for unrecognized text content.
      *
      * @param source The source path to analyze, must not be {@code null}.
      * @return The detected MIME type, never {@code null}.
@@ -101,4 +106,5 @@ public interface MimeType {
             throw new UncheckedIOException("Cannot read magic bytes from " + source, e);
         }
     }
+
 }

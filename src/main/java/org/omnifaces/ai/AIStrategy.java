@@ -28,7 +28,20 @@ import java.io.Serializable;
  * @author Bauke Scholtz
  * @since 1.0
  */
-public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler, Class<? extends AIAudioHandler> audioHandler) implements Serializable {
+public final record AIStrategy(
+    Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler, Class<? extends AIAudioHandler> audioHandler
+) implements Serializable {
+
+    /**
+     * Creates a strategy with the specified text, image, and audio handlers.
+     *
+     * @param textHandler The text handler, or {@code null} to use the AI provider's default.
+     * @param imageHandler The image handler, or {@code null} to use the AI provider's default.
+     * @param audioHandler The audio handler, or {@code null} to use the AI provider's default.
+     */
+    public AIStrategy {
+        // Canonical constructor.
+    }
 
     /**
      * Creates an empty strategy, so it uses the AI provider's default for text, image and audio handlers.
@@ -72,7 +85,10 @@ public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class
      * @return A new strategy instance.
      * @since 1.1
      */
-    public static AIStrategy of(Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler, Class<? extends AIAudioHandler> audioHandler) {
+    public static AIStrategy of(
+        Class<? extends AITextHandler> textHandler, Class<? extends AIImageHandler> imageHandler, Class<? extends AIAudioHandler> audioHandler
+    )
+    {
         return new AIStrategy(textHandler, imageHandler, audioHandler);
     }
 
@@ -105,4 +121,5 @@ public final record AIStrategy(Class<? extends AITextHandler> textHandler, Class
     public AIStrategy withAudioHandler(Class<? extends AIAudioHandler> audioHandler) {
         return new AIStrategy(textHandler, imageHandler, audioHandler);
     }
+
 }

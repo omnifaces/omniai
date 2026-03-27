@@ -131,7 +131,9 @@ public class GenerateImageOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link GenerateImageOptions} instances. For example:
+     * 
      * <pre>
+     * 
      * GenerateImageOptions options = GenerateImageOptions.newBuilder()
      *     .size("1024x1024")
      *     .build();
@@ -149,6 +151,7 @@ public class GenerateImageOptions implements Serializable {
      * Use {@link GenerateImageOptions#newBuilder()} to obtain a new builder instance.
      */
     public static class Builder {
+
         private static final Pattern SIZE_PATTERN = Pattern.compile("\\d+x\\d+");
         private static final Pattern ASPECT_RATIO_PATTERN = Pattern.compile("\\d+:\\d+");
 
@@ -157,7 +160,8 @@ public class GenerateImageOptions implements Serializable {
         private String quality = GenerateImageOptions.DEFAULT_QUALITY;
         private String outputFormat = GenerateImageOptions.DEFAULT_OUTPUT_FORMAT;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Sets the size of the generated image. Defaults to {@value GenerateImageOptions#DEFAULT_SIZE}.
@@ -277,5 +281,7 @@ public class GenerateImageOptions implements Serializable {
         private static int calculateGreatestCommonDivisor(int a, int b) {
             return b == 0 ? a : calculateGreatestCommonDivisor(b, a % b);
         }
+
     }
+
 }

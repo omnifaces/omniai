@@ -82,16 +82,18 @@ class ModerationResultTest {
         scores.put("hate", 0.5);
         var result = new ModerationResult(false, scores);
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> result.getScores().put("violence", 0.3));
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> result.getScores().put("violence", 0.3)
+        );
     }
 
     @Test
     void getScores_isSorted() {
         var scores = Map.of(
-                "violence", 0.3,
-                "hate", 0.1,
-                "sexual", 0.5
+            "violence", 0.3,
+            "hate", 0.1,
+            "sexual", 0.5
         );
         var result = new ModerationResult(false, scores);
 
@@ -164,9 +166,9 @@ class ModerationResultTest {
     @Test
     void getFlaggedCategories_someAboveThreshold() {
         var scores = Map.of(
-                "hate", 0.8,
-                "violence", 0.3,
-                "sexual", 0.6
+            "hate", 0.8,
+            "violence", 0.3,
+            "sexual", 0.6
         );
         var result = new ModerationResult(true, scores);
 
@@ -194,9 +196,9 @@ class ModerationResultTest {
     @Test
     void getHighestCategory_multipleScores() {
         var scores = Map.of(
-                "hate", 0.3,
-                "violence", 0.9,
-                "sexual", 0.5
+            "hate", 0.3,
+            "violence", 0.9,
+            "sexual", 0.5
         );
         var result = new ModerationResult(true, scores);
 
@@ -217,9 +219,9 @@ class ModerationResultTest {
     @Test
     void getHighestScore_multipleScores() {
         var scores = Map.of(
-                "hate", 0.3,
-                "violence", 0.9,
-                "sexual", 0.5
+            "hate", 0.3,
+            "violence", 0.9,
+            "sexual", 0.5
         );
         var result = new ModerationResult(true, scores);
 
@@ -273,4 +275,5 @@ class ModerationResultTest {
             assertEquals(original.getScores(), deserialized.getScores());
         }
     }
+
 }

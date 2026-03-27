@@ -105,7 +105,8 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     }
 
     /**
-     * Checks if this version is less than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
+     * Checks if this version is less than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names
+     * match.
      *
      * @param others The other AI model versions to compare against.
      * @return {@code true} if this version is less than or equal to any of the given versions (with matching model names).
@@ -125,7 +126,8 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     }
 
     /**
-     * Checks if this version is greater than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names match.
+     * Checks if this version is greater than or equal to the version of any of the given AI model versions. Returns {@code false} if none of the model names
+     * match.
      *
      * @param others The other AI model versions to compare against.
      * @return {@code true} if this version is greater than or equal to any of the given versions (with matching model names).
@@ -155,8 +157,8 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     }
 
     /**
-     * Compares this version with the specified version for order.
-     * Comparison is performed first by model name (case-insensitive), then by major version, then by minor version.
+     * Compares this version with the specified version for order. Comparison is performed first by model name (case-insensitive), then by major version, then
+     * by minor version.
      *
      * @param other The other AI model version to compare against.
      * @return A negative integer, zero, or a positive integer as this version is less than, equal to, or greater than the specified version.
@@ -207,9 +209,8 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
     }
 
     /**
-     * Strips date-like suffixes and everything after them from the model name to prevent date components from being
-     * parsed as version numbers. Handles both {@code YYYY-MM-DD} (e.g., {@code -2025-08-07}) and {@code YYYYMMDD}
-     * (e.g., {@code -20250929}) formats.
+     * Strips date-like suffixes and everything after them from the model name to prevent date components from being parsed as version numbers. Handles both
+     * {@code YYYY-MM-DD} (e.g., {@code -2025-08-07}) and {@code YYYYMMDD} (e.g., {@code -20250929}) formats.
      *
      * @param fullModelName The full model name.
      * @return The model name with date suffixes and trailing content removed.
@@ -299,4 +300,5 @@ public final record AIModelVersion(String modelName, int majorVersion, int minor
 
         return digits.length() > 0 ? Integer.parseInt(digits.toString()) : 0;
     }
+
 }
