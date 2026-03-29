@@ -73,10 +73,9 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             ); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
-        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options)); // Anthropic API ignores user_location when running
-                                                                                                             // web search tool. The user_location field is
-                                                                                                             // still sent for forward-compatibility (may be
-                                                                                                             // respected in future model versions).
+        // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility
+        // (may be respected in future model versions).
+        buildChatPayloadSystemPrompt(service, payload, appendWebSearchLocationToPromptIfNecessary(options));
         buildChatPayloadHistoryMessages(service, messages, input);
         buildChatPayloadUserContent(service, messages, input, options);
         payload.add("messages", messages);
