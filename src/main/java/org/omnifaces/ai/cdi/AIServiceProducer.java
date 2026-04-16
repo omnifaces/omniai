@@ -95,7 +95,7 @@ class AIServiceProducer {
 
     /**
      * Resolves expressions in the given value if necessary.
-     * 
+     *
      * @param beanManager The CDI bean manager for EL resolution.
      * @param value The value, possibly containing an expression.
      * @return The resolved value, or {@code null} if the input is blank.

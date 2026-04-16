@@ -85,7 +85,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to the payload as a top-level {@code tools} field.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -109,7 +109,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the payload as a top-level {@code system} field.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -123,7 +123,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -148,7 +148,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, files, and text message) to the messages array.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -204,7 +204,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (streaming, temperature, topP, structured output) to the payload.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.

@@ -43,14 +43,14 @@ public interface AIAudioHandler extends Serializable {
     /**
      * Builds the system prompt for {@link AIService#transcribe(byte[])}, {@link AIService#transcribe(java.nio.file.Path)},
      * {@link AIService#transcribeAsync(byte[])}, and {@link AIService#transcribeAsync(java.nio.file.Path)}.
-     * 
+     *
      * @return The system prompt.
      */
     String buildTranscribePrompt();
 
     /**
      * Parses transcription text from the API response JSON of a transcribe operation.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param responseJson The API response JSON.
      * @return The extracted transcription text from the API response JSON.
@@ -62,7 +62,7 @@ public interface AIAudioHandler extends Serializable {
 
     /**
      * Builds the JSON request payload for all generate audio operations.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @param service The visiting AI service.
      * @param text The text to convert to audio.
@@ -80,7 +80,7 @@ public interface AIAudioHandler extends Serializable {
      * Parses audio content from the API response body of generate audio operation.
      * <p>
      * The returned stream must be closed by the caller.
-     * 
+     *
      * @implNote The default implementation returns the response body directly.
      * @param responseBody The API response body, usually either the raw audio file or a JSON object with an encoded audio file, along with some meta data.
      * @return The extracted audio content from the API response body.

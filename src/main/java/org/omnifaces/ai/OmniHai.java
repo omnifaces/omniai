@@ -59,7 +59,7 @@ public final class OmniHai {
 
     /**
      * Returns the OmniHai brand name.
-     * 
+     *
      * @return The OmniHai brand name.
      */
     public static String name() {
@@ -68,7 +68,7 @@ public final class OmniHai {
 
     /**
      * Returns the OmniHai version currently used.
-     * 
+     *
      * @return The OmniHai version currently used.
      */
     public static String version() {
@@ -77,7 +77,7 @@ public final class OmniHai {
 
     /**
      * Returns the OmniHai homepage URL.
-     * 
+     *
      * @return The OmniHai homepage URL.
      */
     public static String url() {
@@ -86,7 +86,7 @@ public final class OmniHai {
 
     /**
      * Returns the OmniHai user agent string suitable for HTTP {@code User-Agent} header.
-     * 
+     *
      * @return The OmniHai user agent string suitable for HTTP {@code User-Agent} header.
      */
     public static String userAgent() {

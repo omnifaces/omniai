@@ -131,9 +131,9 @@ public class GenerateImageOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link GenerateImageOptions} instances. For example:
-     * 
+     *
      * <pre>
-     * 
+     *
      * GenerateImageOptions options = GenerateImageOptions.newBuilder()
      *     .size("1024x1024")
      *     .build();

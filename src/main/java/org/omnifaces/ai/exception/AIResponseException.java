@@ -59,7 +59,7 @@ public class AIResponseException extends AIException {
 
     /**
      * Returns The HTTP response body.
-     * 
+     *
      * @return The HTTP response body.
      */
     public String getResponseBody() {

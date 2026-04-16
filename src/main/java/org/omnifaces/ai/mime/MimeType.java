@@ -33,21 +33,21 @@ public interface MimeType {
 
     /**
      * Returns the MIME type string.
-     * 
+     *
      * @return The MIME type string (e.g., "application/pdf").
      */
     String value();
 
     /**
      * Returns the file extension.
-     * 
+     *
      * @return The file extension without a leading dot (e.g., "pdf").
      */
     String extension();
 
     /**
      * Returns whether this is an image mime type.
-     * 
+     *
      * @return whether this is an image mime type.
      * @since 1.1
      */
@@ -57,7 +57,7 @@ public interface MimeType {
 
     /**
      * Returns whether this is an audio mime type.
-     * 
+     *
      * @return whether this is an audio mime type.
      * @since 1.1
      */
@@ -67,7 +67,7 @@ public interface MimeType {
 
     /**
      * Returns whether this is a video mime type.
-     * 
+     *
      * @return whether this is a video mime type.
      * @since 1.1
      */

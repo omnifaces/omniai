@@ -15,14 +15,14 @@
  * CDI integration for dependency injection of AI services.
  * <p>
  * This package provides the {@link org.omnifaces.ai.cdi.AI} qualifier annotation for injecting configured {@link org.omnifaces.ai.AIService} instances:
- * 
+ *
  * <pre>
- * 
+ *
  * &#64;Inject
  * &#64;AI(provider = ANTHROPIC, apiKey = "#{config.apiKey}")
  * private AIService ai;
  * </pre>
- * 
+ *
  * Expression syntax (EL-style <code>#{...}</code>, <code>${...}</code> or MicroProfile Config-style <code>${config:...}</code>) is supported for configuration
  * values, allowing externalization of API keys and other sensitive settings.
  *

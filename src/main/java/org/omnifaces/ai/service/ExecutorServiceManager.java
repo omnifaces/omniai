@@ -61,7 +61,7 @@ class ExecutorServiceManager {
 
     /**
      * Returns the managed executor service, or {@code null} if unavailable.
-     * 
+     *
      * @return The managed executor service, or {@code null} if unavailable.
      */
     public ExecutorService getManagedExecutorService() {
@@ -70,7 +70,7 @@ class ExecutorServiceManager {
 
     /**
      * Returns the CDI-managed instance of this bean.
-     * 
+     *
      * @return The CDI-managed instance of this bean.
      */
     public static ExecutorServiceManager getCurrentInstance() {

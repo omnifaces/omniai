@@ -43,7 +43,7 @@ import org.omnifaces.ai.exception.AIResponseException;
  * </ul>
  * <p>
  * This implementation makes no provider-specific API calls or assumptions, it only generates default prompts.
- * 
+ *
  * @author Bauke Scholtz
  * @since 1.0
  * @see AIImageHandler
@@ -112,7 +112,7 @@ public class DefaultAIImageHandler implements AIImageHandler {
     /**
      * Returns all possible paths to the error message in the JSON response parsed by {@link #parseImageContent(JsonObject)}. The first path that matches a
      * value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
@@ -123,7 +123,7 @@ public class DefaultAIImageHandler implements AIImageHandler {
     /**
      * Returns all possible paths to the image content in the JSON response parsed by {@link #parseImageContent(JsonObject)}. May not be empty. The first path
      * that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the image content in the JSON response.
      */

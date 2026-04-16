@@ -90,7 +90,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add tools to payload as top-level {@code tools} field for Responses API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -114,7 +114,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to payload as top-level {@code instructions} field for Responses API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -128,7 +128,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to messages array as {@code system} role for Chat Completions API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
@@ -146,7 +146,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the input array for Responses API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -158,7 +158,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array for Chat Completions API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -202,7 +202,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, audio files, other files, and text message) to the input array for Responses API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -215,7 +215,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images, audio files, other files, and text message) to the messages array for Chat Completions API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -309,7 +309,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Responses API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -322,7 +322,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (max tokens, streaming, temperature, topP, structured output) to the payload for Chat Completions API.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.
@@ -397,7 +397,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Returns file upload metadata. This basically represents additional form data during file upload request.
-     * 
+     *
      * @param service The visiting AI service.
      * @param file The file to upload.
      * @return File upload metadata.
@@ -439,7 +439,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Process chat stream event with {@code responses} API.
-     * 
+     *
      * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
@@ -485,7 +485,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Process chat stream event with {@code chat/completions} API.
-     * 
+     *
      * @param options The chat options.
      * @param event Stream event.
      * @param onToken Callback receiving each stream data chunk (often one word/token/line).
@@ -519,7 +519,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
 
     /**
      * Returns web search tool name.
-     * 
+     *
      * @return Web search tool name.
      * @since 1.3
      */
@@ -538,7 +538,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     /**
      * Builds an OpenAI-compatible {@code user_location} object from the given {@link Location}. Returns {@code null} if the location is
      * {@link Location#isGlobal() global}.
-     * 
+     *
      * @param location The location to build the user location object from.
      * @return An OpenAI-compatible {@code user_location} JSON object, or {@code null} if the location is global.
      * @since 1.3

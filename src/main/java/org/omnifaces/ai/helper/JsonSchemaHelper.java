@@ -81,9 +81,9 @@ import jakarta.json.JsonValue;
  * </ul>
  * <p>
  * Example usage:
- * 
+ *
  * <pre>
- * 
+ *
  * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
  * }
  *
@@ -160,9 +160,9 @@ public final class JsonSchemaHelper {
      * </ul>
      * <p>
      * Example usage:
-     * 
+     *
      * <pre>
-     * 
+     *
      * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
      * }
      *
@@ -257,7 +257,7 @@ public final class JsonSchemaHelper {
      * Example usage:
      *
      * <pre>
-     * 
+     *
      * record ProductReview(String sentiment, int rating, List&lt;String&gt; pros, List&lt;String&gt; cons) {
      * }
      *

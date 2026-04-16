@@ -74,7 +74,7 @@ public class ModerationOptions implements Serializable {
 
         /**
          * Returns the category name.
-         * 
+         *
          * @return The category name.
          */
         public String getName() {
@@ -83,7 +83,7 @@ public class ModerationOptions implements Serializable {
 
         /**
          * Returns whether this category is supported by OpenAI v1 moderation API.
-         * 
+         *
          * @return {@code true} if supported by OpenAI v1 moderation API.
          */
         public boolean isOpenAISupported() {
@@ -143,9 +143,9 @@ public class ModerationOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link ModerationOptions} instances. For example:
-     * 
+     *
      * <pre>
-     * 
+     *
      * ModerationOptions options = ModerationOptions.newBuilder()
      *     .categories(Category.HATE, Category.VIOLENCE)
      *     .threshold(0.8)

@@ -52,17 +52,17 @@ import org.omnifaces.ai.service.XAIService;
  * <h2>Usage</h2>
  * <p>
  * Use {@link AIConfig} to create an {@link AIService} instance of a chosen provider. For example, to use {@link AIProvider#ANTHROPIC}:
- * 
+ *
  * <pre>
- * 
+ *
  * var service = AIConfig.of(AIProvider.ANTHROPIC, "your-anthropic-api-key").createService();
  * </pre>
- * 
+ *
  * For {@link AIProvider#CUSTOM}, you'll need to provide the {@link Class} instance of your custom {@link AIService} implementation instead of the AIProvider
  * enum:
- * 
+ *
  * <pre>
- * 
+ *
  * var service = AIConfig.of(YourCustomAIService.class, "your-api-key").createService();
  * </pre>
  *
@@ -77,7 +77,7 @@ public enum AIProvider {
      * OpenAI: GPT, GPT mini, GPT nano, etc.
      * <p>
      * Defaults currently to model {@code gpt-5.2-2025-12-11} at endpoint {@code https://api.openai.com/v1}.
-     * 
+     *
      * @see OpenAIService
      * @see OpenAITextHandler
      * @see OpenAIImageHandler
@@ -94,7 +94,7 @@ public enum AIProvider {
      * Anthropic: Claude Opus, Claude Sonnet, Claude Haiku, etc.
      * <p>
      * Defaults currently to model {@code claude-sonnet-4-6} at endpoint {@code https://api.anthropic.com/v1}.
-     * 
+     *
      * @see AnthropicAIService
      * @see AnthropicAITextHandler
      * @see DefaultAIImageHandler
@@ -111,7 +111,7 @@ public enum AIProvider {
      * Google AI: Gemini Pro, Gemini Flash, Gemini Flash Lite, etc.
      * <p>
      * Defaults currently to model {@code gemini-3-flash-preview} at endpoint {@code https://generativelanguage.googleapis.com/v1beta}.
-     * 
+     *
      * @see GoogleAIService
      * @see GoogleAITextHandler
      * @see GoogleAIImageHandler
@@ -128,7 +128,7 @@ public enum AIProvider {
      * xAI: Grok Fast Reasoning, Grok Non Reasoning, Grok Code, etc.
      * <p>
      * Defaults currently to model {@code grok-4-1-fast-reasoning} at endpoint {@code https://api.x.ai/v1}.
-     * 
+     *
      * @see XAIService
      * @see OpenAITextHandler
      * @see XAIImageHandler
@@ -145,7 +145,7 @@ public enum AIProvider {
      * Mistral AI: Mistral Large, Mistral Medium, Mistral Small, etc.
      * <p>
      * Defaults currently to model {@code mistral-medium-2508} at endpoint {@code https://api.mistral.ai/v1}.
-     * 
+     *
      * @see MistralAIService
      * @see MistralAITextHandler
      * @see OpenAIImageHandler
@@ -162,7 +162,7 @@ public enum AIProvider {
      * Meta AI: Llama Maverick, Llama Scout, Llama default, etc.
      * <p>
      * Defaults currently to model {@code Llama-4-Scout-17B-16E-Instruct-FP8} at endpoint {@code https://api.llama.com/v1}.
-     * 
+     *
      * @see MetaAIService
      * @see MetaAITextHandler
      * @see OpenAIImageHandler
@@ -179,7 +179,7 @@ public enum AIProvider {
      * Azure OpenAI: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code gpt-5-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
-     * 
+     *
      * @see AzureAIService
      * @see AzureAITextHandler
      * @see OpenAIImageHandler
@@ -196,7 +196,7 @@ public enum AIProvider {
      * OpenRouter: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code deepseek/deepseek-v3.2} at endpoint {@code https://openrouter.ai/api/v1}.
-     * 
+     *
      * @see OpenRouterAIService
      * @see OpenRouterAITextHandler
      * @see OpenAIImageHandler
@@ -213,7 +213,7 @@ public enum AIProvider {
      * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
      * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://router.huggingface.co/v1}.
-     * 
+     *
      * @see HuggingFaceAIService
      * @see OpenAITextHandler
      * @see OpenAIImageHandler
@@ -232,7 +232,7 @@ public enum AIProvider {
      * Defaults currently to model {@code gemma3} at endpoint {@code http://localhost:11434}.
      * <p>
      * To install it:
-     * 
+     *
      * <pre>
      * # Install
      * curl -fsSL https://ollama.com/install.sh | sh
@@ -304,7 +304,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider instance matching the given name, case insensitive, or {@code null} when there is no match.
-     * 
+     *
      * @param name to match an AI provider for.
      * @return The AI provider instance matching the given name, case insensitive, or {@code null} when there is no match.
      */
@@ -314,7 +314,7 @@ public enum AIProvider {
 
     /**
      * Returns the AI provider's name.
-     * 
+     *
      * @return The AI provider's name.
      */
     public String getName() {
@@ -324,7 +324,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's service class. If this returns {@code null}, then the end-user needs to provide a {@link Class} instance of the custom
      * {@link AIService} implementation as {@link AIConfig#provider()}.
-     * 
+     *
      * @return The AI provider's service class.
      */
     public Class<? extends AIService> getServiceClass() {
@@ -333,7 +333,7 @@ public enum AIProvider {
 
     /**
      * Returns whether this AI provider requires an API key.
-     * 
+     *
      * @return Whether this AI provider requires an API key.
      */
     public boolean isApiKeyRequired() {
@@ -343,7 +343,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's default AI model. Can be overridden via {@link AIConfig#withModel(String)} or {@link AIConfig#PROPERTY_MODEL} or
      * {@link AI#model()}.
-     * 
+     *
      * @return the AI provider's default AI model.
      */
     public String getDefaultModel() {
@@ -353,7 +353,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's default API endpoint. Can be overridden via {@link AIConfig#withEndpoint(String)} or {@link AIConfig#PROPERTY_ENDPOINT} or
      * {@link AI#endpoint()}.
-     * 
+     *
      * @return the AI provider's default API endpoint.
      */
     public String getDefaultEndpoint() {
@@ -363,7 +363,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's default AI text handler. Can be overridden via {@link AIConfig#withStrategy(AIStrategy)} or
      * {@link AIStrategy#withTextHandler(Class)} or {@link AI#textHandler()}.
-     * 
+     *
      * @return the AI provider's default AI text handler.
      */
     public Class<? extends AITextHandler> getDefaultTextHandler() {
@@ -373,7 +373,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's default AI image handler. Can be overridden via {@link AIConfig#withStrategy(AIStrategy)} or
      * {@link AIStrategy#withImageHandler(Class)} or {@link AI#imageHandler()}.
-     * 
+     *
      * @return the AI provider's default AI image handler.
      */
     public Class<? extends AIImageHandler> getDefaultImageHandler() {
@@ -383,7 +383,7 @@ public enum AIProvider {
     /**
      * Returns the AI provider's default AI audio handler. Can be overridden via {@link AIConfig#withStrategy(AIStrategy)} or
      * {@link AIStrategy#withAudioHandler(Class)} or {@link AI#audioHandler()}.
-     * 
+     *
      * @return the AI provider's default AI audio handler.
      * @since 1.1
      */

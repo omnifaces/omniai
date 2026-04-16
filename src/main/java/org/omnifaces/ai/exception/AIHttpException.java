@@ -100,7 +100,7 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP request URI.
-     * 
+     *
      * @return The HTTP request URI.
      */
     public URI getUri() {
@@ -109,7 +109,7 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP status code.
-     * 
+     *
      * @return The HTTP status code.
      */
     public int getStatusCode() {
@@ -118,7 +118,7 @@ public class AIHttpException extends AIException {
 
     /**
      * Returns the HTTP response body.
-     * 
+     *
      * @return The HTTP response body.
      */
     public String getResponseBody() {

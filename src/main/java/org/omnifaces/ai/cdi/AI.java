@@ -36,36 +36,36 @@ import org.omnifaces.ai.model.ChatOptions;
  * CDI qualifier annotation for injecting configured {@link AIService} instances.
  * <p>
  * Usage example with built-in provider:
- * 
+ *
  * <pre>
- * 
+ *
  * &#64;Inject
  * &#64;AI(provider = ANTHROPIC, apiKey = "#{config.anthropicApiKey}")
  * private AIService ai;
  * </pre>
  * <p>
  * Usage example with custom service class:
- * 
+ *
  * <pre>
- * 
+ *
  * &#64;Inject
  * &#64;AI(serviceClass = MyCustomAIService.class)
  * private AIService ai;
  * </pre>
- * 
+ *
  * Usage example with custom OpenAI text handler for request tracking:
- * 
+ *
  * <pre>
- * 
+ *
  * public class TrackingTextHandler extends OpenAITextHandler {
- * 
+ *
  *     &#64;Override
  *     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
  *         return Json.createObjectBuilder(super.buildChatPayload(service, input, options, streaming))
  *             .add("safety_identifier", getCurrentUserHash())
  *             .build();
  *     }
- * 
+ *
  * }
  *
  * &#64;Inject

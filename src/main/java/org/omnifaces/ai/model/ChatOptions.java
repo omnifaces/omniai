@@ -99,7 +99,7 @@ public class ChatOptions implements Serializable {
 
         /**
          * Checks if this location represents a global context (i.e., all fields are null).
-         * 
+         *
          * @return {@code true} if this instance is global; {@code false} otherwise.
          */
         public boolean isGlobal() {
@@ -187,7 +187,7 @@ public class ChatOptions implements Serializable {
 
     /**
      * Custom serialization to handle non-serializable {@link JsonObject}.
-     * 
+     *
      * @param output The object output stream.
      * @throws IOException If an I/O error occurs.
      */
@@ -198,7 +198,7 @@ public class ChatOptions implements Serializable {
 
     /**
      * Custom deserialization to restore {@link JsonObject} from its string representation.
-     * 
+     *
      * @param input The object input stream.
      * @throws IOException If an I/O error occurs.
      * @throws ClassNotFoundException If the class of a serialized object cannot be found.
@@ -234,7 +234,7 @@ public class ChatOptions implements Serializable {
      * parseable JSON in a specific format.
      * <p>
      * The schema should follow the JSON Schema specification. For example:
-     * 
+     *
      * <pre>
      * {
      *   "type": "object",
@@ -300,7 +300,7 @@ public class ChatOptions implements Serializable {
      * <p>
      * This is the recommended way to obtain a dedicated, mutable instance from one of the shared constants ({@link #DEFAULT}, {@link #CREATIVE},
      * {@link #DETERMINISTIC}) when you want to track token usage:
-     * 
+     *
      * <pre>
      * ChatOptions options = ChatOptions.DEFAULT.copy();
      * service.chat("Hello", options);
@@ -546,9 +546,9 @@ public class ChatOptions implements Serializable {
 
     /**
      * Creates a new builder for constructing {@link ChatOptions} instances. For example:
-     * 
+     *
      * <pre>
-     * 
+     *
      * ChatOptions options = ChatOptions.newBuilder()
      *     .systemPrompt("You are a helpful software architect.")
      *     .jsonSchema(myJsonSchema)
@@ -606,7 +606,7 @@ public class ChatOptions implements Serializable {
          * parseable JSON in a specific format.
          * <p>
          * The schema should follow the JSON Schema specification. For example:
-         * 
+         *
          * <pre>
          * {
          *   "type": "object",
@@ -784,9 +784,9 @@ public class ChatOptions implements Serializable {
          * Memory is implicitly enabled with {@value ChatOptions#DEFAULT_MAX_HISTORY} if not already set via {@link #withMemory()} or {@link #withMemory(int)}.
          * <p>
          * Usage example:
-         * 
+         *
          * <pre>
-         * 
+         *
          * // Save history from a previous session
          * List&lt;Message&gt; saved = options.getHistory();
          *

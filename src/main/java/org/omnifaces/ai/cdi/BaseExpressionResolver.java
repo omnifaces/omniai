@@ -30,7 +30,7 @@ abstract class BaseExpressionResolver {
 
     /**
      * Returns {@code true} if the given string looks like an expression, i.e. it contains <code>${</code> or <code>#{</code>.
-     * 
+     *
      * @param value The string to check.
      * @return {@code true} if the given string looks like an expression.
      */
@@ -40,7 +40,7 @@ abstract class BaseExpressionResolver {
 
     /**
      * Returns {@code true} if the given string looks like a MicroProfile Config expression, i.e. it contains <code>${config:</code>.
-     * 
+     *
      * @param value The string to check.
      * @return {@code true} if the given string looks like an expression.
      */

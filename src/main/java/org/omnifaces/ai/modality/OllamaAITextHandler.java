@@ -58,7 +58,7 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add system prompt to the messages array as a {@code system} role message.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param options The chat options.
@@ -75,7 +75,7 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add conversation history messages to the messages array.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -92,7 +92,7 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add user content (images and text message) to the messages array.
-     * 
+     *
      * @param service The visiting AI service.
      * @param messages The messages array builder.
      * @param input The chat input.
@@ -118,7 +118,7 @@ public class OllamaAITextHandler extends DefaultAITextHandler {
 
     /**
      * Add generation config (temperature, maxTokens, topP, structured output) to the payload.
-     * 
+     *
      * @param service The visiting AI service.
      * @param payload The payload builder.
      * @param options The chat options.

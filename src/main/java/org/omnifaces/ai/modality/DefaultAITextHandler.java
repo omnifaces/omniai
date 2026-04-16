@@ -238,7 +238,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the error message in the JSON response parsed by {@link #parseChatResponse(JsonObject)} or
      * {@link #parseFileResponse(JsonObject)}. May be empty. The first path that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation returns {@link DefaultAITextHandler#DEFAULT_ERROR_MESSAGE_PATHS}.
      * @return all possible paths to the error message in the JSON response.
      */
@@ -249,7 +249,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the message content in the JSON response parsed by {@link #parseChatResponse(JsonObject)}. May not be empty. The first path
      * that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the message content in the JSON response.
      */
@@ -260,7 +260,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May not be empty. The first path
      * that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the input token count in the JSON response.
      * @since 1.3
@@ -272,7 +272,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the output token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May not be empty. The first path
      * that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation throws UnsupportedOperationException.
      * @return all possible paths to the output token count in the JSON response.
      * @since 1.3
@@ -284,7 +284,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the reasoning token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May be empty. The first path
      * that matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation returns an empty list.
      * @return all possible paths to the reasoning token count in the JSON response.
      * @since 1.3
@@ -296,7 +296,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns all possible paths to the file ID in the JSON response parsed by {@link #parseFileResponse(JsonObject)}. May not be empty. The first path that
      * matches a value in the JSON response will be used; remaining paths are ignored.
-     * 
+     *
      * @implNote The default implementation returns {@code id}.
      * @return all possible paths to the message content in the JSON response.
      */
@@ -308,7 +308,7 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Appends extra prompt to existing system prompt, if any.
-     * 
+     *
      * @param options The chat options whose system prompt to append to.
      * @param extraPrompt The extra prompt text to append.
      * @return A new {@link ChatOptions} instance with the appended system prompt.
@@ -323,7 +323,7 @@ public class DefaultAITextHandler implements AITextHandler {
     /**
      * Returns options with a "Search within {location}" hint appended to the system prompt, but only if web search is enabled with a non-global location.
      * Returns the original options unchanged otherwise.
-     * 
+     *
      * @param options The chat options to inspect and potentially modify.
      * @return Updated options, or the original options if no injection is needed.
      * @since 1.3
@@ -337,7 +337,7 @@ public class DefaultAITextHandler implements AITextHandler {
 
     /**
      * Try to parse the given SSE event data as JSON and feed it to the given JSON processor. Any failure to parse will log a WARNING and continue.
-     * 
+     *
      * @param eventData SSE event data line.
      * @param processor The JSON processor.
      * @return {@code true} to continue stream in case of exception, else the result of the given JSON processor.
