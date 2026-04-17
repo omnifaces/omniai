@@ -55,6 +55,7 @@ public class GoogleAIService extends BaseAIService {
     private static final AIModelVersion GEMINI_1_5 = AIModelVersion.of("gemini", 1, 5);
     private static final AIModelVersion GEMINI_2 = AIModelVersion.of("gemini", 2);
     private static final AIModelVersion GEMINI_2_5 = AIModelVersion.of("gemini", 2, 5);
+    private static final AIModelVersion GEMINI_3 = AIModelVersion.of("gemini", 3);
 
     /**
      * Constructs a Google AI service with the specified configuration.
@@ -102,6 +103,11 @@ public class GoogleAIService extends BaseAIService {
     @Override
     public boolean supportsWebSearch() {
         return true; // Not version-bound, support is API-bound.
+    }
+
+    @Override
+    public boolean supportsReasoningEffort() {
+        return getModelVersion().gte(GEMINI_3);
     }
 
     @Override

@@ -25,8 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.omnifaces.ai.exception.AIException;
 import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.model.ChatInput;
@@ -39,6 +37,8 @@ import org.omnifaces.ai.model.ModerationOptions;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.omnifaces.ai.model.ModerationResult;
 import org.omnifaces.ai.service.AIServiceWrapper;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Generic interface for AI service providers.
@@ -1558,6 +1558,22 @@ public interface AIService extends Serializable {
      * @since 1.3
      */
     default boolean supportsWebSearch() {
+        return false;
+    }
+
+    /**
+     * Returns whether this AI service implementation honors the {@link org.omnifaces.ai.model.ChatOptions#getReasoningEffort() reasoning effort} configured on
+     * {@link org.omnifaces.ai.model.ChatOptions}. When {@code true}, the provider-specific handler translates the requested
+     * {@link org.omnifaces.ai.model.ChatOptions.ReasoningEffort} to the provider's native reasoning/thinking payload (e.g. OpenAI
+     * {@code reasoning_effort}/{@code reasoning.effort}, Anthropic {@code thinking.budget_tokens}, Google {@code thinkingConfig.thinkingLevel}). When
+     * {@code false}, the configured reasoning effort is silently ignored and the provider's own default reasoning behavior applies.
+     *
+     * @implNote The default implementation returns false.
+     * @return Whether this AI service implementation honors the configured reasoning effort.
+     * @since 1.4
+     * @see org.omnifaces.ai.model.ChatOptions.ReasoningEffort
+     */
+    default boolean supportsReasoningEffort() {
         return false;
     }
 

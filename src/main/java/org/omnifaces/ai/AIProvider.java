@@ -76,7 +76,7 @@ public enum AIProvider {
     /**
      * OpenAI: GPT, GPT mini, GPT nano, etc.
      * <p>
-     * Defaults currently to model {@code gpt-5.2-2025-12-11} at endpoint {@code https://api.openai.com/v1}.
+     * Defaults currently to model {@code gpt-5.4} at endpoint {@code https://api.openai.com/v1}.
      *
      * @see OpenAIService
      * @see OpenAITextHandler
@@ -86,7 +86,7 @@ public enum AIProvider {
      * @see <a href="https://platform.openai.com/docs/models">Available OpenAI Models</a>
      */
     OPENAI(
-        "OpenAI", OpenAIService.class, true, "gpt-5.2-2025-12-11", "https://api.openai.com/v1", OpenAITextHandler.class, OpenAIImageHandler.class,
+        "OpenAI", OpenAIService.class, true, "gpt-5.4", "https://api.openai.com/v1", OpenAITextHandler.class, OpenAIImageHandler.class,
         OpenAIAudioHandler.class
     ),
 
@@ -212,7 +212,7 @@ public enum AIProvider {
     /**
      * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
-     * Defaults currently to model {@code google/gemma-3-27b-it} at endpoint {@code https://router.huggingface.co/v1}.
+     * Defaults currently to model {@code google/gemma-4-31B-it} at endpoint {@code https://router.huggingface.co/v1}.
      *
      * @see HuggingFaceAIService
      * @see OpenAITextHandler
@@ -222,7 +222,7 @@ public enum AIProvider {
      * @see <a href="https://huggingface.co/models">Available Hugging Face Models</a>
      */
     HUGGINGFACE(
-        "Hugging Face", HuggingFaceAIService.class, true, "google/gemma-3-27b-it", "https://router.huggingface.co/v1", OpenAITextHandler.class,
+        "Hugging Face", HuggingFaceAIService.class, true, "google/gemma-4-31B-it", "https://router.huggingface.co/v1", OpenAITextHandler.class,
         OpenAIImageHandler.class, DefaultAIAudioHandler.class
     ),
 

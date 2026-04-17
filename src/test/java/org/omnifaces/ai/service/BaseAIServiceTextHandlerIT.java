@@ -35,6 +35,7 @@ import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ChatOptions.Location;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.opentest4j.TestAbortedException;
@@ -268,6 +269,38 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
             () -> assertTrue(response.price().compareTo(BigDecimal.ZERO) >= 0, "price is not negative"),
             () -> assertNotNull(response.currencyCode(), "currency code is set"),
             () -> assertEquals("USD", response.currencyCode())
+        );
+    }
+
+    @Test
+    void chatWithReasoningEffort() {
+        if (!service.supportsReasoningEffort()) {
+            throw new TestAbortedException("Not supported by " + getProvider());
+        }
+
+        var low = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.LOW).build();
+        var high = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.HIGH).build();
+        var prompt = "Think carefully step by step, then answer: what is the 10th Fibonacci number? Do not output anything other than the final number.";
+
+        service.chat(prompt, low);
+        service.chat(prompt, high);
+
+        var lowUsage = low.getLastUsage();
+        var highUsage = high.getLastUsage();
+        log("low usage: " + lowUsage);
+        log("high usage: " + highUsage);
+
+        // outputTokens is the portable signal. OpenAI rolls reasoning tokens into output_tokens; Anthropic rolls thinking tokens into output_tokens; Google's
+        // parseChatUsage adjusts candidatesTokenCount to include thoughtsTokenCount. So outputTokens reliably grows with effort across all three providers.
+        assertAll(
+            () -> assertNotNull(lowUsage),
+            () -> assertNotNull(highUsage),
+            () -> assertTrue(lowUsage.outputTokens() > 0, "LOW outputTokens must be > 0: " + lowUsage.outputTokens()),
+            () -> assertTrue(highUsage.outputTokens() > 0, "HIGH outputTokens must be > 0: " + highUsage.outputTokens()),
+            () -> assertTrue(
+                highUsage.outputTokens() > lowUsage.outputTokens(),
+                "HIGH outputTokens (" + highUsage.outputTokens() + ") must exceed LOW (" + lowUsage.outputTokens() + ")"
+            )
         );
     }
 

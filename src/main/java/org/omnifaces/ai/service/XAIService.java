@@ -52,6 +52,7 @@ public class XAIService extends OpenAIService {
     private static final long serialVersionUID = 1L;
 
     private static final AIModelVersion GROK_4 = AIModelVersion.of("grok", 4);
+    private static final AIModelVersion GROK_4_20 = AIModelVersion.of("grok", 4, 20);
 
     /**
      * Constructs an xAI service with the specified configuration.
@@ -83,6 +84,11 @@ public class XAIService extends OpenAIService {
     @Override
     public boolean supportsStructuredOutput() {
         return true; // Not version-bound, support is API-bound.
+    }
+
+    @Override
+    public boolean supportsReasoningEffort() {
+        return getModelVersion().gte(GROK_4_20) && getModelName().toLowerCase().contains("multi-agent");
     }
 
     @Override

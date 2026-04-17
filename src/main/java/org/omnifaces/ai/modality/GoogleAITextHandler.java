@@ -29,6 +29,7 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.GoogleAIService;
@@ -221,7 +222,35 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
                 .add("responseSchema", options.getJsonSchema());
         }
 
+        var effort = getEffectiveReasoningEffort(service, options);
+
+        if (effort != ReasoningEffort.AUTO) {
+            generationConfig.add("thinkingConfig", Json.createObjectBuilder().add("thinkingLevel", effort.name().toLowerCase()));
+        }
+
         payload.add("generationConfig", generationConfig);
+    }
+
+    /**
+     * Returns the reasoning effort the server will actually apply, after accounting for model capability and implicit defaults. As of now, Gemini 3+ only
+     * supports AUTO, LOW, MEDIUM, HIGH.
+     *
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @return The reasoning effort the server will effectively apply; never {@code null}.
+     * @since 1.4
+     * @see <a href="https://ai.google.dev/gemini-api/docs/thinking">Gemini Thinking API Reference</a>
+     */
+    protected ReasoningEffort getEffectiveReasoningEffort(AIService service, ChatOptions options) {
+        if (!service.supportsReasoningEffort()) {
+            return ReasoningEffort.AUTO;
+        }
+
+        return switch (options.getReasoningEffort()) {
+            case NONE -> ReasoningEffort.AUTO;
+            case XHIGH -> ReasoningEffort.HIGH;
+            default -> options.getReasoningEffort();
+        };
     }
 
     @Override
@@ -248,13 +277,14 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     public ChatUsage parseChatUsage(JsonObject responseJson) {
         var usage = super.parseChatUsage(responseJson);
 
-        if (usage == null || usage.reasoningTokens() == -1) {
-            return usage;
+        if (usage == null) {
+            return null;
         }
 
         // In contrary to e.g. OpenAI, Google AI doesn't include reasoning tokens in output (candidates) tokens, so we need to recalculate.
-        var adjustedOutput = usage.outputTokens() == -1 ? usage.reasoningTokens() : usage.outputTokens() + usage.reasoningTokens();
-        return new ChatUsage(usage.inputTokens(), adjustedOutput, usage.reasoningTokens());
+        var reasoningTokens = usage.reasoningTokens() == -1 ? 0 : usage.reasoningTokens();
+        var adjustedOutput = usage.outputTokens() == -1 ? reasoningTokens : usage.outputTokens() + reasoningTokens;
+        return new ChatUsage(usage.inputTokens(), adjustedOutput, reasoningTokens);
     }
 
     @Override

@@ -52,6 +52,7 @@ public class MistralAIService extends OpenAIService {
     private static final long serialVersionUID = 1L;
 
     private static final AIModelVersion MISTRAL_2402 = AIModelVersion.of("mistral", 2402);
+    private static final AIModelVersion MISTRAL_2603 = AIModelVersion.of("mistral", 2603);
     private static final AIModelVersion VOXTRAL = AIModelVersion.of("voxtral");
     private static final AIModelVersion VOXTRAL_MINI = AIModelVersion.of("voxtral-mini");
 
@@ -78,7 +79,7 @@ public class MistralAIService extends OpenAIService {
 
     @Override
     public boolean supportsStreaming() {
-        return getModelVersion().gte(MISTRAL_2402);
+        return getModelVersion().gte(MISTRAL_2402) || getModelName().toLowerCase().endsWith("latest");
     }
 
     @Override
@@ -89,6 +90,11 @@ public class MistralAIService extends OpenAIService {
     @Override
     public boolean supportsStructuredOutput() {
         return true; // Not version-bound, support is API-bound since January 2025.
+    }
+
+    @Override
+    public boolean supportsReasoningEffort() {
+        return getModelVersion().gte(MISTRAL_2603) || getModelName().toLowerCase().endsWith("latest");
     }
 
     @Override

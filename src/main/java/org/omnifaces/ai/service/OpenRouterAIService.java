@@ -93,6 +93,11 @@ public class OpenRouterAIService extends OpenAIService {
     }
 
     @Override
+    public boolean supportsReasoningEffort() {
+        return true;
+    }
+
+    @Override
     public boolean supportsOpenAIResponsesApi() {
         return false;
     }

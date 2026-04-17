@@ -12,11 +12,14 @@
  */
 package org.omnifaces.ai.modality;
 
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.service.AIServiceWrapper;
 import org.omnifaces.ai.service.OpenRouterAIService;
 
@@ -51,6 +54,32 @@ public class OpenRouterAITextHandler extends OpenAITextHandler {
         else {
             return super.buildChatPayload(service, input, options, streaming);
         }
+    }
+
+    /**
+     * OpenRouter accepts {@code "none"} as a valid effort value regardless of the routed model, and transparently translates the effort string to whatever
+     * shape the underlying model needs (percentages of {@code max_tokens} for budget-based providers like Anthropic / Gemini / Qwen). So we do not need the
+     * GPT-5-specific {@code AUTO}/{@code NONE} to {@code MEDIUM} fold that the OpenAI base applies.
+     *
+     * @see <a href="https://openrouter.ai/docs/guides/best-practices/reasoning-tokens">Reasoning Tokens API Reference</a>
+     */
+    @Override
+    protected ReasoningEffort getEffectiveReasoningEffort(AIService service, ChatOptions options) {
+        if (!service.supportsReasoningEffort()) {
+            return ReasoningEffort.NONE;
+        }
+
+        var effort = options.getReasoningEffort();
+        return effort == ReasoningEffort.AUTO ? ReasoningEffort.NONE : effort;
+    }
+
+    /**
+     * OpenRouter always expects the effort under a nested {@code reasoning.effort} object on the Chat Completions endpoint (not the flat
+     * {@code reasoning_effort} field that pure OpenAI Chat Completions uses).
+     */
+    @Override
+    protected void addReasoningEffort(AIService service, JsonObjectBuilder payload, ReasoningEffort effort, boolean supportsResponsesApi) {
+        payload.add("reasoning", Json.createObjectBuilder().add("effort", effort.name().toLowerCase()));
     }
 
 }

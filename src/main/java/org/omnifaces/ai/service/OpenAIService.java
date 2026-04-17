@@ -163,6 +163,11 @@ public class OpenAIService extends BaseAIService {
         return supportsOpenAIResponsesApi();
     }
 
+    @Override
+    public boolean supportsReasoningEffort() {
+        return getModelVersion().gte(GPT_5);
+    }
+
     /**
      * Returns only authorization bearer header with API key as value.
      */

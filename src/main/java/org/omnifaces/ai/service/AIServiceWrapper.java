@@ -431,6 +431,11 @@ public abstract class AIServiceWrapper implements AIService {
     }
 
     @Override
+    public boolean supportsReasoningEffort() {
+        return getWrapped().supportsReasoningEffort();
+    }
+
+    @Override
     public boolean supportsModality(AIModality modality) {
         return getWrapped().supportsModality(modality);
     }

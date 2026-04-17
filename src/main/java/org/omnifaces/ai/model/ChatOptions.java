@@ -66,6 +66,9 @@ public class ChatOptions implements Serializable {
     /** Default maximum number of messages (both sent and received) retained in conversation history: {@value}. */
     public static final int DEFAULT_MAX_HISTORY = 20;
 
+    /** Default reasoning effort: {@link ReasoningEffort#AUTO}. */
+    public static final ReasoningEffort DEFAULT_REASONING_EFFORT = ReasoningEffort.AUTO;
+
     /** Default chat options with temperature of {@value #DEFAULT_TEMPERATURE}. */
     public static final ChatOptions DEFAULT = ChatOptions.newBuilder().build();
 
@@ -79,6 +82,42 @@ public class ChatOptions implements Serializable {
         DEFAULT.immutable = true;
         CREATIVE.immutable = true;
         DETERMINISTIC.immutable = true;
+    }
+
+    /**
+     * Controls how much internal reasoning (a.k.a. "thinking" or "extended thought") the AI model performs before producing its visible answer, on providers
+     * and models that expose this knob.
+     * <p>
+     * Higher levels typically improve answer quality on hard problems (math, multi-step planning, code) at the cost of more tokens and latency. Lower levels
+     * are cheaper and faster but may skip steps on harder problems.
+     *
+     * @since 1.4
+     * @see Builder#reasoningEffort(ReasoningEffort)
+     * @see ChatOptions#getReasoningEffort()
+     */
+    public enum ReasoningEffort {
+
+        /**
+         * Do not send any reasoning effort setting; each provider applies its own built-in default. This is the default value for
+         * {@link ChatOptions#getReasoningEffort()}.
+         */
+        AUTO,
+
+        /** Actively disable reasoning where the provider supports it, for minimum cost and latency. */
+        NONE,
+
+        /** Allocates a small portion of tokens. */
+        LOW,
+
+        /** Allocates a moderate portion of tokens. */
+        MEDIUM,
+
+        /** Allocates a large portion of tokens for reasoning. */
+        HIGH,
+
+        /** Allocates the largest portion of tokens for reasoning. */
+        XHIGH;
+
     }
 
     /**
@@ -125,6 +164,8 @@ public class ChatOptions implements Serializable {
     private final double temperature;
     /** The maximum number of tokens. */
     private final Integer maxTokens;
+    /** The reasoning effort. */
+    private final ReasoningEffort reasoningEffort;
     /** The Top-P value. */
     private final double topP;
     /** The web search location. */
@@ -143,6 +184,7 @@ public class ChatOptions implements Serializable {
         this.jsonSchema = builder.jsonSchema;
         this.temperature = builder.temperature;
         this.maxTokens = builder.maxTokens;
+        this.reasoningEffort = builder.reasoningEffort;
         this.topP = builder.topP;
         this.webSearchLocation = builder.webSearchLocation;
 
@@ -160,14 +202,15 @@ public class ChatOptions implements Serializable {
     }
 
     private ChatOptions(
-        String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, double topP, Location webSearchLocation, List<Message> history,
-        int maxHistory
+        String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, ReasoningEffort reasoningEffort, double topP,
+        Location webSearchLocation, List<Message> history, int maxHistory
     )
     {
         this.systemPrompt = systemPrompt;
         this.jsonSchema = jsonSchema;
         this.temperature = temperature;
         this.maxTokens = maxTokens;
+        this.reasoningEffort = reasoningEffort;
         this.topP = topP;
         this.webSearchLocation = webSearchLocation;
         this.history = history;
@@ -179,6 +222,7 @@ public class ChatOptions implements Serializable {
         this.jsonSchema = source.jsonSchema;
         this.temperature = source.temperature;
         this.maxTokens = source.maxTokens;
+        this.reasoningEffort = source.reasoningEffort;
         this.topP = source.topP;
         this.webSearchLocation = source.webSearchLocation;
         this.history = source.history;
@@ -264,7 +308,7 @@ public class ChatOptions implements Serializable {
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearchLocation, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, history, maxHistory);
     }
 
     /**
@@ -275,7 +319,7 @@ public class ChatOptions implements Serializable {
      * @since 1.1
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, webSearchLocation, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, history, maxHistory);
     }
 
     /**
@@ -291,7 +335,22 @@ public class ChatOptions implements Serializable {
      * @see #getWebSearchLocation()
      */
     public ChatOptions withWebSearch(Location location) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, topP, location, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, location, history, maxHistory);
+    }
+
+    /**
+     * Returns a copy of this instance with the given reasoning effort set, preserving all other options including any shared {@link #hasMemory() memory} state.
+     *
+     * @param reasoningEffort The reasoning effort to use. Must not be {@code null}; use {@link ReasoningEffort#AUTO} to defer to the provider default.
+     * @return A new {@code ChatOptions} instance with the specified reasoning effort.
+     * @throws NullPointerException if {@code reasoningEffort} is {@code null}.
+     * @since 1.4
+     * @see ReasoningEffort
+     */
+    public ChatOptions withReasoningEffort(ReasoningEffort reasoningEffort) {
+        return new ChatOptions(
+            systemPrompt, jsonSchema, temperature, maxTokens, requireNonNull(reasoningEffort, "reasoningEffort"), topP, webSearchLocation, history, maxHistory
+        );
     }
 
     /**
@@ -340,6 +399,20 @@ public class ChatOptions implements Serializable {
      */
     public Integer getMaxTokens() {
         return maxTokens;
+    }
+
+    /**
+     * Gets the reasoning effort for models that support extended thinking. Defaults to {@link ReasoningEffort#AUTO}.
+     * <p>
+     * Since {@code maxTokens} on reasoning-capable models includes the model's thinking tokens in addition to the visible response, picking a higher reasoning
+     * effort may require a correspondingly higher {@code maxTokens} to avoid truncated responses. See {@link ReasoningEffort} for per-provider details.
+     *
+     * @return The configured reasoning effort; never {@code null}.
+     * @since 1.4
+     * @see ReasoningEffort
+     */
+    public ReasoningEffort getReasoningEffort() {
+        return reasoningEffort;
     }
 
     /**
@@ -573,6 +646,7 @@ public class ChatOptions implements Serializable {
         private JsonObject jsonSchema;
         private double temperature = ChatOptions.DEFAULT_TEMPERATURE;
         private Integer maxTokens;
+        private ReasoningEffort reasoningEffort = ChatOptions.DEFAULT_REASONING_EFFORT;
         private double topP = ChatOptions.DEFAULT_TOP_P;
         private Location webSearchLocation;
         private int maxHistory;
@@ -670,6 +744,24 @@ public class ChatOptions implements Serializable {
             }
 
             this.maxTokens = maxTokens;
+            return this;
+        }
+
+        /**
+         * Sets the reasoning effort for models that support extended thinking. Defaults to {@link ReasoningEffort#AUTO}.
+         * <p>
+         * Since {@link #maxTokens(Integer) maxTokens} on reasoning-capable models includes the model's thinking tokens in addition to the visible response,
+         * picking a higher reasoning effort may require a correspondingly higher {@code maxTokens} to avoid truncated responses. See {@link ReasoningEffort}
+         * for per-provider details.
+         *
+         * @param reasoningEffort The reasoning effort to apply. Must not be {@code null}; use {@link ReasoningEffort#AUTO} to defer to the provider default.
+         * @return This builder instance for chaining.
+         * @throws NullPointerException if {@code reasoningEffort} is {@code null}.
+         * @since 1.4
+         * @see ReasoningEffort
+         */
+        public Builder reasoningEffort(ReasoningEffort reasoningEffort) {
+            this.reasoningEffort = requireNonNull(reasoningEffort, "reasoningEffort");
             return this;
         }
 

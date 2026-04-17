@@ -38,6 +38,7 @@ import org.omnifaces.ai.model.ChatInput.Attachment;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
 import org.omnifaces.ai.model.ChatOptions.Location;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.OpenAIService;
 
@@ -53,6 +54,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     private static final long serialVersionUID = 1L;
 
     private static final AIModelVersion GPT_5 = AIModelVersion.of("gpt", 5);
+    private static final AIModelVersion GPT_5_1 = AIModelVersion.of("gpt", 5, 1);
 
     /**
      * @see <a href="https://developers.openai.com/api/reference/chat-completions/overview">Chat Completions API Reference</a>
@@ -336,7 +338,7 @@ public class OpenAITextHandler extends DefaultAITextHandler {
         addGenerationConfig(service, payload, options, streaming, false);
     }
 
-    private static void addGenerationConfig(
+    private void addGenerationConfig(
         AIService service, JsonObjectBuilder payload, ChatOptions options, boolean streaming, boolean supportsResponsesApi
     )
     {
@@ -359,7 +361,13 @@ public class OpenAITextHandler extends DefaultAITextHandler {
             }
         }
 
-        if (service.getModelVersion().ne(GPT_5)) { // Bug in GPT 5.0; should have been allowed when reasoning_effort=none
+        var effectiveReasoningEffort = getEffectiveReasoningEffort(service, options);
+
+        if (service.supportsReasoningEffort() && effectiveReasoningEffort != ReasoningEffort.AUTO) {
+            addReasoningEffort(service, payload, effectiveReasoningEffort, supportsResponsesApi);
+        }
+
+        if (effectiveReasoningEffort == ReasoningEffort.NONE) {
             payload.add("temperature", options.getTemperature());
         }
 
@@ -392,6 +400,53 @@ public class OpenAITextHandler extends DefaultAITextHandler {
                         )
                 );
             }
+        }
+    }
+
+    /**
+     * Returns the reasoning effort the server will actually apply, after accounting for model capability and implicit defaults.
+     *
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @return The reasoning effort the server will effectively apply; never {@code null}.
+     * @since 1.4
+     */
+    protected ReasoningEffort getEffectiveReasoningEffort(AIService service, ChatOptions options) {
+        if (!service.supportsReasoningEffort()) {
+            return ReasoningEffort.NONE;
+        }
+
+        var effort = options.getReasoningEffort();
+
+        if (service.getModelVersion().lt(GPT_5_1) && (effort == ReasoningEffort.AUTO || effort == ReasoningEffort.NONE)) {
+            return ReasoningEffort.MEDIUM;
+        }
+
+        if (effort == ReasoningEffort.XHIGH && !(service.getModelVersion().gte(GPT_5_1) && service.getModelName().toLowerCase().contains("codex-max"))) {
+            return ReasoningEffort.HIGH;
+        }
+
+        return effort == ReasoningEffort.AUTO ? ReasoningEffort.NONE : effort;
+    }
+
+    /**
+     * Emits the reasoning effort on the payload in the correct shape for the active API variant: {@code reasoning.effort} for the Responses API, or
+     * {@code reasoning_effort} top-level for the Chat Completions API.
+     *
+     * @param service The visiting AI service.
+     * @param payload The payload builder.
+     * @param effort The reasoning effort to emit (already known to be non-{@link ReasoningEffort#AUTO}).
+     * @param supportsResponsesApi Whether the Responses API is active.
+     * @since 1.4
+     */
+    protected void addReasoningEffort(AIService service, JsonObjectBuilder payload, ReasoningEffort effort, boolean supportsResponsesApi) {
+        var value = effort.name().toLowerCase();
+
+        if (supportsResponsesApi) {
+            payload.add("reasoning", Json.createObjectBuilder().add("effort", value));
+        }
+        else {
+            payload.add("reasoning_effort", value);
         }
     }
 

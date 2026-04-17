@@ -17,6 +17,8 @@ import java.util.Map;
 
 import org.omnifaces.ai.AIService;
 import org.omnifaces.ai.model.ChatInput.Attachment;
+import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.service.MistralAIService;
 
 /**
@@ -35,6 +37,21 @@ public class MistralAITextHandler extends OpenAITextHandler {
         var metadata = new HashMap<>(super.getFileUploadMetadata(service, file));
         metadata.put("purpose", "ocr");
         return metadata;
+    }
+
+    /**
+     * Mistral (2603) only supports NONE or HIGH.
+     */
+    @Override
+    protected ReasoningEffort getEffectiveReasoningEffort(AIService service, ChatOptions options) {
+        if (!service.supportsReasoningEffort()) {
+            return ReasoningEffort.NONE;
+        }
+
+        return switch (options.getReasoningEffort()) {
+            case AUTO, NONE, LOW -> ReasoningEffort.NONE;
+            default -> ReasoningEffort.HIGH;
+        };
     }
 
 }

@@ -35,6 +35,7 @@ import org.omnifaces.ai.mime.MimeType;
 import org.omnifaces.ai.model.ChatInput.Message;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatInput.UploadedFile;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 
 class ChatOptionsTest {
 
@@ -51,6 +52,7 @@ class ChatOptionsTest {
         assertNull(options.getJsonSchema());
         assertEquals(ChatOptions.DEFAULT_TEMPERATURE, options.getTemperature());
         assertNull(options.getMaxTokens());
+        assertEquals(ReasoningEffort.AUTO, options.getReasoningEffort());
         assertEquals(ChatOptions.DEFAULT_TOP_P, options.getTopP());
     }
 
@@ -941,6 +943,97 @@ class ChatOptionsTest {
         assertEquals("test", withSearch.getSystemPrompt());
         assertEquals(0.7, withSearch.getTemperature());
     }
+
+    // =================================================================================================================
+    // Reasoning effort
+    // =================================================================================================================
+
+    @Test
+    void reasoningEffort_default_isAuto() {
+        assertEquals(ReasoningEffort.AUTO, ChatOptions.newBuilder().build().getReasoningEffort());
+    }
+
+    @Test
+    void reasoningEffort_builder_roundTripsAllValues() {
+        for (var effort : ReasoningEffort.values()) {
+            assertEquals(effort, ChatOptions.newBuilder().reasoningEffort(effort).build().getReasoningEffort());
+        }
+    }
+
+    @Test
+    void reasoningEffort_builder_null_throwsNPE() {
+        var builder = ChatOptions.newBuilder();
+        assertThrows(NullPointerException.class, () -> builder.reasoningEffort(null));
+    }
+
+    @Test
+    void withReasoningEffort_preservesOtherSettings() {
+        var options = ChatOptions.newBuilder()
+            .systemPrompt("test")
+            .temperature(0.3)
+            .maxTokens(500)
+            .topP(0.8)
+            .build();
+
+        var withEffort = options.withReasoningEffort(ReasoningEffort.HIGH);
+
+        assertEquals(ReasoningEffort.HIGH, withEffort.getReasoningEffort());
+        assertEquals("test", withEffort.getSystemPrompt());
+        assertEquals(0.3, withEffort.getTemperature());
+        assertEquals(500, withEffort.getMaxTokens());
+        assertEquals(0.8, withEffort.getTopP());
+        assertEquals(ReasoningEffort.AUTO, options.getReasoningEffort()); // original unchanged
+    }
+
+    @Test
+    void withReasoningEffort_null_throwsNPE() {
+        var options = ChatOptions.newBuilder().build();
+        assertThrows(NullPointerException.class, () -> options.withReasoningEffort(null));
+    }
+
+    @Test
+    void copy_preservesReasoningEffort() {
+        var original = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.HIGH).build();
+        assertEquals(ReasoningEffort.HIGH, original.copy().getReasoningEffort());
+    }
+
+    @Test
+    void withJsonSchema_preservesReasoningEffort() {
+        var original = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.MEDIUM).build();
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+        assertEquals(ReasoningEffort.MEDIUM, original.withJsonSchema(schema).getReasoningEffort());
+    }
+
+    @Test
+    void withSystemPrompt_preservesReasoningEffort() {
+        var original = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.LOW).build();
+        assertEquals(ReasoningEffort.LOW, original.withSystemPrompt("hello").getReasoningEffort());
+    }
+
+    @Test
+    void withWebSearch_preservesReasoningEffort() {
+        var original = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.NONE).build();
+        assertEquals(ReasoningEffort.NONE, original.withWebSearch(ChatOptions.Location.GLOBAL).getReasoningEffort());
+    }
+
+    @Test
+    void reasoningEffort_serialization_roundTrips() throws Exception {
+        var original = ChatOptions.newBuilder().reasoningEffort(ReasoningEffort.HIGH).build();
+
+        var baos = new ByteArrayOutputStream();
+        try (var oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(original);
+        }
+
+        try (var ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+            var deserialized = (ChatOptions) ois.readObject();
+            assertEquals(ReasoningEffort.HIGH, deserialized.getReasoningEffort());
+        }
+    }
+
+    // =================================================================================================================
+    // copy_preservesWebSearchLocation
+    // =================================================================================================================
 
     @Test
     void copy_preservesWebSearchLocation() {

@@ -38,6 +38,7 @@ import org.omnifaces.ai.exception.AITokenLimitExceededException;
 import org.omnifaces.ai.model.ChatInput;
 import org.omnifaces.ai.model.ChatInput.Message.Role;
 import org.omnifaces.ai.model.ChatOptions;
+import org.omnifaces.ai.model.ChatOptions.ReasoningEffort;
 import org.omnifaces.ai.model.ChatUsage;
 import org.omnifaces.ai.model.Sse.Event;
 import org.omnifaces.ai.service.AnthropicAIService;
@@ -66,11 +67,7 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
     public JsonObject buildChatPayload(AIService service, ChatInput input, ChatOptions options, boolean streaming) {
         var payload = Json.createObjectBuilder()
             .add("model", service.getModelName())
-            .add(
-                "max_tokens",
-                ofNullable(options.getMaxTokens())
-                    .orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X)
-            ); // Required!
+            .add("max_tokens", computeEffectiveMaxTokens(service, options)); // Required!
         var messages = Json.createArrayBuilder();
         buildChatPayloadTools(service, payload, options);
         // Anthropic API ignores user_location when running web search tool. The user_location field is still sent for forward-compatibility
@@ -217,12 +214,21 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             payload.add("stream", true);
         }
 
-        if (options.getTemperature() != 0.7) {
-            payload.add("temperature", options.getTemperature());
-        }
+        var thinkingBudget = resolveThinkingBudget(service, options);
 
-        if (options.getTopP() != 1.0) {
-            payload.add("top_p", options.getTopP());
+        if (thinkingBudget > 0) {
+            payload.add(
+                "thinking", Json.createObjectBuilder()
+                    .add("type", "enabled")
+                    .add("budget_tokens", thinkingBudget)
+            );
+        }
+        else {
+            payload.add("temperature", options.getTemperature());
+
+            if (options.getTopP() != 1.0) {
+                payload.add("top_p", options.getTopP());
+            }
         }
 
         if (options.getJsonSchema() != null) {
@@ -233,6 +239,61 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                     .add("schema", addStrictAdditionalProperties(options.getJsonSchema()))
             );
         }
+    }
+
+    /**
+     * Computes the {@code max_tokens} value to send to the Anthropic API. Applies the model-tier default when the caller did not set one.
+     *
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @return The effective {@code max_tokens} to send.
+     * @since 1.4
+     */
+    protected int computeEffectiveMaxTokens(AIService service, ChatOptions options) {
+        return ofNullable(options.getMaxTokens())
+            .orElseGet(() -> service.getModelVersion().lte(CLAUDE_3) ? DEFAULT_MAX_TOKENS_CLAUDE_3_0 : DEFAULT_MAX_TOKENS_CLAUDE_3_X);
+    }
+
+    /**
+     * Resolves the effective thinking budget for the given service and options as a fraction of {@link #computeEffectiveMaxTokens(AIService, ChatOptions)},
+     * using the ratio returned by {@link #toBudgetRatio(ReasoningEffort)}. Returns {@code 0} when the service does not
+     * {@link AIService#supportsReasoningEffort() support reasoning effort} or when the requested effort maps to no thinking.
+     *
+     * @param service The visiting AI service.
+     * @param options The chat options.
+     * @return The effective {@code budget_tokens}, or {@code 0} when thinking should not be emitted.
+     * @since 1.4
+     */
+    protected int resolveThinkingBudget(AIService service, ChatOptions options) {
+        if (!service.supportsReasoningEffort()) {
+            return 0;
+        }
+
+        return (int) (computeEffectiveMaxTokens(service, options) * toBudgetRatio(options.getReasoningEffort()));
+    }
+
+    /**
+     * Returns the fraction of {@code max_tokens} to allocate as thinking budget for the given reasoning effort.
+     * <ul>
+     * <li>{@link ReasoningEffort#AUTO} / {@link ReasoningEffort#NONE}: {@code 0.0} (no thinking)</li>
+     * <li>{@link ReasoningEffort#LOW}: {@code 0.20}</li>
+     * <li>{@link ReasoningEffort#MEDIUM}: {@code 0.50}</li>
+     * <li>{@link ReasoningEffort#HIGH}: {@code 0.80}</li>
+     * <li>{@link ReasoningEffort#XHIGH}: {@code 0.95}</li>
+     * </ul>
+     *
+     * @param effort The reasoning effort.
+     * @return The fraction of {@code max_tokens} to use for thinking; between {@code 0.0} and {@code 1.0}.
+     * @since 1.4
+     */
+    protected double toBudgetRatio(ReasoningEffort effort) {
+        return switch (effort) {
+            case AUTO, NONE -> 0.0;
+            case LOW -> 0.20;
+            case MEDIUM -> 0.50;
+            case HIGH -> 0.80;
+            case XHIGH -> 0.95;
+        };
     }
 
     @Override
