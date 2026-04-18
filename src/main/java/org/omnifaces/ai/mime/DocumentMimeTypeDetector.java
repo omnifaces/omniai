@@ -19,6 +19,7 @@ import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.startsWith;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -71,6 +72,17 @@ final class DocumentMimeTypeDetector {
 
     private DocumentMimeTypeDetector() {
         throw new AssertionError();
+    }
+
+    /**
+     * Looks up a document MIME type by its string value (e.g. {@code "application/pdf"}).
+     *
+     * @param value The MIME type string to match against.
+     * @return An {@link Optional} containing the matching document MIME type, or empty if no match is found.
+     * @since 1.4
+     */
+    static Optional<MimeType> lookupDocumentMimeType(String value) {
+        return Arrays.stream(DocumentMimeType.values()).filter(type -> type.value.equals(value)).map(MimeType.class::cast).findFirst();
     }
 
     /**

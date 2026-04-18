@@ -15,11 +15,16 @@ package org.omnifaces.ai.mime;
 import static java.lang.Math.min;
 import static java.nio.file.Files.size;
 import static org.omnifaces.ai.helper.FileHelper.newOffsetInputStream;
+import static org.omnifaces.ai.helper.TextHelper.requireNonBlank;
 import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.guessAudioVideoMimeType;
+import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.lookupAudioVideoMimeType;
 import static org.omnifaces.ai.mime.DocumentMimeTypeDetector.guessDocumentMimeType;
+import static org.omnifaces.ai.mime.DocumentMimeTypeDetector.lookupDocumentMimeType;
 import static org.omnifaces.ai.mime.ImageMimeTypeDetector.guessImageMimeType;
+import static org.omnifaces.ai.mime.ImageMimeTypeDetector.lookupImageMimeType;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
@@ -105,6 +110,44 @@ public interface MimeType {
         catch (IOException e) {
             throw new UncheckedIOException("Cannot read magic bytes from " + source, e);
         }
+    }
+
+    /**
+     * Returns a {@link MimeType} for the given MIME type string.
+     * <p>
+     * If the string matches a known MIME type (image, audio/video, or document), the corresponding built-in instance is returned. Otherwise a
+     * forward-compatible fallback instance is returned whose {@link #extension()} is derived from the MIME subtype (e.g. {@code "application/x-custom"} yields
+     * extension {@code "x-custom"}).
+     * <p>
+     * This is primarily used when rehydrating a {@link org.omnifaces.ai.model.ChatOptions} from JSON, where the MIME type is identified by its string value.
+     *
+     * @param value The MIME type string, must not be {@code null} or blank.
+     * @return A {@link MimeType} instance for the given value, never {@code null}.
+     * @throws IllegalArgumentException if {@code value} is {@code null} or blank.
+     * @since 1.4
+     */
+    static MimeType of(String value) {
+        var sanitized = requireNonBlank(value, "value").strip();
+        return lookupImageMimeType(sanitized).or(() -> lookupAudioVideoMimeType(sanitized)).or(() -> lookupDocumentMimeType(sanitized))
+            .orElseGet(() -> new UnknownMimeType(sanitized));
+    }
+
+    /**
+     * Fallback implementation of {@link MimeType} for values that do not match a known built-in type.
+     * <p>
+     * The {@link #extension()} is derived from the subtype portion of the MIME string (after the slash), stripping any parameters after a semicolon.
+     */
+    final record UnknownMimeType(String value, String extension) implements MimeType, Serializable {
+
+        UnknownMimeType(String value) {
+            this(value, deriveExtension(value));
+        }
+
+        private static String deriveExtension(String value) {
+            var subtype = value.contains("/") ? value.substring(value.indexOf('/') + 1) : value;
+            return subtype.contains(";") ? subtype.substring(0, subtype.indexOf(';')).strip() : subtype;
+        }
+
     }
 
 }

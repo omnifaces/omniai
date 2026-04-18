@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.mime.MimeType;
@@ -615,6 +617,159 @@ public class ChatOptions implements Serializable {
         }
 
         this.lastUsage = usage;
+    }
+
+    /**
+     * Serializes this instance to a portable JSON string suitable for session stores, databases, audit logs, or cross-service transport.
+     * <p>
+     * All user-facing options are included: {@code systemPrompt}, {@code jsonSchema}, {@code temperature}, {@code maxTokens}, {@code reasoningEffort},
+     * {@code topP}, {@code webSearchLocation}, {@code maxHistory}, and {@link #getHistory() history} (including any recorded uploaded file references). Null or
+     * unset fields are omitted for a compact payload. The {@link #getLastUsage() last usage} is deliberately not included since it is per-call state.
+     * <p>
+     * The returned JSON can be rehydrated via {@link #fromJson(String)}. Round-tripping a shared default constant ({@link #DEFAULT}, {@link #CREATIVE},
+     * {@link #DETERMINISTIC}) yields a mutable copy, equivalent to calling {@link #copy()}.
+     *
+     * @return A JSON string representation of this instance.
+     * @since 1.4
+     * @see #fromJson(String)
+     */
+    public String toJson() {
+        var builder = Json.createObjectBuilder();
+
+        if (systemPrompt != null) {
+            builder.add("systemPrompt", systemPrompt);
+        }
+        if (jsonSchema != null) {
+            builder.add("jsonSchema", jsonSchema);
+        }
+
+        builder.add("temperature", temperature);
+
+        if (maxTokens != null) {
+            builder.add("maxTokens", maxTokens);
+        }
+
+        builder.add("reasoningEffort", reasoningEffort.name());
+        builder.add("topP", topP);
+
+        if (webSearchLocation != null) {
+            var locationBuilder = Json.createObjectBuilder();
+            addIfNotNull(locationBuilder, "country", webSearchLocation.country());
+            addIfNotNull(locationBuilder, "region", webSearchLocation.region());
+            addIfNotNull(locationBuilder, "city", webSearchLocation.city());
+            builder.add("webSearchLocation", locationBuilder);
+        }
+
+        if (history != null) {
+            builder.add("maxHistory", maxHistory);
+            var historyBuilder = Json.createArrayBuilder();
+
+            for (var message : history) {
+                var messageBuilder = Json.createObjectBuilder()
+                    .add("role", message.role().name())
+                    .add("content", message.content());
+
+                if (!message.uploadedFiles().isEmpty()) {
+                    var filesBuilder = Json.createArrayBuilder();
+
+                    for (var uploadedFile : message.uploadedFiles()) {
+                        filesBuilder.add(
+                            Json.createObjectBuilder()
+                                .add("id", uploadedFile.id())
+                                .add("mimeType", uploadedFile.mimeType().value())
+                        );
+                    }
+
+                    messageBuilder.add("uploadedFiles", filesBuilder);
+                }
+
+                historyBuilder.add(messageBuilder);
+            }
+
+            builder.add("history", historyBuilder);
+        }
+
+        return builder.build().toString();
+    }
+
+    private static void addIfNotNull(JsonObjectBuilder builder, String name, String value) {
+        if (value != null) {
+            builder.add(name, value);
+        }
+    }
+
+    /**
+     * Deserializes a JSON string produced by {@link #toJson()} into a fresh {@link ChatOptions} instance.
+     * <p>
+     * Missing fields fall back to the same defaults as {@link #newBuilder()}. The returned instance is always mutable (i.e. {@link #isDefault()} returns
+     * {@code false}) and starts with no {@link #getLastUsage() last usage} recorded.
+     *
+     * @param json The JSON string to parse. Must not be {@code null}.
+     * @return A new {@link ChatOptions} instance.
+     * @throws NullPointerException if {@code json} is {@code null}.
+     * @throws org.omnifaces.ai.exception.AIResponseException if the JSON cannot be parsed.
+     * @throws IllegalArgumentException if a field contains an invalid value (e.g. unknown reasoning effort, out-of-range temperature).
+     * @since 1.4
+     * @see #toJson()
+     */
+    public static ChatOptions fromJson(String json) {
+        var parsed = parseJson(requireNonNull(json, "json"));
+        var builder = newBuilder();
+
+        if (parsed.containsKey("systemPrompt")) {
+            builder.systemPrompt(parsed.getString("systemPrompt"));
+        }
+        if (parsed.containsKey("jsonSchema")) {
+            builder.jsonSchema(parsed.getJsonObject("jsonSchema"));
+        }
+        if (parsed.containsKey("temperature")) {
+            builder.temperature(parsed.getJsonNumber("temperature").doubleValue());
+        }
+        if (parsed.containsKey("maxTokens") && !parsed.isNull("maxTokens")) {
+            builder.maxTokens(parsed.getInt("maxTokens"));
+        }
+        if (parsed.containsKey("reasoningEffort")) {
+            builder.reasoningEffort(ReasoningEffort.valueOf(parsed.getString("reasoningEffort")));
+        }
+        if (parsed.containsKey("topP")) {
+            builder.topP(parsed.getJsonNumber("topP").doubleValue());
+        }
+        if (parsed.containsKey("webSearchLocation")) {
+            var location = parsed.getJsonObject("webSearchLocation");
+            builder.webSearch(
+                new Location(
+                    location.getString("country", null),
+                    location.getString("region", null),
+                    location.getString("city", null)
+                )
+            );
+        }
+
+        if (parsed.containsKey("history") || parsed.containsKey("maxHistory")) {
+            builder.withMemory(parsed.getInt("maxHistory", DEFAULT_MAX_HISTORY));
+
+            if (parsed.containsKey("history")) {
+                var restored = new ArrayList<Message>();
+
+                for (var value : parsed.getJsonArray("history")) {
+                    var message = value.asJsonObject();
+                    var files = new ArrayList<UploadedFile>();
+
+                    if (message.containsKey("uploadedFiles")) {
+                        for (var fileValue : message.getJsonArray("uploadedFiles")) {
+                            var file = fileValue.asJsonObject();
+                            files.add(new UploadedFile(file.getString("id"), MimeType.of(file.getString("mimeType"))));
+                        }
+                    }
+
+                    restored.add(new Message(Role.valueOf(message.getString("role")), message.getString("content"), files));
+                }
+
+                builder.history(restored);
+            }
+        }
+
+        return builder.build();
     }
 
     /**

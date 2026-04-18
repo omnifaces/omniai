@@ -736,7 +736,7 @@ class ChatOptionsTest {
     @Test
     void recordUsage_validUsage_setsLastUsage() {
         var options = ChatOptions.newBuilder().build();
-        var usage = new ChatUsage(100, 50, -1);
+        var usage = new ChatUsage(100, 50, -1, -1);
 
         options.recordUsage(usage);
 
@@ -746,7 +746,7 @@ class ChatOptionsTest {
     @Test
     void recordUsage_null_clearsLastUsage() {
         var options = ChatOptions.newBuilder().build();
-        options.recordUsage(new ChatUsage(100, 50, -1));
+        options.recordUsage(new ChatUsage(100, 50, -1, -1));
 
         options.recordUsage(null);
 
@@ -756,8 +756,8 @@ class ChatOptionsTest {
     @Test
     void recordUsage_staleScenario_latestCallWins() {
         var options = ChatOptions.newBuilder().build();
-        var first = new ChatUsage(100, 50, -1);
-        var second = new ChatUsage(200, 75, -1);
+        var first = new ChatUsage(100, 50, -1, -1);
+        var second = new ChatUsage(200, 75, -1, -1);
 
         options.recordUsage(first);
         options.recordUsage(second);
@@ -788,7 +788,7 @@ class ChatOptionsTest {
 
     @Test
     void recordUsage_onDefault_throwsISE() {
-        assertThrows(IllegalStateException.class, () -> ChatOptions.DEFAULT.recordUsage(new ChatUsage(1, 1, -1)));
+        assertThrows(IllegalStateException.class, () -> ChatOptions.DEFAULT.recordUsage(new ChatUsage(1, 1, -1, -1)));
     }
 
     @Test
@@ -811,7 +811,7 @@ class ChatOptionsTest {
     @Test
     void copy_isMutable() {
         var copy = ChatOptions.DEFAULT.copy();
-        var usage = new ChatUsage(100, 50, -1);
+        var usage = new ChatUsage(100, 50, -1, -1);
 
         copy.recordUsage(usage);
 
@@ -1075,6 +1075,218 @@ class ChatOptionsTest {
         assertEquals(1, history.get(0).uploadedFiles().size());
         assertEquals("file-2", history.get(0).uploadedFiles().get(0).id());
         assertTrue(history.get(2).uploadedFiles().isEmpty()); // msg3 has no files
+    }
+
+    // =================================================================================================================
+    // JSON export/import
+    // =================================================================================================================
+
+    @Test
+    void toJson_default_isValidJsonObject() {
+        var json = ChatOptions.DEFAULT.toJson();
+        assertTrue(json.startsWith("{"));
+        assertTrue(json.endsWith("}"));
+    }
+
+    @Test
+    void toJson_omitsNullFields() {
+        var json = ChatOptions.DEFAULT.toJson();
+        assertFalse(json.contains("systemPrompt"));
+        assertFalse(json.contains("jsonSchema"));
+        assertFalse(json.contains("maxTokens"));
+        assertFalse(json.contains("webSearchLocation"));
+        assertFalse(json.contains("history"));
+    }
+
+    @Test
+    void toJson_includesAlwaysPresentFields() {
+        var json = ChatOptions.DEFAULT.toJson();
+        assertTrue(json.contains("temperature"));
+        assertTrue(json.contains("topP"));
+        assertTrue(json.contains("reasoningEffort"));
+    }
+
+    @Test
+    void jsonRoundTrip_allScalarFields() {
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+        var original = ChatOptions.newBuilder()
+            .systemPrompt("You are helpful.")
+            .jsonSchema(schema)
+            .temperature(0.4)
+            .maxTokens(1234)
+            .reasoningEffort(ReasoningEffort.HIGH)
+            .topP(0.9)
+            .build();
+
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertEquals(original.getSystemPrompt(), restored.getSystemPrompt());
+        assertEquals(original.getJsonSchema().toString(), restored.getJsonSchema().toString());
+        assertEquals(original.getTemperature(), restored.getTemperature());
+        assertEquals(original.getMaxTokens(), restored.getMaxTokens());
+        assertEquals(original.getReasoningEffort(), restored.getReasoningEffort());
+        assertEquals(original.getTopP(), restored.getTopP());
+    }
+
+    @Test
+    void jsonRoundTrip_webSearchGlobal() {
+        var original = ChatOptions.newBuilder().webSearch().build();
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertTrue(restored.useWebSearch());
+        assertTrue(restored.getWebSearchLocation().isGlobal());
+    }
+
+    @Test
+    void jsonRoundTrip_webSearchLocalized() {
+        var miami = new ChatOptions.Location("US", "Florida", "Miami");
+        var original = ChatOptions.newBuilder().webSearch(miami).build();
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertTrue(restored.useWebSearch());
+        assertEquals(miami, restored.getWebSearchLocation());
+    }
+
+    @Test
+    void jsonRoundTrip_memoryAndHistory() {
+        var original = ChatOptions.newBuilder().withMemory(6).build();
+        original.recordMessage(Role.USER, "Hello");
+        original.recordMessage(Role.ASSISTANT, "Hi there");
+        original.recordMessage(Role.USER, "How are you?");
+
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertTrue(restored.hasMemory());
+        assertEquals(6, restored.getMaxHistory());
+        var history = restored.getHistory();
+        assertEquals(3, history.size());
+        assertEquals(Role.USER, history.get(0).role());
+        assertEquals("Hello", history.get(0).content());
+        assertEquals(Role.ASSISTANT, history.get(1).role());
+        assertEquals("Hi there", history.get(1).content());
+        assertEquals("How are you?", history.get(2).content());
+    }
+
+    @Test
+    void jsonRoundTrip_uploadedFiles() {
+        var original = ChatOptions.newBuilder().withMemory().build();
+        original.recordMessage(Role.USER, "Analyze these");
+        original.recordUploadedFile("file-1", TEST_PDF);
+        original.recordUploadedFile("file-2", TEST_PNG);
+        original.recordMessage(Role.ASSISTANT, "Done");
+
+        var restored = ChatOptions.fromJson(original.toJson());
+        var files = restored.getHistory().get(0).uploadedFiles();
+
+        assertEquals(2, files.size());
+        assertEquals("file-1", files.get(0).id());
+        assertEquals("application/pdf", files.get(0).mimeType().value());
+        assertEquals("file-2", files.get(1).id());
+        assertEquals("image/png", files.get(1).mimeType().value());
+    }
+
+    @Test
+    void jsonRoundTrip_uploadedFiles_rehydratesKnownMimeTypeAsEnum() {
+        var original = ChatOptions.newBuilder().withMemory().build();
+        original.recordMessage(Role.USER, "x");
+        original.recordUploadedFile("f", TEST_PDF);
+
+        var restored = ChatOptions.fromJson(original.toJson());
+        var mimeType = restored.getHistory().get(0).uploadedFiles().get(0).mimeType();
+
+        assertTrue(mimeType.getClass().isEnum(), "Expected known MIME type to rehydrate as enum but was " + mimeType.getClass());
+    }
+
+    @Test
+    void jsonRoundTrip_uploadedFiles_rehydratesUnknownMimeTypeAsFallback() {
+        var jsonWithUnknownMime = "{\"temperature\":0.7,\"reasoningEffort\":\"AUTO\",\"topP\":1.0,\"maxHistory\":20,"
+            + "\"history\":[{\"role\":\"USER\",\"content\":\"x\",\"uploadedFiles\":[{\"id\":\"f\",\"mimeType\":\"application/x-custom\"}]}]}";
+
+        var restored = ChatOptions.fromJson(jsonWithUnknownMime);
+        var mimeType = restored.getHistory().get(0).uploadedFiles().get(0).mimeType();
+
+        assertEquals("application/x-custom", mimeType.value());
+        assertEquals("x-custom", mimeType.extension());
+    }
+
+    @Test
+    void jsonRoundTrip_emptyHistoryWithMemory() {
+        var original = ChatOptions.newBuilder().withMemory(8).build();
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertTrue(restored.hasMemory());
+        assertEquals(8, restored.getMaxHistory());
+        assertTrue(restored.getHistory().isEmpty());
+    }
+
+    @Test
+    void jsonRoundTrip_preservesDefaults() {
+        var original = ChatOptions.newBuilder().build();
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertEquals(original.getTemperature(), restored.getTemperature());
+        assertEquals(original.getTopP(), restored.getTopP());
+        assertEquals(original.getReasoningEffort(), restored.getReasoningEffort());
+        assertNull(restored.getSystemPrompt());
+        assertNull(restored.getMaxTokens());
+        assertFalse(restored.hasMemory());
+        assertFalse(restored.useWebSearch());
+    }
+
+    @Test
+    void fromJson_sharedDefault_returnsMutableCopy() {
+        var restored = ChatOptions.fromJson(ChatOptions.DEFAULT.toJson());
+
+        assertFalse(restored.isDefault());
+        restored.recordUsage(new ChatUsage(1, 1, -1, -1));
+        assertNotNull(restored.getLastUsage());
+    }
+
+    @Test
+    void fromJson_emptyObject_usesDefaults() {
+        var restored = ChatOptions.fromJson("{}");
+
+        assertEquals(ChatOptions.DEFAULT_TEMPERATURE, restored.getTemperature());
+        assertEquals(ChatOptions.DEFAULT_TOP_P, restored.getTopP());
+        assertEquals(ReasoningEffort.AUTO, restored.getReasoningEffort());
+        assertNull(restored.getSystemPrompt());
+        assertFalse(restored.hasMemory());
+    }
+
+    @Test
+    void fromJson_null_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.fromJson(null));
+    }
+
+    @Test
+    void fromJson_invalidJson_throwsException() {
+        assertThrows(Exception.class, () -> ChatOptions.fromJson("not json"));
+    }
+
+    @Test
+    void fromJson_invalidReasoningEffort_throwsIAE() {
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ChatOptions.fromJson("{\"reasoningEffort\":\"TURBO\"}")
+        );
+    }
+
+    @Test
+    void jsonRoundTrip_slidingWindowTruncatesOnRestore() {
+        var json = "{\"temperature\":0.7,\"reasoningEffort\":\"AUTO\",\"topP\":1.0,\"maxHistory\":2,"
+            + "\"history\":["
+            + "{\"role\":\"USER\",\"content\":\"msg1\"},"
+            + "{\"role\":\"ASSISTANT\",\"content\":\"reply1\"},"
+            + "{\"role\":\"USER\",\"content\":\"msg2\"},"
+            + "{\"role\":\"ASSISTANT\",\"content\":\"reply2\"}"
+            + "]}";
+
+        var restored = ChatOptions.fromJson(json);
+        var history = restored.getHistory();
+
+        assertEquals(2, history.size());
+        assertEquals("msg2", history.get(0).content());
+        assertEquals("reply2", history.get(1).content());
     }
 
 }

@@ -17,6 +17,7 @@ import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.FTYP_MAGIC;
 import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.RIFF_MAGIC;
 import static org.omnifaces.ai.mime.AudioVideoMimeTypeDetector.startsWith;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -119,9 +120,20 @@ final class ImageMimeTypeDetector {
         return Optional.empty();
     }
 
+    /**
+     * Looks up an image MIME type by its string value (e.g. {@code "image/png"}).
+     *
+     * @param value The MIME type string to match against.
+     * @return An {@link Optional} containing the matching image MIME type, or empty if no match is found.
+     * @since 1.4
+     */
+    static Optional<MimeType> lookupImageMimeType(String value) {
+        return Arrays.stream(ImageMimeType.values()).filter(type -> type.value.equals(value)).map(MimeType.class::cast).findFirst();
+    }
+
     private static boolean isLikelySvg(byte[] content) {
         var head = new String(content, 0, Math.min(1024, content.length), US_ASCII).toLowerCase();
-        return head.startsWith("<?xml") && (head.contains("<svg") || head.contains("http://www.w3.org/2000/svg"));
+        return head.contains("<svg") || head.contains("http://www.w3.org/2000/svg");
     }
 
 }

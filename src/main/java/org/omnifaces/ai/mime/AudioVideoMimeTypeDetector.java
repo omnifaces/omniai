@@ -14,6 +14,7 @@ package org.omnifaces.ai.mime;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -138,6 +139,17 @@ final class AudioVideoMimeTypeDetector {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Looks up an audio/video MIME type by its string value (e.g. {@code "audio/mpeg"}).
+     *
+     * @param value The MIME type string to match against.
+     * @return An {@link Optional} containing the matching audio/video MIME type, or empty if no match is found.
+     * @since 1.4
+     */
+    static Optional<MimeType> lookupAudioVideoMimeType(String value) {
+        return Arrays.stream(AudioVideoMimeType.values()).filter(type -> type.value.equals(value)).map(MimeType.class::cast).findFirst();
     }
 
     // Common helper ---------------------------------------------------------------------------------------------------
