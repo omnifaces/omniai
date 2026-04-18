@@ -242,7 +242,7 @@ abstract class BaseAIServiceTextHandlerIT extends AIServiceIT {
         }
 
         var miami = new Location("US", null, "Miami");
-        var response = service.webSearch("What is the current weather?", miami);
+        var response = service.webSearch("What is the current weather? High/Low?", miami);
         log(response);
         assertAll(
             () -> assertTrue(response.contains("Miami"), "response contains 'Miami'"),
