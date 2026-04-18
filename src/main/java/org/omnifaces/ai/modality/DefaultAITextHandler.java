@@ -207,12 +207,14 @@ public class DefaultAITextHandler implements AITextHandler {
             var inputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageInputTokensPaths);
             var outputTokensString = findFirstNonBlankByPaths(responseJson, chatUsageOutputTokensPaths);
             var reasoningTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageReasoningTokensPaths());
+            var cachedInputTokensString = findFirstNonBlankByPaths(responseJson, getChatUsageCachedInputTokensPaths());
 
             if (inputTokensString.isPresent() || outputTokensString.isPresent()) {
                 var inputTokens = inputTokensString.map(Integer::parseInt).orElse(-1);
                 var outputTokens = outputTokensString.map(Integer::parseInt).orElse(-1);
                 var reasoningTokens = reasoningTokensString.map(Integer::parseInt).orElse(-1);
-                return new ChatUsage(inputTokens, outputTokens, reasoningTokens);
+                var cachedInputTokens = cachedInputTokensString.map(Integer::parseInt).orElse(-1);
+                return new ChatUsage(inputTokens, outputTokens, reasoningTokens, cachedInputTokens);
             }
         }
         catch (Exception e) {
@@ -290,6 +292,18 @@ public class DefaultAITextHandler implements AITextHandler {
      * @since 1.3
      */
     public List<String> getChatUsageReasoningTokensPaths() {
+        return emptyList();
+    }
+
+    /**
+     * Returns all possible paths to the cached input token count in the JSON response parsed by {@link #parseChatUsage(JsonObject)}. May be empty. The first
+     * path that matches a value in the JSON response will be used; remaining paths are ignored.
+     *
+     * @implNote The default implementation returns an empty list.
+     * @return all possible paths to the cached input token count in the JSON response.
+     * @since 1.4
+     */
+    public List<String> getChatUsageCachedInputTokensPaths() {
         return emptyList();
     }
 

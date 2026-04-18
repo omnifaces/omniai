@@ -186,11 +186,16 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
             }
         }
 
-        content.add(
-            Json.createObjectBuilder()
-                .add("type", "text")
-                .add("text", input.getMessage())
-        );
+        var text = Json.createObjectBuilder()
+            .add("type", "text")
+            .add("text", input.getMessage());
+
+        if (options.hasMemory()) {
+            // https://docs.claude.com/en/docs/build-with-claude/prompt-caching
+            text.add("cache_control", Json.createObjectBuilder().add("type", "ephemeral"));
+        }
+
+        content.add(text);
 
         messages.add(
             Json.createObjectBuilder()
@@ -311,6 +316,11 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
         return List.of("usage.output_tokens");
     }
 
+    @Override
+    public List<String> getChatUsageCachedInputTokensPaths() {
+        return List.of("usage.cache_read_input_tokens");
+    }
+
     /**
      * An override which joins potentially multiple chat response parts into a single string.
      */
@@ -356,11 +366,17 @@ public class AnthropicAITextHandler extends DefaultAITextHandler {
                         options.recordUsage(parseChatUsage(json.getJsonObject("message")));
                     }
                     else if ("message_delta".equals(type)) {
-                        findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(
-                            outputTokens -> options.recordUsage(
-                                new ChatUsage(options.getLastUsage() != null ? options.getLastUsage().inputTokens() : -1, Integer.parseInt(outputTokens), -1)
-                            )
-                        );
+                        findByPath(json, getChatUsageOutputTokensPaths().get(0)).ifPresent(outputTokens -> {
+                            var prior = options.getLastUsage();
+                            options.recordUsage(
+                                new ChatUsage(
+                                    prior != null ? prior.inputTokens() : -1,
+                                    Integer.parseInt(outputTokens),
+                                    -1,
+                                    prior != null ? prior.cachedInputTokens() : -1
+                                )
+                            );
+                        });
                     }
                 }
                 else if ("error".equals(type)) {

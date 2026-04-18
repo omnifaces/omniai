@@ -33,68 +33,88 @@ class ChatUsageTest {
 
     @Test
     void new_validTokens_createsRecord() {
-        var usage = new ChatUsage(100, 50, 20);
+        var usage = new ChatUsage(100, 50, 20, 40);
 
         assertEquals(100, usage.inputTokens());
         assertEquals(50, usage.outputTokens());
         assertEquals(20, usage.reasoningTokens());
+        assertEquals(40, usage.cachedInputTokens());
     }
 
     @Test
     void new_unknownInputTokens_accepted() {
-        var usage = new ChatUsage(-1, 50, -1);
+        var usage = new ChatUsage(-1, 50, -1, -1);
 
         assertEquals(-1, usage.inputTokens());
         assertEquals(50, usage.outputTokens());
         assertEquals(-1, usage.reasoningTokens());
+        assertEquals(-1, usage.cachedInputTokens());
     }
 
     @Test
     void new_unknownOutputTokens_accepted() {
-        var usage = new ChatUsage(100, -1, -1);
+        var usage = new ChatUsage(100, -1, -1, -1);
 
         assertEquals(100, usage.inputTokens());
         assertEquals(-1, usage.outputTokens());
         assertEquals(-1, usage.reasoningTokens());
+        assertEquals(-1, usage.cachedInputTokens());
     }
 
     @Test
     void new_unknownReasoningTokens_accepted() {
-        var usage = new ChatUsage(100, 50, -1);
+        var usage = new ChatUsage(100, 50, -1, -1);
 
         assertEquals(100, usage.inputTokens());
         assertEquals(50, usage.outputTokens());
         assertEquals(-1, usage.reasoningTokens());
+        assertEquals(-1, usage.cachedInputTokens());
+    }
+
+    @Test
+    void new_unknownCachedInputTokens_accepted() {
+        var usage = new ChatUsage(100, 50, 20, -1);
+
+        assertEquals(100, usage.inputTokens());
+        assertEquals(50, usage.outputTokens());
+        assertEquals(20, usage.reasoningTokens());
+        assertEquals(-1, usage.cachedInputTokens());
     }
 
     @Test
     void new_allUnknown_accepted() {
-        var usage = new ChatUsage(-1, -1, -1);
+        var usage = new ChatUsage(-1, -1, -1, -1);
 
         assertEquals(-1, usage.inputTokens());
         assertEquals(-1, usage.outputTokens());
         assertEquals(-1, usage.reasoningTokens());
+        assertEquals(-1, usage.cachedInputTokens());
     }
 
     @Test
     void new_invalidInputTokens_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(-2, 50, -1));
+        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(-2, 50, -1, -1));
     }
 
     @Test
     void new_invalidOutputTokens_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(100, -2, -1));
+        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(100, -2, -1, -1));
     }
 
     @Test
     void new_invalidReasoningTokens_throwsException() {
-        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(100, 50, -2));
+        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(100, 50, -2, -1));
+    }
+
+    @Test
+    void new_invalidCachedInputTokens_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(100, 50, -1, -2));
     }
 
     @Test
     void new_allInvalid_throwsExceptionOnInput() {
         // compact constructor checks inputTokens first
-        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(-5, -5, -5));
+        assertThrows(IllegalArgumentException.class, () -> new ChatUsage(-5, -5, -5, -5));
     }
 
     // =================================================================================================================
@@ -104,27 +124,33 @@ class ChatUsageTest {
     @Test
     void totalTokens_bothKnown_returnsSum() {
         // reasoningTokens is a subset of outputTokens, not added separately
-        assertEquals(150, new ChatUsage(100, 50, 20).totalTokens());
+        assertEquals(150, new ChatUsage(100, 50, 20, -1).totalTokens());
     }
 
     @Test
     void totalTokens_noReasoning_returnsInputPlusOutput() {
-        assertEquals(150, new ChatUsage(100, 50, -1).totalTokens());
+        assertEquals(150, new ChatUsage(100, 50, -1, -1).totalTokens());
+    }
+
+    @Test
+    void totalTokens_cachedSubsetDoesNotAffectTotal() {
+        // cachedInputTokens is a subset of inputTokens, already counted; must not be added separately
+        assertEquals(150, new ChatUsage(100, 50, -1, 80).totalTokens());
     }
 
     @Test
     void totalTokens_unknownInput_returnsUnknown() {
-        assertEquals(-1, new ChatUsage(-1, 50, -1).totalTokens());
+        assertEquals(-1, new ChatUsage(-1, 50, -1, -1).totalTokens());
     }
 
     @Test
     void totalTokens_unknownOutput_returnsUnknown() {
-        assertEquals(-1, new ChatUsage(100, -1, -1).totalTokens());
+        assertEquals(-1, new ChatUsage(100, -1, -1, -1).totalTokens());
     }
 
     @Test
     void totalTokens_allUnknown_returnsUnknown() {
-        assertEquals(-1, new ChatUsage(-1, -1, -1).totalTokens());
+        assertEquals(-1, new ChatUsage(-1, -1, -1, -1).totalTokens());
     }
 
     // =================================================================================================================
@@ -133,22 +159,27 @@ class ChatUsageTest {
 
     @Test
     void equality_sameValues_areEqual() {
-        assertEquals(new ChatUsage(100, 50, 20), new ChatUsage(100, 50, 20));
+        assertEquals(new ChatUsage(100, 50, 20, 40), new ChatUsage(100, 50, 20, 40));
     }
 
     @Test
     void equality_differentInputTokens_areNotEqual() {
-        assertNotEquals(new ChatUsage(100, 50, -1), new ChatUsage(200, 50, -1));
+        assertNotEquals(new ChatUsage(100, 50, -1, -1), new ChatUsage(200, 50, -1, -1));
     }
 
     @Test
     void equality_differentOutputTokens_areNotEqual() {
-        assertNotEquals(new ChatUsage(100, 50, -1), new ChatUsage(100, 75, -1));
+        assertNotEquals(new ChatUsage(100, 50, -1, -1), new ChatUsage(100, 75, -1, -1));
     }
 
     @Test
     void equality_differentReasoningTokens_areNotEqual() {
-        assertNotEquals(new ChatUsage(100, 50, 20), new ChatUsage(100, 50, 30));
+        assertNotEquals(new ChatUsage(100, 50, 20, -1), new ChatUsage(100, 50, 30, -1));
+    }
+
+    @Test
+    void equality_differentCachedInputTokens_areNotEqual() {
+        assertNotEquals(new ChatUsage(100, 50, 20, 40), new ChatUsage(100, 50, 20, 50));
     }
 
     // =================================================================================================================
@@ -162,7 +193,7 @@ class ChatUsageTest {
 
     @Test
     void serialization_preservesKnownValues() throws Exception {
-        var original = new ChatUsage(100, 50, 20);
+        var original = new ChatUsage(100, 50, 20, 40);
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {
@@ -179,7 +210,7 @@ class ChatUsageTest {
 
     @Test
     void serialization_preservesUnknownValues() throws Exception {
-        var original = new ChatUsage(-1, -1, -1);
+        var original = new ChatUsage(-1, -1, -1, -1);
 
         var baos = new ByteArrayOutputStream();
         try (var oos = new ObjectOutputStream(baos)) {

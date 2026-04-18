@@ -22,6 +22,11 @@ import java.io.Serializable;
  * <p>
  * {@code outputTokens} always represents the total number of non-input tokens generated, including any internal reasoning or thinking tokens.
  * {@code reasoningTokens} exposes the reasoning subset for informational purposes and is always {@code <= outputTokens} when both are known.
+ * <p>
+ * {@code cachedInputTokens} exposes the portion of {@code inputTokens} that was served from the provider's prompt cache and is always {@code <= inputTokens}
+ * when both are known. It is populated when the provider supports and reports prompt caching (Anthropic: {@code cache_read_input_tokens}, OpenAI:
+ * {@code cached_tokens}, Google: {@code cachedContentTokenCount}). Automatically activated on memory-enabled chat calls for providers that require explicit
+ * cache markers; fully automatic for providers that cache implicitly.
  *
  * @param inputTokens The number of tokens consumed by the request (system prompt, conversation history, and user message combined), or {@code -1} if not
  * reported by the provider.
@@ -29,11 +34,13 @@ import java.io.Serializable;
  * provider.
  * @param reasoningTokens The number of tokens used for internal reasoning/thinking, or {@code -1} if the provider does not report this separately. Always a
  * subset of {@code outputTokens} when known.
+ * @param cachedInputTokens The subset of {@code inputTokens} served from the provider's prompt cache, or {@code -1} if the provider does not report this.
+ * Always a subset of {@code inputTokens} when known.
  * @author Bauke Scholtz
  * @since 1.3
  * @see ChatOptions#getLastUsage()
  */
-public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens) implements Serializable {
+public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens, int cachedInputTokens) implements Serializable {
 
     /**
      * Validates the record components.
@@ -44,6 +51,8 @@ public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTo
      * non-negative value.
      * @param reasoningTokens The number of tokens used for internal reasoning/thinking, must be {@code -1} or a non-negative value. Always a subset of
      * {@code outputTokens} when known.
+     * @param cachedInputTokens The subset of {@code inputTokens} served from the provider's prompt cache, must be {@code -1} or a non-negative value. Always a
+     * subset of {@code inputTokens} when known.
      */
     public ChatUsage {
         if (inputTokens < -1) {
@@ -54,6 +63,9 @@ public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTo
         }
         if (reasoningTokens < -1) {
             throw new IllegalArgumentException("Reasoning tokens must be >= -1");
+        }
+        if (cachedInputTokens < -1) {
+            throw new IllegalArgumentException("Cached input tokens must be >= -1");
         }
     }
 

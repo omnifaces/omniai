@@ -483,6 +483,11 @@ public class OpenAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageCachedInputTokensPaths() {
+        return List.of("usage.input_tokens_details.cached_tokens", "usage.prompt_tokens_details.cached_tokens"); // Responses API; Completions API
+    }
+
+    @Override
     public boolean processChatStreamEvent(AIService service, ChatOptions options, Event event, Consumer<String> onToken) {
         if (supportsResponsesApi(service)) {
             return processChatStreamEventWithResponsesApi(options, event, onToken);

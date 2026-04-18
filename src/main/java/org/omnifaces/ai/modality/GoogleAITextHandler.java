@@ -274,6 +274,11 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
     }
 
     @Override
+    public List<String> getChatUsageCachedInputTokensPaths() {
+        return List.of("usageMetadata.cachedContentTokenCount");
+    }
+
+    @Override
     public ChatUsage parseChatUsage(JsonObject responseJson) {
         var usage = super.parseChatUsage(responseJson);
 
@@ -284,7 +289,7 @@ public class GoogleAITextHandler extends DefaultAITextHandler {
         // In contrary to e.g. OpenAI, Google AI doesn't include reasoning tokens in output (candidates) tokens, so we need to recalculate.
         var reasoningTokens = usage.reasoningTokens() == -1 ? 0 : usage.reasoningTokens();
         var adjustedOutput = usage.outputTokens() == -1 ? reasoningTokens : usage.outputTokens() + reasoningTokens;
-        return new ChatUsage(usage.inputTokens(), adjustedOutput, reasoningTokens);
+        return new ChatUsage(usage.inputTokens(), adjustedOutput, reasoningTokens, usage.cachedInputTokens());
     }
 
     @Override
