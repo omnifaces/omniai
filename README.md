@@ -210,7 +210,13 @@ ChatOptions options = ChatOptions.newBuilder()
     .build();
 ```
 
-Since `ChatOptions` is `Serializable`, you can save and restore the entire instance across sessions (e.g., in an HTTP session or database).
+Since `ChatOptions` is `Serializable`, you can save and restore the entire instance across sessions (e.g., in an HTTP session or database). For portable storage — REST payloads, JSON columns, audit logs, cross-service transport — use the explicit JSON form:
+
+```java
+String json = options.toJson();     // serialize: options + history, no lastUsage
+ChatOptions restored = ChatOptions.fromJson(json); // rehydrate: always mutable
+```
+
 If you need to reuse the same conversation history with different settings (e.g., a different system prompt or temperature), you can seed a new `ChatOptions` with the history from an existing one:
 ```java
 List<ChatInput.Message> saved = originalOptions.getHistory();
@@ -255,12 +261,81 @@ String response = service.chat("Explain quantum computing", options);
 // Get usage statistics after the call
 ChatUsage usage = options.getLastUsage();
 System.out.println("Input tokens: " + usage.inputTokens());
+System.out.println("Cached input tokens: " + usage.cachedInputTokens()); // Subset of input tokens served from the provider's prompt cache
 System.out.println("Output tokens: " + usage.outputTokens());
 System.out.println("Reasoning tokens: " + usage.reasoningTokens()); // Models with reasoning support; the value is a subset of output tokens
 System.out.println("Total tokens: " + usage.totalTokens()); // input tokens + output tokens
 ```
 
 `ChatUsage` is available after each chat call when the provider reports token usage. Values are `-1` if not reported by the provider.
+
+### Cost Calculation
+
+Turn token usage into an actual cost by attaching a `ChatPricing` configuration to your `ChatOptions`. Prices are expressed *per one million tokens* to match how providers publish their rate sheets. Look up the current rate for your chosen model and pass those numbers in:
+
+```java
+// Example rates — always use the provider's current rate sheet
+ChatPricing pricing = new ChatPricing(
+    new BigDecimal("3.00"),  // input price per 1M tokens
+    new BigDecimal("0.30"),  // cached-input price per 1M tokens (optional)
+    new BigDecimal("15.00"), // output price per 1M tokens (includes reasoning)
+    Currency.getInstance("USD"));
+
+ChatOptions options = ChatOptions.newBuilder()
+    .pricing(pricing)
+    .build();
+
+String response = service.chat("Explain quantum computing", options);
+
+ChatCost cost = options.getLastCost();
+System.out.println("Input cost:        " + cost.inputCost());
+System.out.println("Cached input cost: " + cost.cachedInputCost());
+System.out.println("Output cost:       " + cost.outputCost());
+System.out.println("Total cost:        " + cost.totalCost() + " " + cost.currency());
+```
+
+`ChatPricing.of(input, output)` and `ChatPricing.of(input, cached, output)` are convenience factories that skip the currency. When `cachedInputTokenPrice` is `null`, cached tokens are billed at `inputTokenPrice`. You can also compute a cost ad-hoc from any `ChatUsage`:
+
+```java
+ChatCost cost = usage.calculateCost(pricing);
+```
+
+Note: `ChatPricing` models a simplified three-tier scheme (base input, cached input, output). Provider-specific billing axes such as Anthropic's 5-minute / 1-hour cache-*write* premium are not modeled and may cause under-counting for heavy explicit-prompt-caching workloads. For strict accuracy, reconcile against the provider's own billing API.
+
+#### Budget cap
+
+Pair a pricing with a cumulative-cost cap to stop runaway spend on a given `ChatOptions` instance:
+
+```java
+ChatOptions options = ChatOptions.newBuilder()
+    .pricing(pricing, new BigDecimal("1.00")) // hard stop at $1.00
+    .build();
+
+while (hasMoreWork()) {
+    try {
+        service.chat(next(), options);
+    } catch (AIBudgetExceededException e) {
+        log.warn("Spent {} of {} {} — stopping", e.getTotalCost(), e.getMaxTotalCost(), e.getCurrency());
+        break;
+    }
+}
+```
+
+The cap is checked *before* each call using the accumulated `ChatOptions.getTotalCost()`. It is a **soft** ceiling: the call that pushes the running total at or over the cap still completes; the next call is refused with `AIBudgetExceededException`. Call `options.resetBudget()` to zero the counter and start a fresh window on the same instance, switch to a different `ChatOptions` instance, or even fail over to a different `AIService` (e.g. a cheaper model) to continue.
+
+### Reasoning Effort
+
+Models that expose reasoning (e.g. GPT-5, Claude extended thinking, Gemini thinking, Grok reasoning) let you tune how many tokens to spend on internal reasoning:
+
+```java
+ChatOptions options = ChatOptions.newBuilder()
+    .reasoningEffort(ReasoningEffort.HIGH)
+    .build();
+
+String answer = service.chat("Prove the Pythagorean theorem.", options);
+```
+
+Available levels: `AUTO` (default, defers to the provider), `NONE` (disable reasoning where supported), `LOW`, `MEDIUM`, `HIGH`, and `XHIGH`. Providers that don't support a given level map to the closest equivalent.
 
 ### Structured Outputs
 
@@ -586,7 +661,11 @@ From the caller's perspective it is just an `AIService`. Other use cases include
 - Structured outputs - Get typed Java objects directly from AI responses: `service.chat(message, MyRecord.class)`
 - File attachments - Send documents, images, and other files alongside chat messages with help of `ChatInput`
 - Web search - Access up-to-date internet information via `service.webSearch(query)` or `ChatOptions.newBuilder().webSearch().build()`, with optional location context for localized results
-- Token usage tracking - Track input, output, and reasoning tokens per call via `ChatOptions.getLastUsage()` for cost monitoring and optimization
+- Token usage tracking - Track input, cached input, output, and reasoning tokens per call via `ChatOptions.getLastUsage()`
+- Cost calculation - Attach a `ChatPricing` to `ChatOptions` and read the per-call `ChatCost` from `ChatOptions.getLastCost()`
+- Budget cap - Set a cumulative-cost cap alongside pricing; exceeding it aborts the next call with `AIBudgetExceededException`
+- Reasoning effort control - Dial reasoning spend with `ChatOptions.newBuilder().reasoningEffort(...)` across providers that support it
+- Portable JSON serialization - `ChatOptions.toJson()` / `ChatOptions.fromJson(String)` for session stores, databases, or cross-service transport
 - Native CDI with EL - `@AI(apiKey = "#{config.openaiKey}")` with expression resolution
 - MicroProfile Config - `@AI(apiKey = "${config:openai.key}")` with expression resolution
 - 10 providers out of the box - Including Ollama for local/offline
@@ -614,7 +693,7 @@ OmniHai fills a different niche. For apps that need:
 - Web search with optional location context
 - Image analysis (describe, generate alt text)
 - Audio analysis (transcribe) and generation (text-to-speech)
-- Token usage tracking for cost monitoring
+- Token usage tracking and cost calculation for budget monitoring
 - Minimal dependencies
 - Pure Jakarta EE / MicroProfile
 
