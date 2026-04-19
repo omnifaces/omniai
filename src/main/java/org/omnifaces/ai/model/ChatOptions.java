@@ -23,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -172,6 +173,8 @@ public class ChatOptions implements Serializable {
     private final double topP;
     /** The web search location. */
     private final Location webSearchLocation;
+    /** The pricing used to calculate {@link #getLastCost() cost} from recorded {@link ChatUsage}. */
+    private final ChatPricing pricing;
     /** The conversation history for memory-enabled chat sessions. */
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
@@ -189,6 +192,7 @@ public class ChatOptions implements Serializable {
         this.reasoningEffort = builder.reasoningEffort;
         this.topP = builder.topP;
         this.webSearchLocation = builder.webSearchLocation;
+        this.pricing = builder.pricing;
 
         var memoryEnabled = builder.maxHistory > 0 || builder.history != null;
         this.maxHistory = builder.maxHistory > 0 ? builder.maxHistory : (memoryEnabled ? DEFAULT_MAX_HISTORY : 0);
@@ -205,7 +209,7 @@ public class ChatOptions implements Serializable {
 
     private ChatOptions(
         String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, ReasoningEffort reasoningEffort, double topP,
-        Location webSearchLocation, List<Message> history, int maxHistory
+        Location webSearchLocation, ChatPricing pricing, List<Message> history, int maxHistory
     )
     {
         this.systemPrompt = systemPrompt;
@@ -215,6 +219,7 @@ public class ChatOptions implements Serializable {
         this.reasoningEffort = reasoningEffort;
         this.topP = topP;
         this.webSearchLocation = webSearchLocation;
+        this.pricing = pricing;
         this.history = history;
         this.maxHistory = maxHistory;
     }
@@ -227,6 +232,7 @@ public class ChatOptions implements Serializable {
         this.reasoningEffort = source.reasoningEffort;
         this.topP = source.topP;
         this.webSearchLocation = source.webSearchLocation;
+        this.pricing = source.pricing;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
     }
@@ -310,7 +316,7 @@ public class ChatOptions implements Serializable {
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
     }
 
     /**
@@ -321,7 +327,7 @@ public class ChatOptions implements Serializable {
      * @since 1.1
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
     }
 
     /**
@@ -337,7 +343,7 @@ public class ChatOptions implements Serializable {
      * @see #getWebSearchLocation()
      */
     public ChatOptions withWebSearch(Location location) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, location, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, location, pricing, history, maxHistory);
     }
 
     /**
@@ -351,8 +357,22 @@ public class ChatOptions implements Serializable {
      */
     public ChatOptions withReasoningEffort(ReasoningEffort reasoningEffort) {
         return new ChatOptions(
-            systemPrompt, jsonSchema, temperature, maxTokens, requireNonNull(reasoningEffort, "reasoningEffort"), topP, webSearchLocation, history, maxHistory
+            systemPrompt, jsonSchema, temperature, maxTokens, requireNonNull(reasoningEffort, "reasoningEffort"), topP, webSearchLocation, pricing, history,
+            maxHistory
         );
+    }
+
+    /**
+     * Returns a copy of this instance with the given pricing set, preserving all other options including any shared {@link #hasMemory() memory} state.
+     *
+     * @param pricing The pricing configuration to use for cost calculations, or {@code null} to clear pricing.
+     * @return A new {@code ChatOptions} instance with the specified pricing.
+     * @since 1.4
+     * @see ChatPricing
+     * @see #getLastCost()
+     */
+    public ChatOptions withPricing(ChatPricing pricing) {
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
     }
 
     /**
@@ -462,6 +482,19 @@ public class ChatOptions implements Serializable {
     }
 
     /**
+     * Returns the pricing configuration used to calculate cost from recorded token usage, or {@code null} if none is configured.
+     *
+     * @return The configured {@link ChatPricing}, or {@code null}.
+     * @since 1.4
+     * @see Builder#pricing(ChatPricing)
+     * @see #withPricing(ChatPricing)
+     * @see #getLastCost()
+     */
+    public ChatPricing getPricing() {
+        return pricing;
+    }
+
+    /**
      * Returns whether conversation memory is enabled for this instance.
      * <p>
      * When {@code true}, the AI service will automatically track all user messages and assistant responses made with this {@code ChatOptions} instance, and
@@ -527,6 +560,29 @@ public class ChatOptions implements Serializable {
         }
 
         return lastUsage;
+    }
+
+    /**
+     * Returns the computed cost of the most recent chat call made with this instance, or {@code null} if no {@link #getPricing() pricing} has been configured,
+     * no call has been made yet, or the provider did not report the input/output token counts needed to compute it.
+     * <p>
+     * Equivalent to {@code getLastUsage().calculateCost(getPricing())} with {@code null}-guards on both sides.
+     *
+     * @return The last computed {@link ChatCost}, or {@code null}.
+     * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
+     * @since 1.4
+     * @see #getPricing()
+     * @see #getLastUsage()
+     * @see ChatUsage#calculateCost(ChatPricing)
+     */
+    public ChatCost getLastCost() {
+        var usage = getLastUsage();
+
+        if (usage == null || pricing == null) {
+            return null;
+        }
+
+        return usage.calculateCost(pricing);
     }
 
     /**
@@ -623,8 +679,9 @@ public class ChatOptions implements Serializable {
      * Serializes this instance to a portable JSON string suitable for session stores, databases, audit logs, or cross-service transport.
      * <p>
      * All user-facing options are included: {@code systemPrompt}, {@code jsonSchema}, {@code temperature}, {@code maxTokens}, {@code reasoningEffort},
-     * {@code topP}, {@code webSearchLocation}, {@code maxHistory}, and {@link #getHistory() history} (including any recorded uploaded file references). Null or
-     * unset fields are omitted for a compact payload. The {@link #getLastUsage() last usage} is deliberately not included since it is per-call state.
+     * {@code topP}, {@code webSearchLocation}, {@code pricing}, {@code maxHistory}, and {@link #getHistory() history} (including any recorded uploaded file
+     * references). Null or unset fields are omitted for a compact payload. The {@link #getLastUsage() last usage} is deliberately not included since it is
+     * per-call state.
      * <p>
      * The returned JSON can be rehydrated via {@link #fromJson(String)}. Round-tripping a shared default constant ({@link #DEFAULT}, {@link #CREATIVE},
      * {@link #DETERMINISTIC}) yields a mutable copy, equivalent to calling {@link #copy()}.
@@ -658,6 +715,21 @@ public class ChatOptions implements Serializable {
             addIfNotNull(locationBuilder, "region", webSearchLocation.region());
             addIfNotNull(locationBuilder, "city", webSearchLocation.city());
             builder.add("webSearchLocation", locationBuilder);
+        }
+
+        if (pricing != null) {
+            var pricingBuilder = Json.createObjectBuilder()
+                .add("inputTokenPrice", pricing.inputTokenPrice())
+                .add("outputTokenPrice", pricing.outputTokenPrice());
+
+            if (pricing.cachedInputTokenPrice() != null) {
+                pricingBuilder.add("cachedInputTokenPrice", pricing.cachedInputTokenPrice());
+            }
+            if (pricing.currency() != null) {
+                pricingBuilder.add("currency", pricing.currency().getCurrencyCode());
+            }
+
+            builder.add("pricing", pricingBuilder);
         }
 
         if (history != null) {
@@ -745,6 +817,22 @@ public class ChatOptions implements Serializable {
             );
         }
 
+        if (parsed.containsKey("pricing")) {
+            var pricingObject = parsed.getJsonObject("pricing");
+            var cachedInputTokenPrice = pricingObject.containsKey("cachedInputTokenPrice")
+                ? pricingObject.getJsonNumber("cachedInputTokenPrice").bigDecimalValue()
+                : null;
+            var currencyCode = pricingObject.getString("currency", null);
+            builder.pricing(
+                new ChatPricing(
+                    pricingObject.getJsonNumber("inputTokenPrice").bigDecimalValue(),
+                    cachedInputTokenPrice,
+                    pricingObject.getJsonNumber("outputTokenPrice").bigDecimalValue(),
+                    currencyCode != null ? Currency.getInstance(currencyCode) : null
+                )
+            );
+        }
+
         if (parsed.containsKey("history") || parsed.containsKey("maxHistory")) {
             builder.withMemory(parsed.getInt("maxHistory", DEFAULT_MAX_HISTORY));
 
@@ -804,6 +892,7 @@ public class ChatOptions implements Serializable {
         private ReasoningEffort reasoningEffort = ChatOptions.DEFAULT_REASONING_EFFORT;
         private double topP = ChatOptions.DEFAULT_TOP_P;
         private Location webSearchLocation;
+        private ChatPricing pricing;
         private int maxHistory;
         private List<Message> history;
 
@@ -977,6 +1066,23 @@ public class ChatOptions implements Serializable {
          */
         public Builder webSearch(Location location) {
             this.webSearchLocation = requireNonNull(location, "location");
+            return this;
+        }
+
+        /**
+         * Sets the pricing configuration used to calculate cost from recorded token usage. Defaults to {@code null} (i.e. no cost calculation).
+         * <p>
+         * Prices are interpreted as per one million tokens. When set, {@link ChatOptions#getLastCost()} returns the computed {@link ChatCost} of the most
+         * recent chat call. See {@link ChatPricing} for details.
+         *
+         * @param pricing The pricing configuration, or {@code null} to disable cost calculation.
+         * @return This builder instance for chaining.
+         * @since 1.4
+         * @see ChatPricing
+         * @see ChatOptions#getLastCost()
+         */
+        public Builder pricing(ChatPricing pricing) {
+            this.pricing = pricing;
             return this;
         }
 

@@ -27,6 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Currency;
 
 import jakarta.json.Json;
 
@@ -1270,6 +1272,212 @@ class ChatOptionsTest {
             () -> ChatOptions.fromJson("{\"reasoningEffort\":\"TURBO\"}")
         );
     }
+
+    // =================================================================================================================
+    // Pricing
+    // =================================================================================================================
+
+    @Test
+    void pricing_default_isNull() {
+        assertNull(ChatOptions.newBuilder().build().getPricing());
+    }
+
+    @Test
+    void builder_pricing_setsValue() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var options = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, options.getPricing());
+    }
+
+    @Test
+    void builder_pricing_null_clearsPricing() {
+        var options = ChatOptions.newBuilder().pricing(null).build();
+
+        assertNull(options.getPricing());
+    }
+
+    @Test
+    void withPricing_setsNewPricing_originalUnchanged() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().build();
+
+        var copy = original.withPricing(pricing);
+
+        assertNull(original.getPricing());
+        assertEquals(pricing, copy.getPricing());
+    }
+
+    @Test
+    void withPricing_null_clearsPricing() {
+        var options = ChatOptions.newBuilder().pricing(ChatPricing.of(BigDecimal.ONE, BigDecimal.ONE)).build();
+
+        var cleared = options.withPricing(null);
+
+        assertNull(cleared.getPricing());
+    }
+
+    @Test
+    void withPricing_preservesOtherSettings() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var options = ChatOptions.newBuilder()
+            .systemPrompt("test")
+            .temperature(0.5)
+            .maxTokens(500)
+            .reasoningEffort(ReasoningEffort.HIGH)
+            .topP(0.8)
+            .build();
+
+        var withPricing = options.withPricing(pricing);
+
+        assertEquals("test", withPricing.getSystemPrompt());
+        assertEquals(0.5, withPricing.getTemperature());
+        assertEquals(500, withPricing.getMaxTokens());
+        assertEquals(ReasoningEffort.HIGH, withPricing.getReasoningEffort());
+        assertEquals(0.8, withPricing.getTopP());
+    }
+
+    @Test
+    void withPricing_sharesMemory() {
+        var original = ChatOptions.newBuilder().withMemory().build();
+        var copy = original.withPricing(ChatPricing.of(BigDecimal.ONE, BigDecimal.ONE));
+
+        assertTrue(copy.hasMemory());
+        copy.recordMessage(Role.USER, "Hello");
+
+        assertEquals(1, original.getHistory().size());
+    }
+
+    @Test
+    void copy_preservesPricing() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, original.copy().getPricing());
+    }
+
+    @Test
+    void withJsonSchema_preservesPricing() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var schema = Json.createObjectBuilder().add("type", "object").build();
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, original.withJsonSchema(schema).getPricing());
+    }
+
+    @Test
+    void withSystemPrompt_preservesPricing() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, original.withSystemPrompt("x").getPricing());
+    }
+
+    @Test
+    void withWebSearch_preservesPricing() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, original.withWebSearch(ChatOptions.Location.GLOBAL).getPricing());
+    }
+
+    @Test
+    void withReasoningEffort_preservesPricing() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        assertEquals(pricing, original.withReasoningEffort(ReasoningEffort.HIGH).getPricing());
+    }
+
+    // =================================================================================================================
+    // getLastCost
+    // =================================================================================================================
+
+    @Test
+    void getLastCost_noPricing_returnsNull() {
+        var options = ChatOptions.newBuilder().build();
+        options.recordUsage(new ChatUsage(100, 50, -1, -1));
+
+        assertNull(options.getLastCost());
+    }
+
+    @Test
+    void getLastCost_noUsage_returnsNull() {
+        var options = ChatOptions.newBuilder().pricing(ChatPricing.of(BigDecimal.ONE, BigDecimal.ONE)).build();
+
+        assertNull(options.getLastCost());
+    }
+
+    @Test
+    void getLastCost_pricingAndUsageSet_computesCost() {
+        var usd = Currency.getInstance("USD");
+        var pricing = new ChatPricing(new BigDecimal("3.00"), new BigDecimal("0.30"), new BigDecimal("15.00"), usd);
+        var options = ChatOptions.newBuilder().pricing(pricing).build();
+        options.recordUsage(new ChatUsage(1_000_000, 2_000_000, -1, 500_000));
+
+        var cost = options.getLastCost();
+
+        assertNotNull(cost);
+        assertEquals(usd, cost.currency());
+        assertEquals(0, new BigDecimal("31.65").compareTo(cost.totalCost())); // 1.5 + 0.15 + 30
+    }
+
+    @Test
+    void getLastCost_usageWithoutReportedTokens_returnsNull() {
+        var options = ChatOptions.newBuilder().pricing(ChatPricing.of(BigDecimal.ONE, BigDecimal.ONE)).build();
+        options.recordUsage(new ChatUsage(-1, -1, -1, -1));
+
+        assertNull(options.getLastCost());
+    }
+
+    @Test
+    void getLastCost_onDefault_throwsISE() {
+        assertThrows(IllegalStateException.class, ChatOptions.DEFAULT::getLastCost);
+    }
+
+    // =================================================================================================================
+    // Pricing JSON round-trip
+    // =================================================================================================================
+
+    @Test
+    void jsonRoundTrip_pricingAllFields() {
+        var usd = Currency.getInstance("USD");
+        var pricing = new ChatPricing(new BigDecimal("3.00"), new BigDecimal("0.30"), new BigDecimal("15.00"), usd);
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertNotNull(restored.getPricing());
+        assertEquals(0, new BigDecimal("3.00").compareTo(restored.getPricing().inputTokenPrice()));
+        assertEquals(0, new BigDecimal("0.30").compareTo(restored.getPricing().cachedInputTokenPrice()));
+        assertEquals(0, new BigDecimal("15.00").compareTo(restored.getPricing().outputTokenPrice()));
+        assertEquals(usd, restored.getPricing().currency());
+    }
+
+    @Test
+    void jsonRoundTrip_pricingWithoutOptionalFields() {
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+        var original = ChatOptions.newBuilder().pricing(pricing).build();
+
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertNotNull(restored.getPricing());
+        assertEquals(0, new BigDecimal("3.00").compareTo(restored.getPricing().inputTokenPrice()));
+        assertNull(restored.getPricing().cachedInputTokenPrice());
+        assertEquals(0, new BigDecimal("15.00").compareTo(restored.getPricing().outputTokenPrice()));
+        assertNull(restored.getPricing().currency());
+    }
+
+    @Test
+    void toJson_omitsPricingWhenUnset() {
+        var json = ChatOptions.DEFAULT.toJson();
+
+        assertFalse(json.contains("pricing"));
+    }
+
+    // =================================================================================================================
+    // Sliding window section end
+    // =================================================================================================================
 
     @Test
     void jsonRoundTrip_slidingWindowTruncatesOnRestore() {

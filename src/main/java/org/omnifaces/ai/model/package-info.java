@@ -17,8 +17,12 @@
  * This package contains value types representing inputs, outputs, and configuration options:
  * <ul>
  * <li>{@link org.omnifaces.ai.model.ChatInput} - user input with optional file attachments</li>
- * <li>{@link org.omnifaces.ai.model.ChatOptions} - chat configuration (temperature, max tokens, reasoning effort, web search, memory/history, JSON schema, JSON export/import)</li>
+ * <li>{@link org.omnifaces.ai.model.ChatOptions} - chat configuration (temperature, max tokens, reasoning effort, web search, memory/history, JSON schema, JSON
+ * export/import, pricing)</li>
  * <li>{@link org.omnifaces.ai.model.ChatUsage} - token usage tracking (input, output, reasoning, cached input tokens)</li>
+ * <li>{@link org.omnifaces.ai.model.ChatPricing} - per-million-tokens pricing for input, cached input, and output</li>
+ * <li>{@link org.omnifaces.ai.model.ChatCost} - computed cost of a chat call derived from {@link org.omnifaces.ai.model.ChatUsage} and
+ * {@link org.omnifaces.ai.model.ChatPricing}</li>
  * <li>{@link org.omnifaces.ai.model.ModerationOptions} - content moderation configuration</li>
  * <li>{@link org.omnifaces.ai.model.ModerationResult} - content moderation results</li>
  * <li>{@link org.omnifaces.ai.model.GenerateImageOptions} - image generation configuration</li>

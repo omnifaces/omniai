@@ -14,6 +14,7 @@ package org.omnifaces.ai.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,6 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Currency;
 
 import org.junit.jupiter.api.Test;
 
@@ -223,6 +226,114 @@ class ChatUsageTest {
 
             assertEquals(original, deserialized);
         }
+    }
+
+    // =================================================================================================================
+    // calculateCost tests
+    // =================================================================================================================
+
+    @Test
+    void calculateCost_allKnown_returnsExpectedComponents() {
+        // 1_000_000 input @ $3.00/M, 500_000 cached @ $0.30/M, 2_000_000 output @ $15.00/M
+        // non-cached = 500_000, so input cost = 500_000 * 3 / 1_000_000 = 1.5
+        // cached cost = 500_000 * 0.30 / 1_000_000 = 0.15
+        // output cost = 2_000_000 * 15 / 1_000_000 = 30
+        var usage = new ChatUsage(1_000_000, 2_000_000, -1, 500_000);
+        var usd = Currency.getInstance("USD");
+        var pricing = new ChatPricing(new BigDecimal("3.00"), new BigDecimal("0.30"), new BigDecimal("15.00"), usd);
+
+        var cost = usage.calculateCost(pricing);
+
+        assertEquals(0, new BigDecimal("1.5").compareTo(cost.inputCost()));
+        assertEquals(0, new BigDecimal("0.15").compareTo(cost.cachedInputCost()));
+        assertEquals(0, new BigDecimal("30").compareTo(cost.outputCost()));
+        assertEquals(usd, cost.currency());
+    }
+
+    @Test
+    void calculateCost_scaleIsTen() {
+        var usage = new ChatUsage(1, 1, -1, -1);
+        var pricing = ChatPricing.of(new BigDecimal("1.00"), new BigDecimal("1.00"));
+
+        var cost = usage.calculateCost(pricing);
+
+        assertEquals(10, cost.inputCost().scale());
+        assertEquals(10, cost.cachedInputCost().scale());
+        assertEquals(10, cost.outputCost().scale());
+    }
+
+    @Test
+    void calculateCost_noCachedPrice_fallsBackToInputPrice() {
+        // cached portion billed at inputTokenPrice when cachedInputTokenPrice is null
+        var usage = new ChatUsage(1_000_000, 0, -1, 400_000);
+        var pricing = ChatPricing.of(new BigDecimal("2.00"), new BigDecimal("10.00"));
+
+        var cost = usage.calculateCost(pricing);
+
+        // cached: 400_000 * 2 / 1_000_000 = 0.8
+        // non-cached input: 600_000 * 2 / 1_000_000 = 1.2
+        assertEquals(0, new BigDecimal("0.8").compareTo(cost.cachedInputCost()));
+        assertEquals(0, new BigDecimal("1.2").compareTo(cost.inputCost()));
+    }
+
+    @Test
+    void calculateCost_cachedUnreported_treatedAsZero() {
+        var usage = new ChatUsage(1_000_000, 500_000, -1, -1);
+        var pricing = new ChatPricing(new BigDecimal("2.00"), new BigDecimal("0.20"), new BigDecimal("8.00"), null);
+
+        var cost = usage.calculateCost(pricing);
+
+        // full input at non-cached rate: 1_000_000 * 2 / 1M = 2
+        assertEquals(0, new BigDecimal("2").compareTo(cost.inputCost()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(cost.cachedInputCost()));
+        assertEquals(0, new BigDecimal("4").compareTo(cost.outputCost()));
+    }
+
+    @Test
+    void calculateCost_zeroTokens_zeroCost() {
+        var usage = new ChatUsage(0, 0, -1, 0);
+        var pricing = new ChatPricing(new BigDecimal("3.00"), new BigDecimal("0.30"), new BigDecimal("15.00"), null);
+
+        var cost = usage.calculateCost(pricing);
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(cost.inputCost()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(cost.cachedInputCost()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(cost.outputCost()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(cost.totalCost()));
+    }
+
+    @Test
+    void calculateCost_inputUnreported_returnsNull() {
+        var usage = new ChatUsage(-1, 50, -1, -1);
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+
+        assertNull(usage.calculateCost(pricing));
+    }
+
+    @Test
+    void calculateCost_outputUnreported_returnsNull() {
+        var usage = new ChatUsage(100, -1, -1, -1);
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+
+        assertNull(usage.calculateCost(pricing));
+    }
+
+    @Test
+    void calculateCost_nullPricing_throwsNPE() {
+        var usage = new ChatUsage(100, 50, -1, -1);
+
+        assertThrows(NullPointerException.class, () -> usage.calculateCost(null));
+    }
+
+    @Test
+    void calculateCost_subCentPrecision() {
+        // 50 tokens at $3/M = 0.00015
+        var usage = new ChatUsage(50, 0, -1, -1);
+        var pricing = ChatPricing.of(new BigDecimal("3.00"), new BigDecimal("15.00"));
+
+        var cost = usage.calculateCost(pricing);
+
+        assertEquals(0, new BigDecimal("0.00015").compareTo(cost.inputCost()));
     }
 
 }

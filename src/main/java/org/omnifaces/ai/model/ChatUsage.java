@@ -12,7 +12,11 @@
  */
 package org.omnifaces.ai.model;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Token usage reported by the AI provider for a single chat call.
@@ -41,6 +45,12 @@ import java.io.Serializable;
  * @see ChatOptions#getLastUsage()
  */
 public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTokens, int cachedInputTokens) implements Serializable {
+
+    /** One million, used as the denominator when converting per-million-tokens pricing to per-call costs. */
+    private static final BigDecimal MILLION = BigDecimal.valueOf(1_000_000);
+
+    /** Scale applied to computed {@link ChatCost} components. Ten decimal places is well below sub-cent precision for any realistic token pricing. */
+    private static final int COST_SCALE = 10;
 
     /**
      * Validates the record components.
@@ -83,6 +93,48 @@ public final record ChatUsage(int inputTokens, int outputTokens, int reasoningTo
         }
 
         return inputTokens + outputTokens;
+    }
+
+    /**
+     * Computes the {@link ChatCost} of this usage using the given {@link ChatPricing}.
+     * <p>
+     * Returns {@code null} when either {@link #inputTokens()} or {@link #outputTokens()} is {@code -1} (unreported by the provider), since a meaningful cost
+     * cannot be calculated without both. When {@link #cachedInputTokens()} is {@code -1} it is treated as zero, so the full input is billed at
+     * {@link ChatPricing#inputTokenPrice()}.
+     * <p>
+     * The cached portion of the input is billed at {@link ChatPricing#effectiveCachedInputTokenPrice()} and the non-cached portion at
+     * {@link ChatPricing#inputTokenPrice()}. Output tokens (including any internal reasoning) are billed at {@link ChatPricing#outputTokenPrice()}. All prices
+     * are interpreted as per one million tokens.
+     *
+     * @param pricing The pricing configuration. Must not be {@code null}.
+     * @return The computed {@link ChatCost}, or {@code null} if input or output tokens were not reported.
+     * @throws NullPointerException if {@code pricing} is {@code null}.
+     * @since 1.4
+     * @see ChatOptions#getLastCost()
+     */
+    public ChatCost calculateCost(ChatPricing pricing) {
+        requireNonNull(pricing, "pricing");
+
+        if (inputTokens == -1 || outputTokens == -1) {
+            return null;
+        }
+
+        var cached = Math.max(cachedInputTokens, 0);
+        var nonCachedInput = inputTokens - cached;
+
+        var inputCost = pricing.inputTokenPrice()
+            .multiply(BigDecimal.valueOf(nonCachedInput))
+            .divide(MILLION, COST_SCALE, RoundingMode.HALF_UP);
+
+        var cachedInputCost = pricing.effectiveCachedInputTokenPrice()
+            .multiply(BigDecimal.valueOf(cached))
+            .divide(MILLION, COST_SCALE, RoundingMode.HALF_UP);
+
+        var outputCost = pricing.outputTokenPrice()
+            .multiply(BigDecimal.valueOf(outputTokens))
+            .divide(MILLION, COST_SCALE, RoundingMode.HALF_UP);
+
+        return new ChatCost(inputCost, cachedInputCost, outputCost, pricing.currency());
     }
 
 }
