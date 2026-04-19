@@ -22,6 +22,7 @@ import java.util.concurrent.CompletionException;
  * <li>{@link AIHttpException} - HTTP-level errors (4xx/5xx status codes)
  * <li>{@link AIResponseException} - Response content errors (parsing, missing content)
  * <li>{@link AITokenLimitExceededException} - Token limit exceeded error
+ * <li>{@link AIBudgetExceededException} - Cumulative cost cap exceeded
  * </ul>
  *
  * @author Bauke Scholtz
@@ -29,6 +30,7 @@ import java.util.concurrent.CompletionException;
  * @see AIHttpException
  * @see AIResponseException
  * @see AITokenLimitExceededException
+ * @see AIBudgetExceededException
  */
 public class AIException extends RuntimeException {
 

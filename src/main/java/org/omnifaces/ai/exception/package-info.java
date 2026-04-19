@@ -29,6 +29,7 @@
  * </li>
  * <li>{@link org.omnifaces.ai.exception.AIResponseException} - response parsing or content errors</li>
  * <li>{@link org.omnifaces.ai.exception.AITokenLimitExceededException} - input/output token limit exceeded</li>
+ * <li>{@link org.omnifaces.ai.exception.AIBudgetExceededException} - cumulative cost cap on ChatOptions reached</li>
  * </ul>
  */
 package org.omnifaces.ai.exception;

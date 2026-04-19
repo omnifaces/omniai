@@ -184,6 +184,7 @@ public abstract class BaseAIService implements AIService {
 
     @Override
     public CompletableFuture<String> chatAsync(ChatInput input, ChatOptions options) throws AIException {
+        options.checkBudget();
         var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
 
         if (options.hasMemory()) {
@@ -209,6 +210,7 @@ public abstract class BaseAIService implements AIService {
             throw new UnsupportedOperationException("Streaming is not supported by " + getName());
         }
 
+        options.checkBudget();
         var effectiveInput = options.hasMemory() ? input.withHistory(options.getHistory()) : input;
 
         if (options.hasMemory()) {

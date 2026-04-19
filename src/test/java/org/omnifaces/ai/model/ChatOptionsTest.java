@@ -1497,4 +1497,296 @@ class ChatOptionsTest {
         assertEquals("reply2", history.get(1).content());
     }
 
+    // =================================================================================================================
+    // Budget cap
+    // =================================================================================================================
+
+    private static ChatPricing flatPricing() {
+        return new ChatPricing(new BigDecimal("1000000"), null, new BigDecimal("1000000"), Currency.getInstance("USD")); // $1/token
+    }
+
+    @Test
+    void pricing_twoArg_setsBoth() {
+        var pricing = flatPricing();
+        var cap = new BigDecimal("5.00");
+        var options = ChatOptions.newBuilder().pricing(pricing, cap).build();
+
+        assertEquals(pricing, options.getPricing());
+        assertEquals(cap, options.getMaxTotalCost());
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+    }
+
+    @Test
+    void pricing_twoArg_nullPricing_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.newBuilder().pricing(null, BigDecimal.ONE));
+    }
+
+    @Test
+    void pricing_twoArg_nullCap_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.newBuilder().pricing(flatPricing(), null));
+    }
+
+    @Test
+    void pricing_twoArg_zeroCap_throwsIAE() {
+        assertThrows(IllegalArgumentException.class, () -> ChatOptions.newBuilder().pricing(flatPricing(), BigDecimal.ZERO));
+    }
+
+    @Test
+    void pricing_twoArg_negativeCap_throwsIAE() {
+        assertThrows(IllegalArgumentException.class, () -> ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("-1")));
+    }
+
+    @Test
+    void pricing_singleArg_clearsPreviouslySetCap() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("5.00")).pricing(flatPricing()).build();
+
+        assertNull(options.getMaxTotalCost());
+    }
+
+    @Test
+    void getMaxTotalCost_defaultsToNull() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertNull(options.getMaxTotalCost());
+    }
+
+    @Test
+    void getTotalCost_defaultsToZero() {
+        var options = ChatOptions.newBuilder().build();
+
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+    }
+
+    @Test
+    void withPricing_twoArg_setsBoth() {
+        var original = ChatOptions.newBuilder().build();
+        var pricing = flatPricing();
+        var cap = new BigDecimal("5.00");
+
+        var copy = original.withPricing(pricing, cap);
+
+        assertEquals(pricing, copy.getPricing());
+        assertEquals(cap, copy.getMaxTotalCost());
+    }
+
+    @Test
+    void withPricing_twoArg_nullPricing_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.newBuilder().build().withPricing(null, BigDecimal.ONE));
+    }
+
+    @Test
+    void withPricing_twoArg_nullCap_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> ChatOptions.newBuilder().build().withPricing(flatPricing(), null));
+    }
+
+    @Test
+    void withPricing_twoArg_nonPositiveCap_throwsIAE() {
+        assertThrows(IllegalArgumentException.class, () -> ChatOptions.newBuilder().build().withPricing(flatPricing(), BigDecimal.ZERO));
+    }
+
+    @Test
+    void withPricing_singleArg_clearsCap() {
+        var original = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("5.00")).build();
+
+        var cleared = original.withPricing(flatPricing());
+
+        assertNull(cleared.getMaxTotalCost());
+    }
+
+    @Test
+    void recordUsage_withPricing_accumulatesTotalCost() {
+        var pricing = new ChatPricing(new BigDecimal("1000000"), null, new BigDecimal("1000000"), null); // $1/token
+        var options = ChatOptions.newBuilder().pricing(pricing).build();
+
+        options.recordUsage(new ChatUsage(1, 2, 0, 0));
+        options.recordUsage(new ChatUsage(3, 4, 0, 0));
+
+        assertEquals(0, new BigDecimal("10").compareTo(options.getTotalCost()));
+    }
+
+    @Test
+    void recordUsage_withoutPricing_doesNotAccumulate() {
+        var options = ChatOptions.newBuilder().build();
+
+        options.recordUsage(new ChatUsage(10, 20, 0, 0));
+
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+    }
+
+    @Test
+    void recordUsage_unreportedTokens_doesNotAccumulate() {
+        var pricing = flatPricing();
+        var options = ChatOptions.newBuilder().pricing(pricing).build();
+
+        options.recordUsage(new ChatUsage(-1, -1, -1, -1));
+
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+    }
+
+    @Test
+    void recordUsage_nullUsage_doesNotAccumulate() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing()).build();
+
+        options.recordUsage(null);
+
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+    }
+
+    @Test
+    void checkBudget_noCap_noOp() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing()).build();
+
+        options.recordUsage(new ChatUsage(1_000_000, 1_000_000, 0, 0));
+        options.checkBudget();
+    }
+
+    @Test
+    void checkBudget_underCap_passes() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("5.00")).build();
+
+        options.recordUsage(new ChatUsage(1, 1, 0, 0)); // $2
+
+        options.checkBudget();
+    }
+
+    @Test
+    void checkBudget_atCap_throws() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("2.00")).build();
+
+        options.recordUsage(new ChatUsage(1, 1, 0, 0)); // $2 == cap
+
+        var thrown = assertThrows(
+            org.omnifaces.ai.exception.AIBudgetExceededException.class,
+            options::checkBudget
+        );
+        assertEquals(0, new BigDecimal("2").compareTo(thrown.getTotalCost()));
+        assertEquals(new BigDecimal("2.00"), thrown.getMaxTotalCost());
+        assertEquals(Currency.getInstance("USD"), thrown.getCurrency());
+    }
+
+    @Test
+    void checkBudget_overCap_throws() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("1.00")).build();
+
+        options.recordUsage(new ChatUsage(5, 5, 0, 0)); // $10 >> $1 cap
+
+        assertThrows(org.omnifaces.ai.exception.AIBudgetExceededException.class, options::checkBudget);
+    }
+
+    @Test
+    void checkBudget_softCap_lastCallThatPushesOverSucceeds() {
+        // Simulates the pre-call check: the call that pushes over the cap completes; the NEXT call is refused.
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("2.00")).build();
+
+        options.checkBudget();
+        options.recordUsage(new ChatUsage(1, 0, 0, 0)); // total = $1, under cap
+
+        options.checkBudget();
+        options.recordUsage(new ChatUsage(5, 0, 0, 0)); // total = $6, over cap
+
+        assertThrows(org.omnifaces.ai.exception.AIBudgetExceededException.class, options::checkBudget);
+    }
+
+    @Test
+    void resetBudget_resetsTotalCost_leavesCap() {
+        var cap = new BigDecimal("2.00");
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), cap).build();
+        options.recordUsage(new ChatUsage(5, 0, 0, 0));
+
+        options.resetBudget();
+
+        assertEquals(BigDecimal.ZERO, options.getTotalCost());
+        assertEquals(cap, options.getMaxTotalCost());
+        options.checkBudget();
+    }
+
+    @Test
+    void resetBudget_onDefault_throwsISE() {
+        assertThrows(IllegalStateException.class, ChatOptions.DEFAULT::resetBudget);
+    }
+
+    @Test
+    void copy_resetsTotalCost() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("100")).build();
+        options.recordUsage(new ChatUsage(5, 5, 0, 0));
+
+        var copy = options.copy();
+
+        assertEquals(BigDecimal.ZERO, copy.getTotalCost());
+        assertEquals(new BigDecimal("100"), copy.getMaxTotalCost());
+    }
+
+    @Test
+    void withPricing_twoArg_preservesOtherSettings() {
+        var options = ChatOptions.newBuilder()
+            .systemPrompt("test")
+            .temperature(0.5)
+            .maxTokens(500)
+            .build();
+
+        var withPricing = options.withPricing(flatPricing(), new BigDecimal("5.00"));
+
+        assertEquals("test", withPricing.getSystemPrompt());
+        assertEquals(0.5, withPricing.getTemperature());
+        assertEquals(500, withPricing.getMaxTokens());
+    }
+
+    // =================================================================================================================
+    // Budget cap JSON round-trip
+    // =================================================================================================================
+
+    @Test
+    void jsonRoundTrip_maxTotalCost() {
+        var cap = new BigDecimal("12.50");
+        var original = ChatOptions.newBuilder().pricing(flatPricing(), cap).build();
+
+        var restored = ChatOptions.fromJson(original.toJson());
+
+        assertEquals(0, cap.compareTo(restored.getMaxTotalCost()));
+    }
+
+    @Test
+    void toJson_omitsMaxTotalCostWhenUnset() {
+        var json = ChatOptions.newBuilder().pricing(flatPricing()).build().toJson();
+
+        assertFalse(json.contains("maxTotalCost"));
+    }
+
+    @Test
+    void toJson_omitsTotalCostRuntimeState() {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("100")).build();
+        options.recordUsage(new ChatUsage(1, 1, 0, 0));
+
+        var json = options.toJson();
+
+        assertFalse(json.contains("totalCost\""));
+    }
+
+    @Test
+    void serialization_totalCostResetsToZero() throws Exception {
+        var options = ChatOptions.newBuilder().pricing(flatPricing(), new BigDecimal("100")).build();
+        options.recordUsage(new ChatUsage(5, 5, 0, 0));
+
+        var baos = new ByteArrayOutputStream();
+        try (var oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(options);
+        }
+
+        try (var ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+            var deserialized = (ChatOptions) ois.readObject();
+            assertEquals(BigDecimal.ZERO, deserialized.getTotalCost());
+            assertEquals(new BigDecimal("100"), deserialized.getMaxTotalCost());
+        }
+    }
+
+    @Test
+    void fromJson_priorMaxTotalCost_restoresAsNull() {
+        var json = "{\"temperature\":0.7,\"reasoningEffort\":\"AUTO\",\"topP\":1.0,\"pricing\":"
+            + "{\"inputTokenPrice\":1000000,\"outputTokenPrice\":1000000,\"currency\":\"USD\"}}";
+
+        var restored = ChatOptions.fromJson(json);
+
+        assertNull(restored.getMaxTotalCost());
+    }
+
 }

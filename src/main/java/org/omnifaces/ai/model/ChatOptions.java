@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -32,6 +33,7 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 
+import org.omnifaces.ai.exception.AIBudgetExceededException;
 import org.omnifaces.ai.helper.JsonSchemaHelper;
 import org.omnifaces.ai.mime.MimeType;
 import org.omnifaces.ai.model.ChatInput.Message;
@@ -175,12 +177,16 @@ public class ChatOptions implements Serializable {
     private final Location webSearchLocation;
     /** The pricing used to calculate {@link #getLastCost() cost} from recorded {@link ChatUsage}. */
     private final ChatPricing pricing;
+    /** The cumulative-cost cap enforced by {@link #checkBudget()}. */
+    private final BigDecimal maxTotalCost;
     /** The conversation history for memory-enabled chat sessions. */
     private final List<Message> history;
     /** The maximum number of messages retained in the conversation history. */
     private final int maxHistory;
     /** The token usage recorded for the most recent chat call made with this instance. */
     private transient ChatUsage lastUsage;
+    /** The cumulative cost across all calls made with this instance. */
+    private transient BigDecimal totalCost = BigDecimal.ZERO;
     /** Whether this instance is a shared default constant and therefore immutable. */
     private boolean immutable;
 
@@ -193,6 +199,7 @@ public class ChatOptions implements Serializable {
         this.topP = builder.topP;
         this.webSearchLocation = builder.webSearchLocation;
         this.pricing = builder.pricing;
+        this.maxTotalCost = builder.maxTotalCost;
 
         var memoryEnabled = builder.maxHistory > 0 || builder.history != null;
         this.maxHistory = builder.maxHistory > 0 ? builder.maxHistory : (memoryEnabled ? DEFAULT_MAX_HISTORY : 0);
@@ -209,7 +216,7 @@ public class ChatOptions implements Serializable {
 
     private ChatOptions(
         String systemPrompt, JsonObject jsonSchema, double temperature, Integer maxTokens, ReasoningEffort reasoningEffort, double topP,
-        Location webSearchLocation, ChatPricing pricing, List<Message> history, int maxHistory
+        Location webSearchLocation, ChatPricing pricing, BigDecimal maxTotalCost, List<Message> history, int maxHistory
     )
     {
         this.systemPrompt = systemPrompt;
@@ -220,6 +227,7 @@ public class ChatOptions implements Serializable {
         this.topP = topP;
         this.webSearchLocation = webSearchLocation;
         this.pricing = pricing;
+        this.maxTotalCost = maxTotalCost;
         this.history = history;
         this.maxHistory = maxHistory;
     }
@@ -233,6 +241,7 @@ public class ChatOptions implements Serializable {
         this.topP = source.topP;
         this.webSearchLocation = source.webSearchLocation;
         this.pricing = source.pricing;
+        this.maxTotalCost = source.maxTotalCost;
         this.history = source.history;
         this.maxHistory = source.maxHistory;
     }
@@ -261,6 +270,7 @@ public class ChatOptions implements Serializable {
         if (jsonSchemaString != null) {
             jsonSchema = parseJson(jsonSchemaString);
         }
+        this.totalCost = BigDecimal.ZERO;
     }
 
     /**
@@ -316,7 +326,9 @@ public class ChatOptions implements Serializable {
      * @return A new {@code ChatOptions} instance with the specified JSON schema.
      */
     public ChatOptions withJsonSchema(JsonObject jsonSchema) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
+        return new ChatOptions(
+            systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, maxTotalCost, history, maxHistory
+        );
     }
 
     /**
@@ -327,7 +339,9 @@ public class ChatOptions implements Serializable {
      * @since 1.1
      */
     public ChatOptions withSystemPrompt(String systemPrompt) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
+        return new ChatOptions(
+            systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, maxTotalCost, history, maxHistory
+        );
     }
 
     /**
@@ -343,7 +357,7 @@ public class ChatOptions implements Serializable {
      * @see #getWebSearchLocation()
      */
     public ChatOptions withWebSearch(Location location) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, location, pricing, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, location, pricing, maxTotalCost, history, maxHistory);
     }
 
     /**
@@ -357,13 +371,14 @@ public class ChatOptions implements Serializable {
      */
     public ChatOptions withReasoningEffort(ReasoningEffort reasoningEffort) {
         return new ChatOptions(
-            systemPrompt, jsonSchema, temperature, maxTokens, requireNonNull(reasoningEffort, "reasoningEffort"), topP, webSearchLocation, pricing, history,
-            maxHistory
+            systemPrompt, jsonSchema, temperature, maxTokens, requireNonNull(reasoningEffort, "reasoningEffort"), topP, webSearchLocation, pricing,
+            maxTotalCost, history, maxHistory
         );
     }
 
     /**
-     * Returns a copy of this instance with the given pricing set, preserving all other options including any shared {@link #hasMemory() memory} state.
+     * Returns a copy of this instance with the given pricing set, preserving all other options including any shared {@link #hasMemory() memory} state. Any
+     * previously configured {@link #getMaxTotalCost() budget cap} is cleared; use {@link #withPricing(ChatPricing, BigDecimal)} to set both at once.
      *
      * @param pricing The pricing configuration to use for cost calculations, or {@code null} to clear pricing.
      * @return A new {@code ChatOptions} instance with the specified pricing.
@@ -372,7 +387,35 @@ public class ChatOptions implements Serializable {
      * @see #getLastCost()
      */
     public ChatOptions withPricing(ChatPricing pricing) {
-        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, history, maxHistory);
+        return new ChatOptions(systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, null, history, maxHistory);
+    }
+
+    /**
+     * Returns a copy of this instance with the given pricing and cumulative-cost cap set, preserving all other options including any shared {@link #hasMemory()
+     * memory} state. The returned instance starts with a fresh zero {@link #getTotalCost() total cost} counter.
+     *
+     * @param pricing The pricing configuration. Must not be {@code null}.
+     * @param maxTotalCost The cumulative-cost cap. Must not be {@code null} and must be strictly positive.
+     * @return A new {@code ChatOptions} instance with the specified pricing and cap.
+     * @throws NullPointerException if {@code pricing} or {@code maxTotalCost} is {@code null}.
+     * @throws IllegalArgumentException if {@code maxTotalCost} is not strictly positive.
+     * @since 1.4
+     * @see AIBudgetExceededException
+     * @see #getMaxTotalCost()
+     * @see #getTotalCost()
+     * @see #resetBudget()
+     */
+    public ChatOptions withPricing(ChatPricing pricing, BigDecimal maxTotalCost) {
+        requireNonNull(pricing, "pricing");
+        requireNonNull(maxTotalCost, "maxTotalCost");
+
+        if (maxTotalCost.signum() <= 0) {
+            throw new IllegalArgumentException("Max total cost must be strictly positive");
+        }
+
+        return new ChatOptions(
+            systemPrompt, jsonSchema, temperature, maxTokens, reasoningEffort, topP, webSearchLocation, pricing, maxTotalCost, history, maxHistory
+        );
     }
 
     /**
@@ -492,6 +535,65 @@ public class ChatOptions implements Serializable {
      */
     public ChatPricing getPricing() {
         return pricing;
+    }
+
+    /**
+     * Returns the cumulative-cost cap configured for this instance via {@link Builder#pricing(ChatPricing, BigDecimal)} or
+     * {@link #withPricing(ChatPricing, BigDecimal)}, or {@code null} if no cap is configured.
+     *
+     * @return The cap, or {@code null}.
+     * @since 1.4
+     * @see #getTotalCost()
+     * @see AIBudgetExceededException
+     */
+    public BigDecimal getMaxTotalCost() {
+        return maxTotalCost;
+    }
+
+    /**
+     * Returns the cumulative cost across all chat calls made with this instance, starting from {@link BigDecimal#ZERO} and growing by
+     * {@link ChatCost#totalCost()} on each call that reports usage with a configured {@link #getPricing() pricing}.
+     *
+     * @return The cumulative cost; never {@code null}.
+     * @since 1.4
+     * @see #getMaxTotalCost()
+     * @see #resetBudget()
+     * @see AIBudgetExceededException
+     */
+    public BigDecimal getTotalCost() {
+        return totalCost;
+    }
+
+    /**
+     * Resets the cumulative {@link #getTotalCost() total cost} counter back to {@link BigDecimal#ZERO}. The configured {@link #getMaxTotalCost() cap} is left
+     * in place. Useful to start a fresh budgeting window on the same instance after catching an {@link AIBudgetExceededException}.
+     *
+     * @throws IllegalStateException if this is a {@link #isDefault() default} instance.
+     * @since 1.4
+     * @see #getTotalCost()
+     * @see #getMaxTotalCost()
+     */
+    public void resetBudget() {
+        if (isDefault()) {
+            throw new IllegalStateException(
+                "Cannot reset budget on a default (shared) ChatOptions instance; use copy() or a withXxx() method to create a dedicated instance"
+            );
+        }
+
+        this.totalCost = BigDecimal.ZERO;
+    }
+
+    /**
+     * Verifies the cumulative {@link #getTotalCost() total cost} has not yet reached the configured {@link #getMaxTotalCost() cap}. Called by the AI service
+     * before dispatching a chat call. No-op when no cap is configured.
+     *
+     * @throws AIBudgetExceededException if {@code getTotalCost() >= getMaxTotalCost()}.
+     * @since 1.4
+     */
+    public void checkBudget() {
+        if (maxTotalCost != null && totalCost.compareTo(maxTotalCost) >= 0) {
+            throw new AIBudgetExceededException(totalCost, maxTotalCost, pricing != null ? pricing.currency() : null);
+        }
     }
 
     /**
@@ -673,15 +775,23 @@ public class ChatOptions implements Serializable {
         }
 
         this.lastUsage = usage;
+
+        if (pricing != null && usage != null) {
+            var cost = usage.calculateCost(pricing);
+
+            if (cost != null) {
+                this.totalCost = this.totalCost.add(cost.totalCost());
+            }
+        }
     }
 
     /**
      * Serializes this instance to a portable JSON string suitable for session stores, databases, audit logs, or cross-service transport.
      * <p>
      * All user-facing options are included: {@code systemPrompt}, {@code jsonSchema}, {@code temperature}, {@code maxTokens}, {@code reasoningEffort},
-     * {@code topP}, {@code webSearchLocation}, {@code pricing}, {@code maxHistory}, and {@link #getHistory() history} (including any recorded uploaded file
-     * references). Null or unset fields are omitted for a compact payload. The {@link #getLastUsage() last usage} is deliberately not included since it is
-     * per-call state.
+     * {@code topP}, {@code webSearchLocation}, {@code pricing}, {@code maxTotalCost}, {@code maxHistory}, and {@link #getHistory() history} (including any
+     * recorded uploaded file references). Null or unset fields are omitted for a compact payload. Runtime state — {@link #getLastUsage() last usage} and
+     * {@link #getTotalCost() total cost} — is deliberately not included.
      * <p>
      * The returned JSON can be rehydrated via {@link #fromJson(String)}. Round-tripping a shared default constant ({@link #DEFAULT}, {@link #CREATIVE},
      * {@link #DETERMINISTIC}) yields a mutable copy, equivalent to calling {@link #copy()}.
@@ -730,6 +840,10 @@ public class ChatOptions implements Serializable {
             }
 
             builder.add("pricing", pricingBuilder);
+        }
+
+        if (maxTotalCost != null) {
+            builder.add("maxTotalCost", maxTotalCost);
         }
 
         if (history != null) {
@@ -823,14 +937,19 @@ public class ChatOptions implements Serializable {
                 ? pricingObject.getJsonNumber("cachedInputTokenPrice").bigDecimalValue()
                 : null;
             var currencyCode = pricingObject.getString("currency", null);
-            builder.pricing(
-                new ChatPricing(
-                    pricingObject.getJsonNumber("inputTokenPrice").bigDecimalValue(),
-                    cachedInputTokenPrice,
-                    pricingObject.getJsonNumber("outputTokenPrice").bigDecimalValue(),
-                    currencyCode != null ? Currency.getInstance(currencyCode) : null
-                )
+            var restoredPricing = new ChatPricing(
+                pricingObject.getJsonNumber("inputTokenPrice").bigDecimalValue(),
+                cachedInputTokenPrice,
+                pricingObject.getJsonNumber("outputTokenPrice").bigDecimalValue(),
+                currencyCode != null ? Currency.getInstance(currencyCode) : null
             );
+
+            if (parsed.containsKey("maxTotalCost")) {
+                builder.pricing(restoredPricing, parsed.getJsonNumber("maxTotalCost").bigDecimalValue());
+            }
+            else {
+                builder.pricing(restoredPricing);
+            }
         }
 
         if (parsed.containsKey("history") || parsed.containsKey("maxHistory")) {
@@ -893,6 +1012,7 @@ public class ChatOptions implements Serializable {
         private double topP = ChatOptions.DEFAULT_TOP_P;
         private Location webSearchLocation;
         private ChatPricing pricing;
+        private BigDecimal maxTotalCost;
         private int maxHistory;
         private List<Message> history;
 
@@ -1070,7 +1190,8 @@ public class ChatOptions implements Serializable {
         }
 
         /**
-         * Sets the pricing configuration used to calculate cost from recorded token usage. Defaults to {@code null} (i.e. no cost calculation).
+         * Sets the pricing configuration used to calculate cost from recorded token usage. Defaults to {@code null} (i.e. no cost calculation). Any previously
+         * configured cumulative-cost cap is cleared; use {@link #pricing(ChatPricing, BigDecimal)} to set both at once.
          * <p>
          * Prices are interpreted as per one million tokens. When set, {@link ChatOptions#getLastCost()} returns the computed {@link ChatCost} of the most
          * recent chat call. See {@link ChatPricing} for details.
@@ -1083,6 +1204,35 @@ public class ChatOptions implements Serializable {
          */
         public Builder pricing(ChatPricing pricing) {
             this.pricing = pricing;
+            this.maxTotalCost = null;
+            return this;
+        }
+
+        /**
+         * Sets the pricing configuration along with a strictly positive cumulative-cost cap. Subsequent chat calls made with the built {@link ChatOptions}
+         * instance throw {@link AIBudgetExceededException} once the accumulated {@link ChatOptions#getTotalCost() total cost} reaches or exceeds the given cap.
+         * The cap is interpreted in the currency carried by {@code pricing}.
+         *
+         * @param pricing The pricing configuration. Must not be {@code null}.
+         * @param maxTotalCost The cumulative-cost cap. Must not be {@code null} and must be strictly positive.
+         * @return This builder instance for chaining.
+         * @throws NullPointerException if {@code pricing} or {@code maxTotalCost} is {@code null}.
+         * @throws IllegalArgumentException if {@code maxTotalCost} is not strictly positive.
+         * @since 1.4
+         * @see AIBudgetExceededException
+         * @see ChatOptions#getMaxTotalCost()
+         * @see ChatOptions#getTotalCost()
+         * @see ChatOptions#resetBudget()
+         */
+        public Builder pricing(ChatPricing pricing, BigDecimal maxTotalCost) {
+            this.pricing = requireNonNull(pricing, "pricing");
+            requireNonNull(maxTotalCost, "maxTotalCost");
+
+            if (maxTotalCost.signum() <= 0) {
+                throw new IllegalArgumentException("Max total cost must be strictly positive");
+            }
+
+            this.maxTotalCost = maxTotalCost;
             return this;
         }
 
