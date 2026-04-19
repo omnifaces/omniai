@@ -15,7 +15,6 @@ package org.omnifaces.ai;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.JsonObject;
 
 import org.omnifaces.ai.exception.AIResponseException;
@@ -43,7 +42,7 @@ import org.omnifaces.ai.model.Sse.Event;
  * Creative / interpretive tasks use a configurable temperature ({@link #getDefaultCreativeTemperature()}); classification tasks use low fixed temperature of
  * {@link ChatOptions#DETERMINISTIC_TEMPERATURE}.
  * <p>
- * The implementations must be stateless and able to be {@link ApplicationScoped}.
+ * The implementations must be stateless and able to be {@code jakarta.enterprise.context.ApplicationScoped}.
  *
  * @author Bauke Scholtz
  * @since 1.0

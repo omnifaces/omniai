@@ -38,15 +38,13 @@ import org.omnifaces.ai.model.ModerationOptions.Category;
 import org.omnifaces.ai.model.ModerationResult;
 import org.omnifaces.ai.service.AIServiceWrapper;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 /**
  * Generic interface for AI service providers.
  * <p>
  * This interface provides a unified abstraction for various AI capabilities including chat, summarization, translation, proofreading, content moderation, image
  * analysis, and more.
  * <p>
- * The implementations must be stateless and able to be {@link ApplicationScoped}.
+ * The implementations must be stateless and able to be {@code jakarta.enterprise.context.ApplicationScoped}.
  *
  * @author Bauke Scholtz
  * @since 1.0
