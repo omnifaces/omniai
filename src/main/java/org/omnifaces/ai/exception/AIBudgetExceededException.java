@@ -36,8 +36,13 @@ public class AIBudgetExceededException extends AIException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The cumulative cost tracked on the {@link ChatOptions} instance. */
     private final BigDecimal totalCost;
+
+    /** The configured cap that has been reached or exceeded. */
     private final BigDecimal maxTotalCost;
+
+    /** The currency inherited from {@link ChatPricing#currency()}, or {@code null} if unspecified. */
     private final Currency currency;
 
     /**
