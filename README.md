@@ -335,7 +335,7 @@ ChatOptions options = ChatOptions.newBuilder()
 String answer = service.chat("Prove the Pythagorean theorem.", options);
 ```
 
-Available levels: `AUTO` (default, defers to the provider), `NONE` (disable reasoning where supported), `LOW`, `MEDIUM`, `HIGH`, and `XHIGH`. Providers that don't support a given level map to the closest equivalent.
+Available levels: `AUTO` (default, defers to the provider), `NONE` (disable reasoning where supported), `LOW` (~20% of budget), `MEDIUM` (~50% of budget), `HIGH` (~80% of budget), and `XHIGH` (~95% of budget). Providers that don't support a given level map to the closest equivalent.
 
 ### Structured Outputs
 
