@@ -76,7 +76,7 @@ public enum AIProvider {
     /**
      * OpenAI: GPT, GPT mini, GPT nano, etc.
      * <p>
-     * Defaults currently to model {@code gpt-5.4} at endpoint {@code https://api.openai.com/v1}.
+     * Defaults currently to model {@code gpt-5.4-mini} at endpoint {@code https://api.openai.com/v1}.
      *
      * @see OpenAIService
      * @see OpenAITextHandler
@@ -86,7 +86,7 @@ public enum AIProvider {
      * @see <a href="https://platform.openai.com/docs/models">Available OpenAI Models</a>
      */
     OPENAI(
-        "OpenAI", OpenAIService.class, true, "gpt-5.4", "https://api.openai.com/v1", OpenAITextHandler.class, OpenAIImageHandler.class,
+        "OpenAI", OpenAIService.class, true, "gpt-5.4-mini", "https://api.openai.com/v1", OpenAITextHandler.class, OpenAIImageHandler.class,
         OpenAIAudioHandler.class
     ),
 
@@ -161,7 +161,7 @@ public enum AIProvider {
     /**
      * Meta AI: Llama Maverick, Llama Scout, Llama default, etc.
      * <p>
-     * Defaults currently to model {@code Llama-4-Scout-17B-16E-Instruct-FP8} at endpoint {@code https://api.llama.com/v1}.
+     * Defaults currently to model {@code Llama-4-Maverick-17B-128E-Instruct-FP8} at endpoint {@code https://api.llama.com/v1}.
      *
      * @see MetaAIService
      * @see MetaAITextHandler
@@ -171,14 +171,14 @@ public enum AIProvider {
      * @see <a href="https://llama.developer.meta.com/docs/models/">Available Meta AI Models</a>
      */
     META(
-        "Meta AI", MetaAIService.class, true, "Llama-4-Scout-17B-16E-Instruct-FP8", "https://api.llama.com/v1", MetaAITextHandler.class,
+        "Meta AI", MetaAIService.class, true, "Llama-4-Maverick-17B-128E-Instruct-FP8", "https://api.llama.com/v1", MetaAITextHandler.class,
         OpenAIImageHandler.class, DefaultAIAudioHandler.class
     ),
 
     /**
      * Azure OpenAI: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
-     * Defaults currently to model {@code gpt-5-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
+     * Defaults currently to model {@code gpt-5.4-mini} at endpoint {@code https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1}.
      *
      * @see AzureAIService
      * @see AzureAITextHandler
@@ -188,7 +188,7 @@ public enum AIProvider {
      * @see <a href="https://ai.azure.com/catalog">Available Azure OpenAI Models</a>
      */
     AZURE(
-        "Azure OpenAI", AzureAIService.class, true, "gpt-5-mini", "https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1",
+        "Azure OpenAI", AzureAIService.class, true, "gpt-5.4-mini", "https://{org.omnifaces.ai.AZURE_RESOURCE}.openai.azure.com/openai/v1",
         AzureAITextHandler.class, OpenAIImageHandler.class, DefaultAIAudioHandler.class
     ),
 
@@ -212,7 +212,7 @@ public enum AIProvider {
     /**
      * Hugging Face: Aggregates a broad range of AI models via a unified OpenAI-compatible API.
      * <p>
-     * Defaults currently to model {@code google/gemma-4-31B-it} at endpoint {@code https://router.huggingface.co/v1}.
+     * Defaults currently to model {@code google/gemma-4-26B-A4B-it} at endpoint {@code https://router.huggingface.co/v1}.
      *
      * @see HuggingFaceAIService
      * @see OpenAITextHandler
@@ -222,14 +222,14 @@ public enum AIProvider {
      * @see <a href="https://huggingface.co/models">Available Hugging Face Models</a>
      */
     HUGGINGFACE(
-        "Hugging Face", HuggingFaceAIService.class, true, "google/gemma-4-31B-it", "https://router.huggingface.co/v1", OpenAITextHandler.class,
+        "Hugging Face", HuggingFaceAIService.class, true, "google/gemma-4-26B-A4B-it", "https://router.huggingface.co/v1", OpenAITextHandler.class,
         OpenAIImageHandler.class, DefaultAIAudioHandler.class
     ),
 
     /**
      * Ollama: Local models, e.g. Llama, Gemma, Mistral, etc via local server.
      * <p>
-     * Defaults currently to model {@code gemma3} at endpoint {@code http://localhost:11434}.
+     * Defaults currently to model {@code gemma4} at endpoint {@code http://localhost:11434}.
      * <p>
      * To install it:
      *
@@ -243,8 +243,8 @@ public enum AIProvider {
      * # Enable on boot
      * sudo systemctl enable ollama
      *
-     * # Run and chat with specific model (will download if absent; gemma3 is ~3.3GB and supports vision)
-     * ollama run gemma3
+     * # Run and chat with specific model (will download if absent; gemma4 is ~9.6GB and supports vision)
+     * ollama run gemma4
      * </pre>
      * <p>
      * Test by opening {@code http://localhost:11434} in web browser.
@@ -256,7 +256,7 @@ public enum AIProvider {
      * @see <a href="https://ollama.com/library">Available Ollama Models</a> (no API Keys required)
      */
     OLLAMA(
-        "Ollama", OllamaAIService.class, false, "gemma3", "http://localhost:11434", OllamaAITextHandler.class, DefaultAIImageHandler.class,
+        "Ollama", OllamaAIService.class, false, "gemma4", "http://localhost:11434", OllamaAITextHandler.class, DefaultAIImageHandler.class,
         DefaultAIAudioHandler.class
     ),
 

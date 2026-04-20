@@ -60,16 +60,16 @@ You can technically also use it on plain Java SE, you'll still need the JSON-P d
 
 | Provider | Default Model | API Key Required | Available Models |
 |----------|---------------|------------------|------------------|
-| OpenAI | gpt-5.2-2025-12-11 | [Yes](https://platform.openai.com/api-keys) | [List](https://platform.openai.com/docs/models) |
+| OpenAI | gpt-5.4-mini | [Yes](https://platform.openai.com/api-keys) | [List](https://platform.openai.com/docs/models) |
 | Anthropic | claude-sonnet-4-6 | [Yes](https://platform.claude.com/settings/keys) | [List](https://platform.claude.com/docs/en/about-claude/models/overview) |
 | Google AI | gemini-3-flash-preview | [Yes](https://aistudio.google.com/app/api-keys) | [List](https://ai.google.dev/gemini-api/docs/models) |
 | xAI | grok-4-1-fast-reasoning | [Yes](https://console.x.ai) | [List](https://docs.x.ai/developers/models) |
 | Mistral | mistral-medium-2508 | [Yes](https://console.mistral.ai/home?workspace_dialog=apiKeys) | [List](https://docs.mistral.ai/getting-started/models) |
-| Meta AI | Llama-4-Scout-17B-16E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) | [List](https://llama.developer.meta.com/docs/models/) |
-| Azure OpenAI | gpt-5-mini | [Yes](https://portal.azure.com) | [List](https://ai.azure.com/catalog) |
+| Meta AI | Llama-4-Maverick-17B-128E-Instruct-FP8 | [Yes](https://llama.developer.meta.com/join-waitlist) | [List](https://llama.developer.meta.com/docs/models/) |
+| Azure OpenAI | gpt-5.4-mini | [Yes](https://portal.azure.com) | [List](https://ai.azure.com/catalog) |
 | OpenRouter | deepseek/deepseek-v3.2 | [Yes](https://openrouter.ai/settings/keys) | [List](https://openrouter.ai/models) |
-| Hugging Face | google/gemma-3-27b-it | [Yes](https://huggingface.co/settings/tokens) | [List](https://huggingface.co/models) |
-| Ollama | gemma3 | No (localhost) | [List](https://ollama.com/library) |
+| Hugging Face | google/gemma-4-26B-A4B-it | [Yes](https://huggingface.co/settings/tokens) | [List](https://huggingface.co/models) |
+| Ollama | gemma4 | No (localhost) | [List](https://ollama.com/library) |
 | Custom | - | - | - |
 
 ## Quick Start
@@ -704,8 +704,8 @@ If Jakarta Agentic matures, OmniHai could potentially be a lightweight implement
 ### Is OmniHai smaller than e.g. LangChain4J?
 
 Yes, significantly:
-- OmniHai JAR: ~210 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 25x smaller when using only one AI provider
-- 81 source files, ~14,000 lines of code (\~6,000 actual code, rest is javadoc)
+- OmniHai JAR: ~230 KB vs LangChain4J: ~5-10 MB (*per* AI provider!) — at least 25x smaller when using only one AI provider
+- 85 source files, ~16,000 lines of code (\~7,000 actual code, rest is javadoc)
 - Zero external runtime dependencies — uses JDK's native `java.net.http.HttpClient` directly without any SDKs
 - Only one required dependency: Jakarta JSON-P (which Jakarta EE and MicroProfile runtimes already have)
 - Other dependencies are optional: CDI, EL and/or MP Config APIs (which Jakarta EE resp. MicroProfile runtimes already have)
