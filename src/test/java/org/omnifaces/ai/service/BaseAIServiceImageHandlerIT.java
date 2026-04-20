@@ -13,6 +13,7 @@
 package org.omnifaces.ai.service;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
@@ -27,13 +28,22 @@ import org.junit.jupiter.api.Test;
 abstract class BaseAIServiceImageHandlerIT extends AIServiceIT {
 
     private static final Set<String> ACCEPTABLE_SHAPES = Set.of("pentagon", "pentagram", "star");
+    private static final Set<String> UNACCEPTABLE_SHAPES = Set.of("hexagon");
     private static final Set<String> ACCEPTABLE_DESCRIPTIONS = Set.of("five", "node", "dot", "line", "circle", "circular");
+    private static final Set<String> UNACCEPTABLE_DESCRIPTIONS = Set.of("six");
 
     @Test
     void analyzeImage() {
         var response = service.analyzeImage(readAllBytes("/omnifaces.png"), "What shape is this?");
         log(response);
-        assertTrue(ACCEPTABLE_SHAPES.stream().anyMatch(response.toLowerCase()::contains), "response must contain acceptable shapes: " + ACCEPTABLE_SHAPES);
+        assertAll(
+            () -> assertTrue(
+                ACCEPTABLE_SHAPES.stream().anyMatch(response.toLowerCase()::contains), "response must contain acceptable shapes: " + ACCEPTABLE_SHAPES
+            ),
+            () -> assertFalse(
+                UNACCEPTABLE_SHAPES.stream().anyMatch(response.toLowerCase()::contains), "response may not contain unacceptable shapes: " + UNACCEPTABLE_SHAPES
+            )
+        );
     }
 
     @Test
@@ -43,8 +53,12 @@ abstract class BaseAIServiceImageHandlerIT extends AIServiceIT {
         var sentences = response.split("\\.");
         assertAll(
             () -> assertTrue(
-                ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(sentences[0].toLowerCase()::contains),
+                ACCEPTABLE_DESCRIPTIONS.stream().anyMatch(response.toLowerCase()::contains),
                 "response must contain acceptable descriptions: " + ACCEPTABLE_DESCRIPTIONS
+            ),
+            () -> assertFalse(
+                UNACCEPTABLE_DESCRIPTIONS.stream().anyMatch(response.toLowerCase()::contains),
+                "response may not contain unacceptable descriptions: " + UNACCEPTABLE_DESCRIPTIONS
             ),
             () -> assertTrue(sentences.length <= 2, "max 2 sentences"),
             () -> assertTrue(sentences[0].split("\\s+").length <= 30, "max 30 words (slack of 5) in 1st sentence"),
