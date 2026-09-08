@@ -30,6 +30,9 @@ jobs:
     # The library is built for the oldest Java it supports and run on every newer one its users may run it on.
     name: Build on JDK ${{matrix.java}}
     runs-on: ubuntu-latest
+    # Dependabot pull requests don't get the repository secrets, so the analysis is skipped when the token is absent.
+    env:
+      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
     strategy:
       fail-fast: false # One Java failing may not hide whether the others pass.
       matrix:
@@ -45,19 +48,18 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Cache Sonar packages
-      if: matrix.java == '17'
+      if: matrix.java == '17' && env.SONAR_TOKEN != ''
       uses: actions/cache@v6
       with:
         path: ~/.sonar/cache
         key: ${{runner.os}}-sonar
         restore-keys: ${{runner.os}}-sonar
     - name: Build and test
-      if: matrix.java != '17'
+      if: matrix.java != '17' || env.SONAR_TOKEN == ''
       run: mvn -B -ntp clean verify # The integration tests are skipped by default as they require an API key of each AI provider.
     # Analyzing takes the build it analyzes, so it runs the tests once rather than after a job which already ran them.
     - name: Build, test and analyze with Sonar
-      if: matrix.java == '17'
+      if: matrix.java == '17' && env.SONAR_TOKEN != ''
       run: mvn -B -ntp clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar -Dsonar.projectKey=omnifaces_omnihai
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
